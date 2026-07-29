@@ -1,0 +1,1820 @@
+import { useMemo, useState } from "react";
+import {
+  AreaChart, Area, BarChart, Bar, LineChart, Line, ComposedChart,
+  PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+} from "recharts";
+import PageHeader from "../components/PageHeader";
+import { Icons } from "../components/Icons";
+import { formatVNDFull, formatVND } from "../utils/format";
+
+const {
+  Utensils, UtensilsCrossed, ChefHat, Wine, Soup, CookingPot, Receipt,
+  ClipboardList, Flame, Tag, Store, PartyPopper,
+  ChevronRight, TrendingUp, TrendingDown, ArrowUpRight, Plus, Filter, Download,
+  Search, MoreHorizontal, Star, Users, Clock, Coffee, AlertCircle,
+  Calendar, DollarSign, ShoppingBag, Heart, Eye, Bell, Activity,
+  CheckCircle2, XCircle, Hourglass, Percent, BarChart3, MapPin,
+  Wallet, Phone, Send, Mail, MessageCircle, ImageIcon, Paperclip,
+  Smile, Reply, Check, CheckCheck,
+} = Icons;
+
+const tooltipStyle = {
+  background: "#0f1218",
+  border: "none",
+  borderRadius: 6,
+  fontSize: 12,
+  color: "#fff",
+  padding: "8px 12px",
+};
+
+const TODAY = "28/07/2026";
+
+// Lấy 2 ký tự đầu của tên để hiển thị avatar (an toàn khi tên undefined/rỗng)
+function initials(name = "") {
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  return (parts[0]?.[0] || "") + (parts[1]?.[0] || "");
+}
+
+export default function RestaurantOperations() {
+  const [shift, setShift] = useState("all");
+  const [branch, setBranch] = useState("all");
+  const data = useMemo(() => buildData({ shift, branch }), [shift, branch]);
+
+  return (
+    <div className="max-w-[1320px] mx-auto pb-12 px-3 sm:px-4 lg:px-6">
+
+      {/* ═══ HERO ═══ */}
+      <div className="relative overflow-hidden rounded-md bg-gradient-to-br from-amber-900 via-orange-800 to-rose-700 text-white shadow-sm">
+        <div className="absolute inset-0 opacity-[0.08] bg-soft-grid" />
+        <div className="absolute -top-16 -right-16 w-72 h-72 rounded-full bg-rose-400/25 blur-3xl" />
+        <div className="absolute -bottom-12 -left-12 w-56 h-56 rounded-full bg-amber-400/25 blur-3xl" />
+        <div className="relative px-4 py-4 sm:px-6 sm:py-5 flex items-start justify-between gap-3 sm:gap-4 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/70 font-semibold flex-wrap">
+              <Utensils className="w-3.5 h-3.5" />
+              F&amp;B · Vận hành nhà hàng
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-100 border border-emerald-400/30 shadow-[0_0_8px_rgba(16,185,129,0.25)]">
+                <span className="relative flex w-2 h-2 items-center justify-center">
+                  <span className="absolute inset-0 rounded-full bg-emerald-300 opacity-70 animate-ping" style={{ animationDuration: "1.8s" }} />
+                  <span className="relative w-1.5 h-1.5 rounded-full bg-emerald-300 shadow-[0_0_4px_1px_rgba(110,231,183,0.7)]" />
+                </span>
+                LIVE
+              </span>
+            </div>
+            <h1 className="font-display font-bold text-[20px] sm:text-[28px] leading-tight mt-1 truncate">
+              Quản lý vận hành nhà hàng
+            </h1>
+            <p className="text-[13px] text-white/80 mt-1 max-w-2xl">
+              Bếp · phục vụ · đặt bàn · doanh thu — theo dõi real-time toàn hệ thống 4 nhà hàng.
+            </p>
+            <div className="flex items-center gap-2 mt-2 sm:mt-3 flex-wrap">
+              {data.heroMeta.map((m, i) => (
+                <div key={i} className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 rounded px-2 py-1 min-w-0">
+                  <span className="text-[10px] uppercase tracking-wider text-white/60 font-semibold whitespace-nowrap">{m.label}</span>
+                  <span className="text-[12px] font-semibold tabular-nums truncate">{m.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <button className="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/15 text-[12.5px] font-semibold flex items-center gap-2 transition">
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Xuất báo cáo</span>
+              <span className="sm:hidden">Xuất</span>
+            </button>
+            <button className="px-3 py-2 rounded-md bg-white text-amber-700 hover:bg-amber-50 text-[12.5px] font-bold flex items-center gap-2 transition shadow-sm">
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Tạo đơn / đặt bàn</span>
+              <span className="sm:hidden">Tạo đơn</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ STRIP BÀN — FLOOR PLAN VIEW ═══ */}
+      <SectionHeader
+        icon={UtensilsCrossed}
+        label="Sơ đồ bàn — theo nhà hàng"
+        sub="Trạng thái real-time · nhấn để xem chi tiết"
+        right={
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] font-semibold flex-wrap">
+            <Dot color="bg-emerald-500" /> Trống
+            <Dot color="bg-amber-500" /> Đang phục vụ
+            <Dot color="bg-violet-500" /> Đã đặt
+            <Dot color="bg-rose-500" /> Bảo trì
+          </div>
+        }
+      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+        {data.restaurants.map((r) => (
+          <RestaurantFloor
+            key={r.id}
+            r={r}
+            selected={branch === r.id}
+            onSelect={() => setBranch(branch === r.id ? "all" : r.id)}
+          />
+        ))}
+      </div>
+
+      {/* ═══ FILTER BAR ═══ */}
+      <div className="mt-7 sm:mt-9 bg-white border border-ink-200 rounded-md p-3 sm:p-3.5 flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-ink-500 mr-1 hidden sm:inline">Lọc ca:</span>
+          {[
+            { id: "all", label: "Cả ngày", icon: Clock },
+            { id: "lunch", label: "Trưa · 11h-14h", icon: Soup },
+            { id: "afternoon", label: "Xế · 14h-17h", icon: Coffee },
+            { id: "dinner", label: "Tối · 17h-22h", icon: Wine },
+          ].map((s) => {
+            const active = shift === s.id;
+            const Icon = s.icon;
+            return (
+              <button
+                key={s.id}
+                onClick={() => setShift(s.id)}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-full text-[11.5px] font-semibold border transition flex items-center gap-1.5 ${
+                  active
+                    ? "bg-amber-700 text-white border-amber-700 shadow-sm"
+                    : "bg-white text-ink-700 border-ink-200 hover:border-amber-300 hover:text-amber-700"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{s.label}</span>
+                <span className="sm:hidden">{s.label.split(" · ")[0]}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+          <button className="px-3 py-1.5 rounded-md bg-ink-100 text-ink-700 text-[11.5px] font-semibold flex items-center gap-1.5 hover:bg-ink-200 transition">
+            <Filter className="w-3.5 h-3.5" /> Nâng cao
+          </button>
+          <button className="px-3 py-1.5 rounded-md bg-amber-700 text-white text-[11.5px] font-bold flex items-center gap-1.5 hover:bg-amber-800 transition">
+            <Search className="w-3.5 h-3.5" /> Tìm món / đơn
+          </button>
+        </div>
+      </div>
+
+      {/* ═══ KPI LỚN ═══ */}
+      <SectionHeader icon={Percent} label="KPI vận hành" sub="Hiệu suất theo real-time" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <KPIBig
+          label="Doanh thu hôm nay"
+          value={formatVND(data.revToday)}
+          sub={`${data.ordersToday} đơn · ${data.guestsToday} khách`}
+          dotColor="bg-amber-500"
+          accent="amber"
+          icon={Wallet}
+          trend={{ value: 18.4, label: "so với hôm qua" }}
+        />
+        <KPIBig
+          label="Bill trung bình"
+          value={formatVND(data.avgBill)}
+          sub={`Trên ${data.guestsToday} khách phục vụ`}
+          dotColor="bg-rose-500"
+          accent="rose"
+          icon={Receipt}
+          trend={{ value: 4.2, label: "so với tuần trước" }}
+        />
+        <KPIBig
+          label="Công suất bàn"
+          value={`${data.tableOcc}%`}
+          sub={`${data.tablesOccupied}/${data.tablesTotal} bàn đang dùng`}
+          dotColor="bg-emerald-500"
+          accent="emerald"
+          icon={Store}
+          trend={{ value: 6.1, label: "so với ca trước" }}
+        />
+        <KPIBig
+          label="Thời gian chờ TB"
+          value={`${data.avgWait}'`}
+          sub="Từ lúc khách ngồi đến món đầu tiên"
+          dotColor="bg-blue-500"
+          accent="blue"
+          icon={Hourglass}
+          trend={{ value: -12, label: "giảm so với hôm qua", invertColor: true }}
+        />
+      </div>
+
+      {/* ═══ BẾP & PHỤC VỤ ═══ */}
+      <SectionHeader
+        icon={ChefHat}
+        label="Bếp & Phục vụ"
+        sub="Số liệu realtime theo ca"
+        right={
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-ink-500">
+            <span className="relative flex w-2 h-2 items-center justify-center">
+              <span className="absolute inset-0 rounded-full bg-emerald-400 opacity-70 animate-ping" />
+              <span className="relative w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            </span>
+            Đồng bộ 30s trước
+          </span>
+        }
+      />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <Card title="Trạng thái đơn trong bếp" subtitle="KDS · real-time" icon={ChefHat} accent="amber" className="lg:col-span-2 overflow-hidden min-w-0">
+          <KitchenBoard rows={data.kitchen} />
+        </Card>
+        <Card title="Ca làm việc" subtitle="Phân công hôm nay" icon={Users} accent="violet">
+          <ShiftBoard rows={data.shifts} />
+        </Card>
+      </div>
+
+      {/* ═══ MENU PERFORMANCE ═══ */}
+      <SectionHeader icon={Soup} label="Hiệu suất thực đơn" sub="Top món, doanh thu, rating" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <Card title="Top 5 món bán chạy" subtitle="Hôm nay · theo số lượng" icon={Soup} accent="amber" className="lg:col-span-2">
+          <TopDishes items={data.topDishes} />
+        </Card>
+        <Card title="Phân bổ danh mục" subtitle="% doanh thu" icon={PieChart} accent="rose">
+          <CategoryMix data={data.categoryMix} />
+        </Card>
+      </div>
+
+      {/* ═══ CHART DOANH THU + GIỜ CAO ĐIỂM ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 mt-5">
+        <Card title="Doanh thu 14 ngày" subtitle="VNĐ" icon={TrendingUp} accent="emerald" className="lg:col-span-2 overflow-hidden min-w-0">
+          <div className="h-52 sm:h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={data.rev14} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="revR" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 6" stroke="#eceef2" vertical={false} />
+                <XAxis dataKey="d" stroke="#8792a8" fontSize={10} tickLine={false} axisLine={false} />
+                <YAxis yAxisId="l" stroke="#f59e0b" fontSize={10} tickLine={false} axisLine={false}
+                  tickFormatter={(v) => `${(v / 1_000_000).toFixed(0)}tr`} />
+                <YAxis yAxisId="r" orientation="right" stroke="#8b5cf6" fontSize={10} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v) => formatVNDFull(v)} />
+                <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
+                <Area yAxisId="l" type="monotone" dataKey="rev" stroke="#f59e0b" strokeWidth={2} fill="url(#revR)" name="Doanh thu" />
+                <Bar yAxisId="r" dataKey="guests" fill="#8b5cf6" radius={[3, 3, 0, 0]} barSize={18} name="Lượt khách" />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+        <Card title="Giờ cao điểm" subtitle="Khách theo khung giờ" icon={Clock} accent="amber">
+          <div className="h-52 sm:h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.peakHours} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 6" stroke="#eceef2" vertical={false} />
+                <XAxis dataKey="h" stroke="#8792a8" fontSize={10} tickLine={false} axisLine={false} />
+                <YAxis stroke="#8792a8" fontSize={10} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="guests" radius={[3, 3, 0, 0]} barSize={14}>
+                  {data.peakHours.map((p, i) => (
+                    <Cell key={i} fill={p.peak ? "#f43f5e" : "#f59e0b"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </div>
+
+      {/* ═══ ĐẶT BÀN ═══ */}
+      <SectionHeader
+        icon={Calendar}
+        label="Đặt bàn hôm nay"
+        sub={`${data.reservations.length} lượt · tổng ${data.guestsRsv} khách`}
+        right={<Badge tone="amber">Cập nhật real-time</Badge>}
+      />
+      <Card title="Danh sách đặt bàn" subtitle="Sắp xếp theo giờ" icon={Calendar} accent="blue" className="p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-[12px]">
+            <thead>
+              <tr className="text-left text-ink-500 uppercase tracking-wider text-[10px] bg-ink-50">
+                <th className="px-3 sm:px-5 py-3 font-semibold">Giờ</th>
+                <th className="px-3 sm:px-5 py-3 font-semibold">Khách hàng</th>
+                <th className="px-3 sm:px-5 py-3 font-semibold">Nhà hàng</th>
+                <th className="px-3 sm:px-5 py-3 font-semibold hidden sm:table-cell">Bàn</th>
+                <th className="px-3 sm:px-5 py-3 font-semibold text-center">Khách</th>
+                <th className="px-3 sm:px-5 py-3 font-semibold hidden md:table-cell">Ghi chú</th>
+                <th className="px-3 sm:px-5 py-3 font-semibold">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.reservations.map((r, i) => (
+                <tr key={r.id} className={`border-t border-ink-100 ${i % 2 ? "bg-ink-50/40" : ""} hover:bg-amber-50/40 transition`}>
+                  <td className="px-3 sm:px-5 py-3 font-bold text-ink-900 tabular-nums whitespace-nowrap">
+                    {r.time}
+                  </td>
+                  <td className="px-3 sm:px-5 py-3 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-rose-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0">
+                        {initials(r.name).toUpperCase() || "?"}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-ink-900 truncate">{r.name}</div>
+                        <div className="text-[10px] text-ink-500 tabular-nums">{r.phone}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3 text-ink-700 whitespace-nowrap">
+                    <span className="font-semibold">{r.branchCode}</span> · {r.branchName}
+                  </td>
+                  <td className="px-3 sm:px-5 py-3 hidden sm:table-cell text-ink-700 whitespace-nowrap">
+                    {r.table}
+                  </td>
+                  <td className="px-3 sm:px-5 py-3 text-center">
+                    <span className="inline-flex items-center justify-center min-w-[26px] h-6 px-2 rounded-full bg-ink-100 text-ink-700 text-[11px] font-bold tabular-nums">
+                      {r.guests}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3 hidden md:table-cell text-ink-600 max-w-[200px] truncate">
+                    {r.note || "—"}
+                  </td>
+                  <td className="px-3 sm:px-5 py-3">
+                    <StatusPill s={r.status} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* ═══ TOP BÀN + NGUYÊN LIỆU ═══ */}
+      <SectionHeader icon={Star} label="Top bàn & Nguyên liệu" sub="Bàn đắt khách · tồn kho bếp" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        <Card title="Bàn có doanh thu cao" subtitle="Top 5 trong ngày" icon={Utensils} accent="amber">
+          <TopTables items={data.topTables} />
+        </Card>
+        <Card title="Nguyên liệu sắp hết" subtitle="Cảnh báo bếp — đặt gấp" icon={AlertCircle} accent="rose">
+          <Inventory items={data.inventory} />
+        </Card>
+      </div>
+
+      {/* ═══ NHÀ CUNG CẤP + ĐÁNH GIÁ ═══ */}
+      <SectionHeader icon={Receipt} label="Nhà cung cấp & Đánh giá" sub="PO đang mở · feedback khách" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        <Card title="Đơn mua hàng hôm nay" subtitle="PO đang chờ giao" icon={Truck} accent="blue">
+          <PurchaseOrders items={data.pos} />
+        </Card>
+        <Card title="Đánh giá mới" subtitle="Từ khách đã dùng bữa" icon={Heart} accent="rose">
+          <ReviewList items={data.reviews} />
+        </Card>
+      </div>
+
+      {/* ═══ HOA HỒNG + SỰ CỐ ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <Card title="Tip / hoa hồng" subtitle="Theo ca · nhân viên" icon={DollarSign} accent="emerald" className="lg:col-span-2">
+          <TipsBoard rows={data.tips} />
+        </Card>
+        <Card title="Sự cố & xử lý" subtitle="Trong ngày" icon={AlertCircle} accent="rose">
+          <IssuesList items={data.issues} />
+        </Card>
+      </div>
+
+      {/* ═══ TIN NHẮN KHÁCH HÀNG - ĐA KÊNH ═══ */}
+      <SectionHeader
+        icon={MessageCircle}
+        label="Hộp thoại khách hàng — đa kênh"
+        sub="Tin nhắn đổ về từ TikTok · Zalo · Messenger · Instagram · SMS · Email"
+        right={
+          <div className="flex items-center gap-2 text-[10px] font-semibold flex-wrap">
+            {data.channels.map((c) => (
+              <span key={c.id} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border ${c.tone}`} title={c.name}>
+                <span className="w-1.5 h-1.5 rounded-full ${c.dot}" />
+                {c.short} <span className="tabular-nums font-bold">{c.unread}</span>
+              </span>
+            ))}
+          </div>
+        }
+      />
+      <Card title="Inbox thống nhất" subtitle={`${data.conversations.reduce((s, c) => s + (c.unread || 0), 0)} tin chưa đọc · hợp nhất mọi nền tảng`} icon={MessageCircle} accent="amber">
+        <MultiChannelInbox
+          conversations={data.conversations}
+        />
+      </Card>
+
+      <div className="mt-10 flex items-center justify-center gap-1.5 text-[11px] text-ink-400">
+        <Utensils className="w-3 h-3" />
+        Số liệu minh họa · Cập nhật real-time · Nguồn: POS · KDS · 28/07 09:24
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════ SUB-COMPONENTS ═══════════ */
+
+function SectionHeader({ icon: Icon, label, sub, right }) {
+  return (
+    <div className="flex items-end justify-between gap-3 sm:gap-4 mt-7 sm:mt-9 mb-3">
+      <div className="flex items-stretch gap-3 min-w-0 flex-1">
+        <div className="w-1 rounded-sm bg-amber-600" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 font-display font-bold text-[12.5px] sm:text-[14px] tracking-wide uppercase text-amber-800 flex-wrap">
+            {Icon && <Icon className="w-4 h-4 text-amber-700 shrink-0" />}
+            <span className="truncate">{label}</span>
+          </div>
+          {sub && <div className="text-[12px] text-ink-500 mt-0.5 truncate">{sub}</div>}
+        </div>
+      </div>
+      {right && <div className="shrink-0 flex items-center gap-1.5">{right}</div>}
+    </div>
+  );
+}
+
+function Badge({ tone = "amber", children }) {
+  const map = {
+    blue: "bg-blue-50 text-blue-700 border-blue-100",
+    amber: "bg-amber-50 text-amber-700 border-amber-100",
+    rose: "bg-rose-50 text-rose-700 border-rose-100",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    violet: "bg-violet-50 text-violet-700 border-violet-100",
+    ink: "bg-ink-100 text-ink-700 border-ink-200",
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${map[tone] || map.amber}`}>
+      {children}
+    </span>
+  );
+}
+
+function Card({ children, className = "", title, subtitle, right, icon: Icon, accent = "amber" }) {
+  const accentMap = {
+    blue: "text-blue-700",
+    emerald: "text-emerald-700",
+    amber: "text-amber-700",
+    rose: "text-rose-700",
+    violet: "text-violet-700",
+    ink: "text-ink-700",
+  };
+  return (
+    <div className={`bg-white border border-ink-200 rounded-md ${className}`}>
+      {(title || right) && (
+        <div className="flex items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-ink-100">
+          <div className="flex items-center gap-2 min-w-0">
+            {Icon && <Icon className={`w-4 h-4 shrink-0 ${accentMap[accent] || accentMap.amber}`} />}
+            <div className="min-w-0">
+              {title && <div className="font-semibold text-[13px] text-ink-900 truncate">{title}</div>}
+              {subtitle && <div className="text-[11px] text-ink-500 mt-0.5 truncate">{subtitle}</div>}
+            </div>
+          </div>
+          {right && <div className="shrink-0 flex items-center gap-1.5">{right}</div>}
+        </div>
+      )}
+      <div className="p-4 sm:p-5">{children}</div>
+    </div>
+  );
+}
+
+function KPIBig({ label, value, sub, dotColor = "bg-amber-500", icon: Icon, accent = "amber", trend }) {
+  const a = {
+    blue: { icon: "bg-blue-100 text-blue-700", border: "border-l-blue-500" },
+    emerald: { icon: "bg-emerald-100 text-emerald-700", border: "border-l-emerald-500" },
+    amber: { icon: "bg-amber-100 text-amber-700", border: "border-l-amber-500" },
+    rose: { icon: "bg-rose-100 text-rose-700", border: "border-l-rose-500" },
+    violet: { icon: "bg-violet-100 text-violet-700", border: "border-l-violet-500" },
+  }[accent] || { icon: "bg-amber-100 text-amber-700", border: "border-l-amber-500" };
+
+  const up = trend.value >= 0;
+  const Icn = up ? TrendingUp : TrendingDown;
+  const toneCls = trend.invertColor
+    ? (trend.value <= 0 ? "text-emerald-700 bg-emerald-50 border-emerald-100" : "text-rose-700 bg-rose-50 border-rose-100")
+    : (up ? "text-emerald-700 bg-emerald-50 border-emerald-100" : "text-rose-700 bg-rose-50 border-rose-100");
+
+  return (
+    <div className={`bg-white border border-ink-200 border-l-4 ${a.border} rounded-md p-4 sm:p-5 relative overflow-hidden`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+            <span className="text-[11px] uppercase tracking-wider text-ink-500 font-semibold truncate">
+              {label}
+            </span>
+          </div>
+          <div className="text-[22px] sm:text-[26px] leading-[1.05] font-display font-bold text-ink-900 tabular-nums mt-2 break-all">
+            {value}
+          </div>
+          {sub && <div className="text-[12px] text-ink-500 mt-2 leading-relaxed">{sub}</div>}
+        </div>
+        {Icon && (
+          <div className={`w-11 h-11 rounded-md ${a.icon} flex items-center justify-center shrink-0`}>
+            <Icon className="w-5 h-5" />
+          </div>
+        )}
+      </div>
+      {trend && (
+        <div className="mt-3 pt-3 border-t border-ink-100 flex items-center justify-between gap-2">
+          <span className="text-[10px] uppercase tracking-wider text-ink-500 font-semibold truncate">{trend.label}</span>
+          <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${toneCls}`}>
+            <Icn className="w-3 h-3" />
+            {up ? "+" : ""}{trend.value}{trend.suffix || "%"}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Dot({ color }) {
+  return <span className={`inline-block w-2 h-2 rounded-full ${color}`} />;
+}
+
+function RestaurantFloor({ r, selected, onSelect }) {
+  return (
+    <button
+      onClick={onSelect}
+      className={`text-left bg-white border rounded-md p-4 transition ${
+        selected ? "border-amber-500 ring-2 ring-amber-200/60 shadow-md" : "border-ink-200 hover:border-amber-300 hover:shadow-sm"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] uppercase tracking-wider font-bold text-amber-700 truncate">
+            {r.code}
+          </div>
+          <div className="font-display font-bold text-[14px] text-ink-900 truncate mt-0.5">
+            {r.name}
+          </div>
+          <div className="text-[10px] text-ink-500 flex items-center gap-1 mt-0.5">
+            <MapPin className="w-3 h-3" /> {r.location}
+          </div>
+        </div>
+        <div className="text-right shrink-0">
+          <div className="text-[18px] font-display font-bold text-ink-900 tabular-nums leading-none">
+            {r.occupied}/{r.total}
+          </div>
+          <div className="text-[10px] text-ink-500 mt-0.5">bàn đang dùng</div>
+        </div>
+      </div>
+      <div className="grid grid-cols-5 gap-1.5">
+        {r.tables.map((t) => (
+          <div
+            key={t.id}
+            title={`Bàn ${t.id} · ${t.label}`}
+            className={`aspect-square rounded text-[9px] font-bold flex items-center justify-center border ${
+              t.status === "occupied" ? "bg-amber-500 border-amber-600 text-white"
+              : t.status === "reserved" ? "bg-violet-500 border-violet-600 text-white"
+              : t.status === "ooo" ? "bg-rose-500 border-rose-600 text-white"
+              : "bg-emerald-50 border-emerald-200 text-emerald-700"
+            }`}
+          >
+            {t.id}
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 pt-3 border-t border-ink-100 flex items-center justify-between text-[10px] text-ink-500">
+        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> ~{r.avgWait} chờ TB</span>
+        <span className="font-semibold text-amber-700 truncate">{formatVND(r.revToday)}</span>
+      </div>
+    </button>
+  );
+}
+
+function StatusPill({ s }) {
+  const map = {
+    seated:     { text: "Đã ngồi", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    waiting:    { text: "Chờ bàn",  cls: "bg-amber-50 text-amber-700 border-amber-200" },
+    incoming:   { text: "Sắp tới",  cls: "bg-blue-50 text-blue-700 border-blue-200" },
+    finished:   { text: "Hoàn tất",  cls: "bg-violet-50 text-violet-700 border-violet-200" },
+    cancelled:  { text: "Hủy",       cls: "bg-rose-50 text-rose-700 border-rose-200" },
+    noshow:     { text: "No-show",   cls: "bg-rose-50 text-rose-700 border-rose-200" },
+    confirmed:  { text: "Xác nhận",   cls: "bg-blue-50 text-blue-700 border-blue-200" },
+  };
+  const cfg = map[s] || map.confirmed;
+  return <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${cfg.cls}`}>{cfg.text}</span>;
+}
+
+function KitchenBoard({ rows }) {
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-12 text-[10px] uppercase tracking-wider font-bold text-ink-500 px-2 py-1">
+        <div className="col-span-2">#Đơn</div>
+        <div className="col-span-3">Bàn</div>
+        <div className="col-span-4">Món</div>
+        <div className="col-span-2 text-right">Thời gian</div>
+        <div className="col-span-1 text-right">Trạng thái</div>
+      </div>
+      {(Array.isArray(rows) ? rows : []).map((r, i) => {
+        const items = Array.isArray(r?.items) ? r.items : [];
+        const cls =
+          r.priority === "rush" ? "bg-rose-50 border-l-rose-500"
+          : r.priority === "late" ? "bg-amber-50 border-l-amber-500"
+          : "bg-white border-l-blue-500";
+        return (
+          <div key={i} className={`grid grid-cols-12 items-center px-2.5 py-2 rounded-md border-l-4 ${cls} text-[12px]`}>
+            <div className="col-span-2 font-bold text-ink-900 tabular-nums">{r.id}</div>
+            <div className="col-span-3 text-ink-700 truncate">{r.table}</div>
+            <div className="col-span-4 text-ink-700 truncate">
+              {items.slice(0, 2).join(", ")}{items.length > 2 ? ` +${items.length - 2}` : ""}
+            </div>
+            <div className="col-span-2 text-right tabular-nums font-semibold">
+              <span className={r.elapsed > r.target ? "text-rose-700" : "text-ink-700"}>{r.elapsed}'</span>
+              <span className="text-ink-400 text-[10px]"> / {r.target}'</span>
+            </div>
+            <div className="col-span-1 text-right">
+              <Badge tone={r.station === "Bếp nóng" ? "rose" : r.station === "Bếp lạnh" ? "blue" : "violet"}>{r.station}</Badge>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ShiftBoard({ rows }) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  return (
+    <div className="space-y-2.5">
+      {safeRows.map((s) => (
+        <div key={s.name} className="border border-ink-100 rounded-md p-2.5">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-md bg-violet-100 text-violet-700 flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="font-semibold text-ink-900 text-[12.5px] truncate">{s.name}</div>
+                <div className="text-[10px] text-ink-500 tabular-nums">{s.start}–{s.end}</div>
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <div className="text-[15px] font-display font-bold text-ink-900 tabular-nums">{s.on}/{s.total}</div>
+              <div className="text-[10px] text-ink-500">có mặt</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {(Array.isArray(s?.members) ? s.members : []).map((m, i) => (
+              <div key={i} className={`relative w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                m.status === "on" ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200" : "bg-ink-100 text-ink-400"
+              }`} title={m.name}>
+                {initials(m.name).toUpperCase() || "?"}
+                {m.status === "on" && <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-white" />}
+              </div>
+            ))}
+            <span className="text-[10px] text-ink-500 ml-1 tabular-nums">+{s.total - s.on} nghỉ</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TopDishes({ items }) {
+  return (
+    <div className="space-y-2.5">
+      {items.map((d, i) => (
+        <div key={i} className="flex items-center gap-3 p-2 rounded-md hover:bg-ink-50 transition">
+          <div className="w-8 h-8 rounded-md bg-amber-50 text-amber-700 flex items-center justify-center font-bold shrink-0">
+            {i + 1}
+          </div>
+          <div className="w-12 h-12 rounded-md shrink-0 flex items-center justify-center text-amber-700" style={{ background: d.bg || "#fef3c7" }}>
+            <Soup className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-ink-900 text-[12.5px] truncate">{d.name}</div>
+            <div className="text-[10px] text-ink-500 truncate">{d.cat} · {formatVND(d.price)}</div>
+          </div>
+          <div className="text-right shrink-0">
+            <div className="text-[14px] font-display font-bold text-ink-900 tabular-nums">{d.qty}</div>
+            <div className="text-[10px] text-emerald-600 font-semibold inline-flex items-center gap-0.5">
+              <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" /> {d.rating}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CategoryMix({ data }) {
+  return (
+    <div>
+      <div className="relative h-44">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie data={data} innerRadius={48} outerRadius={72} paddingAngle={2} dataKey="value" cornerRadius={3} stroke="#fff" strokeWidth={2} startAngle={90} endAngle={-270}>
+              {data.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+            </Pie>
+            <Tooltip contentStyle={tooltipStyle} formatter={(v) => formatVNDFull(v)} />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <div className="text-[9px] uppercase tracking-wider text-ink-500 font-bold">Tổng DT</div>
+          <div className="text-[16px] font-display font-bold text-ink-900 tabular-nums leading-none mt-0.5">
+            {formatVND(data.reduce((s, x) => s + x.value, 0))}
+          </div>
+        </div>
+      </div>
+      <div className="space-y-1.5 mt-2">
+        {data.map((m) => (
+          <div key={m.name} className="flex items-center gap-2 text-[11px]">
+            <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: m.color }} />
+            <span className="font-semibold text-ink-700 flex-1 truncate">{m.name}</span>
+            <span className="font-bold text-ink-900 tabular-nums w-10 text-right">{m.pct}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TopTables({ items }) {
+  return (
+    <div className="space-y-2.5">
+      {items.map((t, i) => (
+        <div key={i} className="flex items-center gap-3 p-2.5 rounded-md hover:bg-amber-50/40 transition border border-transparent hover:border-ink-100">
+          <div className="w-9 h-9 rounded-md bg-amber-50 text-amber-700 flex items-center justify-center font-display font-bold tabular-nums shrink-0">
+            {i + 1}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-ink-900 text-[12.5px] truncate">Bàn {t.id}</div>
+            <div className="text-[10px] text-ink-500">{t.area} · {t.turns} lượt khách</div>
+          </div>
+          <div className="text-right shrink-0">
+            <div className="text-[13px] font-display font-bold text-ink-900 tabular-nums">{formatVND(t.rev)}</div>
+            <div className="text-[10px] text-ink-500 truncate">{t.avgStay} khách/lượt</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Inventory({ items }) {
+  return (
+    <div className="space-y-2">
+      {items.map((it, i) => {
+        const pct = (it.stock / it.max) * 100;
+        const cls = pct < 25 ? "bg-rose-500" : pct < 50 ? "bg-amber-500" : "bg-emerald-500";
+        return (
+          <div key={i} className="px-3 py-2.5 rounded-md border border-ink-100">
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-md bg-rose-50 text-rose-700 flex items-center justify-center shrink-0">
+                  <CookingPot className="w-3.5 h-3.5" />
+                </div>
+                <span className="font-semibold text-ink-900 text-[12.5px] truncate">{it.name}</span>
+              </div>
+              <span className="text-[11px] font-bold text-ink-900 tabular-nums shrink-0">
+                {it.stock}<span className="text-ink-400 font-normal">/{it.max} {it.unit}</span>
+              </span>
+            </div>
+            <div className="h-1.5 bg-ink-100 rounded-full overflow-hidden">
+              <div className={`h-full rounded-full transition-all ${cls}`} style={{ width: `${Math.max(8, pct)}%` }} />
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-ink-500 mt-1.5">
+              <span className="tabular-nums">Còn đủ dùng ~{it.days} ngày</span>
+              <span className={`font-bold ${pct < 25 ? "text-rose-700" : pct < 50 ? "text-amber-700" : "text-emerald-700"}`}>
+                {pct < 25 ? "KHẨN" : pct < 50 ? "SẮP HẾT" : "ỔN"}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function PurchaseOrders({ items }) {
+  return (
+    <div className="space-y-2">
+      {items.map((p, i) => (
+        <div key={i} className="flex items-center gap-3 p-2.5 rounded-md border border-ink-100 hover:bg-blue-50/30 transition">
+          <div className="w-9 h-9 rounded-md bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+            <TruckIcon className="w-4 h-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-mono font-bold text-ink-900 text-[12px]">{p.code}</span>
+              <span className="text-[10px] text-ink-500 truncate">{p.supplier}</span>
+            </div>
+            <div className="text-[10px] text-ink-500 tabular-nums">
+              Giao dự kiến: {p.eta} · {p.items} mặt hàng
+            </div>
+          </div>
+          <div className="text-right shrink-0">
+            <div className="text-[13px] font-display font-bold tabular-nums text-ink-900">{formatVND(p.amount)}</div>
+            <Badge tone={p.status === "received" ? "emerald" : p.status === "shipped" ? "blue" : "amber"}>
+              {p.status === "received" ? "Đã nhận" : p.status === "shipped" ? "Đang giao" : "Chờ duyệt"}
+            </Badge>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ReviewList({ items }) {
+  return (
+    <div className="space-y-3">
+      {items.map((r, i) => (
+        <div key={i} className="pb-3 border-b border-ink-100 last:border-0 last:pb-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-semibold text-ink-900 text-[12.5px] truncate">{r.name}</span>
+            <div className="flex items-center gap-0.5 shrink-0">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Star key={n} className={`w-3 h-3 ${n <= r.rating ? "fill-amber-400 text-amber-400" : "text-ink-200"}`} />
+              ))}
+            </div>
+          </div>
+          <div className="text-[10px] text-ink-500 mt-0.5">{r.branch} · {r.time}</div>
+          <p className="text-[11.5px] text-ink-700 mt-1 leading-relaxed">"{r.text}"</p>
+          {r.dish && <div className="mt-1 text-[10px] text-amber-700 font-semibold">🍽 Đã gọi: {r.dish}</div>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TipsBoard({ rows }) {
+  return (
+    <div>
+      <div className="grid grid-cols-12 text-[10px] uppercase tracking-wider font-bold text-ink-500 px-2 py-1">
+        <div className="col-span-4">Nhân viên</div>
+        <div className="col-span-2 text-right">Đơn</div>
+        <div className="col-span-3 text-right">Hoa hồng</div>
+        <div className="col-span-3 text-right">Tip</div>
+      </div>
+      {rows.map((r, i) => (
+        <div key={i} className="grid grid-cols-12 items-center px-2 py-2 rounded-md hover:bg-emerald-50/40 transition text-[12px] border-b border-ink-100 last:border-0">
+          <div className="col-span-4 font-semibold text-ink-900 truncate flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+              {initials(r.name).toUpperCase() || "?"}
+            </div>
+            <span className="truncate">{r.name}</span>
+          </div>
+          <div className="col-span-2 text-right tabular-nums text-ink-700">{r.orders}</div>
+          <div className="col-span-3 text-right tabular-nums font-bold text-emerald-700">{formatVND(r.commission)}</div>
+          <div className="col-span-3 text-right tabular-nums font-bold text-amber-700">{formatVND(r.tips)}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function IssuesList({ items }) {
+  return (
+    <div className="space-y-2">
+      {items.map((it, i) => (
+        <div key={i} className={`rounded-md border border-l-4 p-3 ${
+          it.priority === "high" ? "bg-rose-50 border-rose-200 border-l-rose-500"
+          : it.priority === "medium" ? "bg-amber-50 border-amber-200 border-l-amber-500"
+          : "bg-white border-ink-200 border-l-blue-500"
+        }`}>
+          <div className="flex items-center gap-2 mb-1">
+            <Badge tone={it.priority === "high" ? "rose" : it.priority === "medium" ? "amber" : "blue"}>
+              {it.priority === "high" ? "Cao" : it.priority === "medium" ? "Trung bình" : "Thấp"}
+            </Badge>
+            <span className="text-[12px] font-semibold text-ink-900 truncate">{it.title}</span>
+          </div>
+          <div className="text-[11px] text-ink-600">{it.desc}</div>
+          <div className="text-[10px] text-ink-500 mt-1.5 flex items-center gap-1.5">
+            <Clock className="w-3 h-3" /> {it.time} · {it.handler}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ═══════════ MULTI-CHANNEL INBOX ═══════════ */
+
+/* Logo cho các kênh nhắn — dạng SVG inline giống brand thật */
+const ChannelIcon = ({ channel, className = "w-3.5 h-3.5" }) => {
+  const m = {
+    zalo: { bg: "bg-[#0068FF]", letter: "Z" },
+    messenger: { bg: "bg-gradient-to-br from-[#00B2FF] to-[#006AFF]", letter: "M" },
+    tiktok: { bg: "bg-black", letter: "T" },
+    instagram: { bg: "bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af]", letter: "I" },
+    facebook: { bg: "bg-[#1877F2]", letter: "f" },
+    sms: { bg: "bg-emerald-500", letter: "S" },
+    email: { bg: "bg-rose-500", letter: "@" },
+    whatsapp: { bg: "bg-[#25D366]", letter: "W" },
+    telegram: { bg: "bg-[#229ED9]", letter: "T" },
+  }[channel] || { bg: "bg-ink-500", letter: "?" };
+  return (
+    <span className={`inline-flex items-center justify-center ${className} rounded-full ${m.bg} text-white font-bold text-[9px] shrink-0`} style={{ width: '1.5em', height: '1.5em' }}>
+      {m.letter}
+    </span>
+  );
+};
+
+function MultiChannelInbox({ conversations }) {
+  const safe = Array.isArray(conversations) ? conversations : [];
+  const [selectedId, setSelectedId] = useState(safe[0]?.id || null);
+  const selected = safe.find((c) => c.id === selectedId) || safe[0];
+  const [filterChannel, setFilterChannel] = useState("all");
+  const [reply, setReply] = useState("");
+
+  const channelDefs = [
+    { id: "all", label: "Tất cả", count: safe.length, tone: "bg-amber-700 text-white border-amber-700" },
+    { id: "zalo", label: "Zalo", count: safe.filter((c) => c.channel === "zalo").length, tone: "bg-blue-50 text-blue-700 border-blue-200" },
+    { id: "messenger", label: "Messenger", count: safe.filter((c) => c.channel === "messenger").length, tone: "bg-cyan-50 text-cyan-700 border-cyan-200" },
+    { id: "tiktok", label: "TikTok", count: safe.filter((c) => c.channel === "tiktok").length, tone: "bg-ink-900 text-white border-ink-900" },
+    { id: "instagram", label: "Instagram", count: safe.filter((c) => c.channel === "instagram").length, tone: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200" },
+    { id: "facebook", label: "Facebook", count: safe.filter((c) => c.channel === "facebook").length, tone: "bg-blue-50 text-blue-700 border-blue-200" },
+    { id: "sms", label: "SMS", count: safe.filter((c) => c.channel === "sms").length, tone: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    { id: "email", label: "Email", count: safe.filter((c) => c.channel === "email").length, tone: "bg-rose-50 text-rose-700 border-rose-200" },
+    { id: "whatsapp", label: "WhatsApp", count: safe.filter((c) => c.channel === "whatsapp").length, tone: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  ];
+
+  const filtered = filterChannel === "all" ? safe : safe.filter((c) => c.channel === filterChannel);
+
+  return (
+    <div className="grid grid-cols-12 gap-3 h-[520px]">
+      {/* LEFT — channel filter + conversation list */}
+      <div className="col-span-12 md:col-span-4 border border-ink-200 rounded-md overflow-hidden flex flex-col bg-ink-50/40">
+        {/* Channel pills */}
+        <div className="px-2.5 py-2 border-b border-ink-200 bg-white">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mb-1">
+            {channelDefs.map((ch) => (
+              <button
+                key={ch.id}
+                onClick={() => setFilterChannel(ch.id)}
+                className={`shrink-0 px-2 py-1 rounded-full text-[10.5px] font-bold border whitespace-nowrap transition ${
+                  filterChannel === ch.id ? ch.tone + " shadow-sm" : "bg-white text-ink-700 border-ink-200 hover:border-amber-300"
+                }`}
+              >
+                {ch.label}
+                <span className={`ml-1 tabular-nums ${filterChannel === ch.id ? "opacity-90" : "text-ink-500"}`}>{ch.count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Conversation list */}
+        <div className="flex-1 overflow-y-auto">
+          {filtered.map((c) => {
+            const active = selected?.id === c.id;
+            const lastMsg = c.messages?.[c.messages.length - 1];
+            const lastFrom = lastMsg?.from || "customer";
+            return (
+              <button
+                key={c.id}
+                onClick={() => setSelectedId(c.id)}
+                className={`w-full text-left px-3 py-2.5 border-b border-ink-100 transition flex items-start gap-2.5 ${
+                  active ? "bg-amber-50" : "hover:bg-amber-50/40"
+                }`}
+              >
+                <div className="relative shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-rose-600 text-white flex items-center justify-center font-bold text-[12px]">
+                    {initials(c.name).toUpperCase() || "?"}
+                  </div>
+                  <div className="absolute -bottom-0.5 -right-0.5 ring-2 ring-white rounded-full">
+                    <ChannelIcon channel={c.channel} className="w-3 h-3" />
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-semibold text-ink-900 text-[12px] truncate">{c.name}</div>
+                    <div className="text-[9.5px] text-ink-500 tabular-nums shrink-0">{c.lastTime}</div>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 mt-0.5">
+                    <div className="text-[10.5px] text-ink-600 truncate">
+                      {lastFrom === "staff" && <span className="text-ink-400 mr-0.5">Bạn:</span>}
+                      {lastMsg?.text || "—"}
+                    </div>
+                    {c.unread > 0 && (
+                      <span className="shrink-0 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[9.5px] font-bold flex items-center justify-center tabular-nums">
+                        {c.unread}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <ChannelLabel channel={c.channel} />
+                    {c.branchCode && (
+                      <span className="inline-flex items-center text-[9px] font-bold text-amber-700 bg-amber-50 px-1 rounded">
+                        {c.branchCode}
+                      </span>
+                    )}
+                    {c.tag && (
+                      <span className="inline-flex items-center text-[9px] font-semibold text-ink-600 bg-ink-100 px-1 rounded truncate">
+                        #{c.tag}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div className="p-6 text-center text-[11px] text-ink-500">Không có hội thoại trên kênh này</div>
+          )}
+        </div>
+      </div>
+
+      {/* RIGHT — chat thread */}
+      <div className="col-span-12 md:col-span-8 border border-ink-200 rounded-md flex flex-col bg-white overflow-hidden">
+        {selected ? (
+          <>
+            {/* Header */}
+            <div className="px-4 py-2.5 border-b border-ink-200 flex items-center justify-between gap-2 bg-gradient-to-r from-amber-50/60 to-rose-50/40">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="relative shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-500 to-rose-600 text-white flex items-center justify-center font-bold text-[12px]">
+                    {initials(selected.name).toUpperCase() || "?"}
+                  </div>
+                  <div className="absolute -bottom-0.5 -right-0.5 ring-2 ring-white rounded-full">
+                    <ChannelIcon channel={selected.channel} className="w-3 h-3" />
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-ink-900 text-[12.5px] truncate flex items-center gap-1.5">
+                    {selected.name}
+                    {selected.verified && <CheckCircle2 className="w-3 h-3 text-blue-500 shrink-0" />}
+                  </div>
+                  <div className="text-[10px] text-ink-500 flex items-center gap-1.5 flex-wrap">
+                    <ChannelLabel channel={selected.channel} detail />
+                    <span>·</span>
+                    <span>{selected.phone || selected.handle}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button className="w-7 h-7 rounded-md hover:bg-ink-100 text-ink-500 flex items-center justify-center" title="Gọi">
+                  <Phone className="w-3.5 h-3.5" />
+                </button>
+                <button className="w-7 h-7 rounded-md hover:bg-ink-100 text-ink-500 flex items-center justify-center" title="Profile">
+                  <Users className="w-3.5 h-3.5" />
+                </button>
+                <button className="w-7 h-7 rounded-md hover:bg-ink-100 text-ink-500 flex items-center justify-center" title="Tạo đơn">
+                  <Receipt className="w-3.5 h-3.5" />
+                </button>
+                <button className="w-7 h-7 rounded-md hover:bg-ink-100 text-ink-500 flex items-center justify-center" title="Thêm">
+                  <MoreHorizontal className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Context bar — quick info */}
+            {selected.context && (
+              <div className="px-4 py-2 bg-ink-50 border-b border-ink-200 text-[10.5px] flex items-center gap-3 flex-wrap text-ink-700">
+                <span className="font-bold uppercase tracking-wider text-ink-500">Ngữ cảnh:</span>
+                {selected.context.orderCode && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold">
+                    <Receipt className="w-2.5 h-2.5" /> Đơn {selected.context.orderCode}
+                  </span>
+                )}
+                {selected.context.table && (
+                  <span className="inline-flex items-center gap-1">
+                    <Utensils className="w-3 h-3 text-ink-400" /> {selected.context.table}
+                  </span>
+                )}
+                {selected.context.branchCode && (
+                  <span className="inline-flex items-center gap-1">
+                    <Store className="w-3 h-3 text-ink-400" /> {selected.context.branchCode}
+                  </span>
+                )}
+                {selected.context.guests && (
+                  <span className="inline-flex items-center gap-1">
+                    <Users className="w-3 h-3 text-ink-400" /> {selected.context.guests} khách
+                  </span>
+                )}
+                {selected.context.time && (
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-ink-400" /> {selected.context.time}
+                  </span>
+                )}
+                {selected.context.value && (
+                  <span className="inline-flex items-center gap-1 font-bold text-emerald-700">
+                    💰 {selected.context.value}
+                  </span>
+                )}
+                {selected.context.sla && (
+                  <span className="ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-bold">
+                    <Hourglass className="w-2.5 h-2.5" /> SLA {selected.context.sla}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gradient-to-b from-ink-50/40 to-white">
+              {(selected.messages || []).map((m, i) => (
+                <Bubble key={i} m={m} prev={selected.messages[i - 1]} />
+              ))}
+              {selected.typing && (
+                <div className="flex items-center gap-1.5 text-[10.5px] text-ink-500 italic">
+                  <span className="flex gap-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-ink-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-ink-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-ink-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
+                  {selected.name} đang nhập…
+                </div>
+              )}
+            </div>
+
+            {/* Quick replies */}
+            <div className="px-4 py-2 border-t border-ink-200 bg-white flex items-center gap-1 overflow-x-auto">
+              <Reply className="w-3 h-3 text-ink-400 shrink-0" />
+              {selected.quickReplies?.map((q, i) => (
+                <button
+                  key={i}
+                  onClick={() => setReply(q)}
+                  className="shrink-0 px-2 py-1 rounded-full text-[10.5px] font-semibold border border-ink-200 bg-ink-50 text-ink-700 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-800 transition whitespace-nowrap"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+
+            {/* Composer */}
+            <div className="px-4 py-2.5 border-t border-ink-200 bg-white flex items-end gap-2">
+              <button className="w-8 h-8 rounded-md hover:bg-ink-100 text-ink-500 flex items-center justify-center shrink-0" title="Đính kèm">
+                <Paperclip className="w-4 h-4" />
+              </button>
+              <button className="w-8 h-8 rounded-md hover:bg-ink-100 text-ink-500 flex items-center justify-center shrink-0" title="Ảnh">
+                <ImageIcon className="w-4 h-4" />
+              </button>
+              <button className="w-8 h-8 rounded-md hover:bg-ink-100 text-ink-500 flex items-center justify-center shrink-0" title="Emoji">
+                <Smile className="w-4 h-4" />
+              </button>
+              <textarea
+                value={reply}
+                onChange={(e) => setReply(e.target.value)}
+                placeholder={`Trả lời qua ${channelDefs.find((x) => x.id === selected.channel)?.label || "tin nhắn"}…`}
+                rows={1}
+                className="flex-1 resize-none px-3 py-2 rounded-md border border-ink-200 bg-ink-50 text-[12px] focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 max-h-20"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                  }
+                }}
+              />
+              <button
+                disabled={!reply.trim()}
+                className={`px-3 py-2 rounded-md text-[12px] font-bold flex items-center gap-1.5 transition shrink-0 ${
+                  reply.trim()
+                    ? "bg-amber-700 hover:bg-amber-800 text-white shadow-sm"
+                    : "bg-ink-100 text-ink-400 cursor-not-allowed"
+                }`}
+              >
+                <Send className="w-3.5 h-3.5" />
+                Gửi
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-ink-400 text-[12px]">
+            Chọn một hội thoại để xem chi tiết
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ChannelLabel({ channel, detail = false }) {
+  const m = {
+    zalo:      { label: detail ? "Zalo OA" : "Zalo",      cls: "bg-blue-50 text-blue-700 border-blue-200" },
+    messenger: { label: detail ? "Facebook Messenger" : "Messenger", cls: "bg-cyan-50 text-cyan-700 border-cyan-200" },
+    tiktok:    { label: detail ? "TikTok DM" : "TikTok",  cls: "bg-ink-900 text-white border-ink-900" },
+    instagram: { label: detail ? "Instagram DM" : "Instagram", cls: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200" },
+    facebook:  { label: detail ? "Facebook Page" : "Facebook", cls: "bg-blue-50 text-blue-700 border-blue-200" },
+    sms:       { label: detail ? "SMS Brandname" : "SMS",  cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    email:     { label: detail ? "Email" : "Email",        cls: "bg-rose-50 text-rose-700 border-rose-200" },
+    whatsapp:  { label: detail ? "WhatsApp Business" : "WhatsApp", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    telegram:  { label: detail ? "Telegram" : "Telegram",   cls: "bg-sky-50 text-sky-700 border-sky-200" },
+  }[channel] || { label: channel, cls: "bg-ink-100 text-ink-700 border-ink-200" };
+  return (
+    <span className={`inline-flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-wider px-1 py-0.5 rounded border ${m.cls}`}>
+      {m.label}
+    </span>
+  );
+}
+
+function Bubble({ m, prev }) {
+  const isStaff = m.from === "staff";
+  const sameAuthor = prev && prev.from === m.from;
+  const time = m.time || "";
+
+  if (m.type === "system") {
+    return (
+      <div className="flex justify-center">
+        <span className="text-[10px] text-ink-500 bg-ink-100 border border-ink-200 px-2 py-1 rounded-full">
+          {m.text}
+        </span>
+      </div>
+    );
+  }
+
+  if (m.type === "image") {
+    return (
+      <div className={`flex ${isStaff ? "justify-end" : "justify-start"}`}>
+        <div className={`max-w-[75%] ${isStaff ? "items-end" : "items-start"} flex flex-col gap-0.5`}>
+          <div className="rounded-md overflow-hidden border border-ink-200">
+            <img src={m.src} alt={m.alt || ""} className="max-w-[260px] w-full object-cover" loading="lazy" />
+          </div>
+          <div className={`text-[9.5px] text-ink-500 flex items-center gap-1 ${isStaff ? "flex-row-reverse" : ""}`}>
+            <span className="tabular-nums">{time}</span>
+            {isStaff && (m.read ? <CheckCheck className="w-3 h-3 text-blue-500" /> : <Check className="w-3 h-3 text-ink-400" />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (m.type === "card") {
+    return (
+      <div className={`flex ${isStaff ? "justify-end" : "justify-start"}`}>
+        <div className={`max-w-[80%] rounded-md border ${isStaff ? "bg-amber-50 border-amber-200" : "bg-white border-ink-200"} overflow-hidden`}>
+          <div className="px-3 py-2 border-b border-ink-100 bg-white/70 flex items-center gap-1.5">
+            <Receipt className="w-3 h-3 text-amber-700" />
+            <span className="text-[10.5px] font-bold text-amber-800 uppercase tracking-wider">{m.cardTitle || "Đơn hàng"}</span>
+          </div>
+          <div className="p-3 space-y-1.5 text-[11.5px]">
+            {m.lines?.map((l, i) => (
+              <div key={i} className="flex items-center justify-between gap-3">
+                <span className="text-ink-700">· {l.name} <span className="text-ink-400">×{l.qty}</span></span>
+                <span className="font-bold text-ink-900 tabular-nums">{formatVND(l.price)}</span>
+              </div>
+            ))}
+            {m.total && (
+              <div className="flex items-center justify-between gap-3 pt-1.5 mt-1.5 border-t border-ink-200">
+                <span className="font-bold text-ink-700">Tổng</span>
+                <span className="font-bold text-emerald-700 tabular-nums">{formatVND(m.total)}</span>
+              </div>
+            )}
+          </div>
+          {m.actions && (
+            <div className="px-3 py-2 border-t border-ink-100 bg-white/70 flex gap-1.5">
+              {m.actions.map((a, i) => (
+                <button key={i} className="flex-1 px-2 py-1 rounded text-[10.5px] font-bold border border-amber-200 text-amber-800 hover:bg-amber-100">
+                  {a}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="px-3 py-1 text-[9.5px] text-ink-500 flex items-center justify-between">
+            <span>{time}</span>
+            {isStaff && (m.read ? <CheckCheck className="w-3 h-3 text-blue-500" /> : <Check className="w-3 h-3 text-ink-400" />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default text bubble
+  return (
+    <div className={`flex ${isStaff ? "justify-end" : "justify-start"}`}>
+      <div className={`max-w-[78%] ${sameAuthor ? "mt-0.5" : "mt-2"} ${isStaff ? "items-end" : "items-start"} flex flex-col gap-0.5`}>
+        {!sameAuthor && (
+          <div className={`text-[10px] font-bold mb-0.5 ${isStaff ? "text-amber-700" : "text-ink-500"}`}>
+            {isStaff ? "Le Palmier" : m.author || "Khách"}
+          </div>
+        )}
+        <div
+          className={`px-3 py-2 rounded-2xl text-[12px] leading-relaxed ${
+            isStaff
+              ? "bg-gradient-to-br from-amber-600 to-rose-600 text-white rounded-br-md"
+              : "bg-white border border-ink-200 text-ink-800 rounded-bl-md"
+          }`}
+        >
+          {m.text}
+        </div>
+        <div className={`text-[9.5px] text-ink-500 flex items-center gap-1 ${isStaff ? "flex-row-reverse" : ""}`}>
+          <span className="tabular-nums">{time}</span>
+          {isStaff && (m.read ? <CheckCheck className="w-3 h-3 text-blue-500" /> : <Check className="w-3 h-3 text-ink-400" />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* TruckIcon local placeholder to avoid extra lucide import */
+function TruckIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+      <path d="M15 18H9" />
+      <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
+      <circle cx="17" cy="18" r="2" />
+      <circle cx="7" cy="18" r="2" />
+    </svg>
+  );
+}
+
+function Truck({ ...props }) {
+  return <TruckIcon {...props} />;
+}
+
+/* ═══════════ DATA ═══════════ */
+
+function buildData({ shift, branch }) {
+  const restaurants = [
+    {
+      id: "lp1", code: "LP1", name: "Le Palmier Sài Gòn",
+      location: "Quận 1 · 24 bàn",
+      total: 24, occupied: 19, avgWait: 8, revToday: 84_500_000,
+      tables: makeTables(24, [
+        { id: "01", status: "occupied" }, { id: "02", status: "occupied" },
+        { id: "03", status: "reserved" }, { id: "04", status: "occupied" },
+        { id: "05", status: "occupied" }, { id: "06", status: "vacant" },
+        { id: "07", status: "occupied" }, { id: "08", status: "occupied" },
+        { id: "09", status: "ooo" },     { id: "10", status: "occupied" },
+        { id: "11", status: "occupied" }, { id: "12", status: "occupied" },
+        { id: "13", status: "reserved" }, { id: "14", status: "occupied" },
+        { id: "15", status: "vacant" },   { id: "16", status: "occupied" },
+        { id: "17", status: "occupied" }, { id: "18", status: "occupied" },
+        { id: "19", status: "occupied" }, { id: "20", status: "reserved" },
+        { id: "21", status: "occupied" }, { id: "22", status: "occupied" },
+        { id: "23", status: "occupied" }, { id: "24", status: "vacant" },
+      ]),
+    },
+    {
+      id: "lp2", code: "LP2", name: "Le Palmier Đà Lạt",
+      location: "Phường 4 · 18 bàn",
+      total: 18, occupied: 12, avgWait: 5, revToday: 56_200_000,
+      tables: makeTables(18, [
+        { id: "01", status: "occupied" }, { id: "02", status: "occupied" },
+        { id: "03", status: "occupied" }, { id: "04", status: "reserved" },
+        { id: "05", status: "occupied" }, { id: "06", status: "occupied" },
+        { id: "07", status: "vacant" },   { id: "08", status: "occupied" },
+        { id: "09", status: "occupied" }, { id: "10", status: "occupied" },
+        { id: "11", status: "ooo" },     { id: "12", status: "vacant" },
+        { id: "13", status: "occupied" }, { id: "14", status: "occupied" },
+        { id: "15", status: "reserved" }, { id: "16", status: "occupied" },
+        { id: "17", status: "occupied" }, { id: "18", status: "reserved" },
+      ]),
+    },
+    {
+      id: "lp3", code: "LP3", name: "Le Palmier Phú Quốc",
+      location: "Bãi Trường · 32 bàn",
+      total: 32, occupied: 27, avgWait: 12, revToday: 128_400_000,
+      tables: makeTables(32, [
+        { id: "01", status: "occupied" }, { id: "02", status: "occupied" },
+        { id: "03", status: "occupied" }, { id: "04", status: "occupied" },
+        { id: "05", status: "reserved" }, { id: "06", status: "occupied" },
+        { id: "07", status: "occupied" }, { id: "08", status: "occupied" },
+        { id: "09", status: "occupied" }, { id: "10", status: "ooo" },
+        { id: "11", status: "occupied" }, { id: "12", status: "occupied" },
+        { id: "13", status: "occupied" }, { id: "14", status: "occupied" },
+        { id: "15", status: "reserved" }, { id: "16", status: "vacant" },
+        { id: "17", status: "occupied" }, { id: "18", status: "occupied" },
+        { id: "19", status: "occupied" }, { id: "20", status: "occupied" },
+        { id: "21", status: "reserved" }, { id: "22", status: "occupied" },
+        { id: "23", status: "occupied" }, { id: "24", status: "occupied" },
+        { id: "25", status: "occupied" }, { id: "26", status: "occupied" },
+        { id: "27", status: "reserved" }, { id: "28", status: "occupied" },
+        { id: "29", status: "occupied" }, { id: "30", status: "occupied" },
+        { id: "31", status: "ooo" },     { id: "32", status: "occupied" },
+      ]),
+    },
+    {
+      id: "lp4", code: "LP4", name: "Le Palmier Nha Trang",
+      location: "Trần Phú · 22 bàn",
+      total: 22, occupied: 14, avgWait: 6, revToday: 62_800_000,
+      tables: makeTables(22, [
+        { id: "01", status: "occupied" }, { id: "02", status: "occupied" },
+        { id: "03", status: "reserved" }, { id: "04", status: "vacant" },
+        { id: "05", status: "occupied" }, { id: "06", status: "occupied" },
+        { id: "07", status: "ooo" },     { id: "08", status: "occupied" },
+        { id: "09", status: "occupied" }, { id: "10", status: "occupied" },
+        { id: "11", status: "reserved" }, { id: "12", status: "occupied" },
+        { id: "13", status: "vacant" },   { id: "14", status: "occupied" },
+        { id: "15", status: "occupied" }, { id: "16", status: "occupied" },
+        { id: "17", status: "occupied" }, { id: "18", status: "reserved" },
+        { id: "19", status: "occupied" }, { id: "20", status: "vacant" },
+        { id: "21", status: "occupied" }, { id: "22", status: "occupied" },
+      ]),
+    },
+  ];
+
+  const heroMeta = [
+    { label: "Ngày", value: TODAY },
+    { label: "Tổng bàn", value: restaurants.reduce((s, r) => s + r.total, 0) },
+    { label: "Đang dùng", value: restaurants.reduce((s, r) => s + r.occupied, 0) },
+    { label: "Nhà hàng", value: restaurants.length },
+  ];
+
+  const kitchen = [
+    { id: "#A247", table: "LP3 · Bàn 12 (Terrace)", items: ["Bò Wagyu áp chảo", "Súp bào ngư", "Salad Caesar"], elapsed: 14, target: 15, priority: "late",  station: "Bếp nóng" },
+    { id: "#A251", table: "LP1 · Bàn 07 (VIP)",     items: ["Tôm hùm nướng bơ", "Khoai tây nghiền"],  elapsed: 22, target: 20, priority: "rush",  station: "Bếp nóng" },
+    { id: "#A253", table: "LP2 · Bàn 09",            items: ["Pizza Margherita", "Tiramisu"],          elapsed: 6,  target: 15, priority: "ok",    station: "Lò nướng" },
+    { id: "#A255", table: "LP4 · Bàn 03",            items: ["Sashimi set", "Miso soup"],               elapsed: 4,  target: 12, priority: "ok",    station: "Bếp lạnh" },
+    { id: "#A258", table: "LP1 · Bàn 02",            items: ["Phở bò Wagyu", "Chả giò"],               elapsed: 11, target: 10, priority: "late",  station: "Bếp nóng" },
+    { id: "#A259", table: "LP3 · Bàn 22",            items: ["Cơm chiên hải sản", "Sữa dừa"],        elapsed: 3,  target: 12, priority: "ok",    station: "Bếp nóng" },
+    { id: "#A261", table: "LP2 · Bàn 14",            items: ["Lẩu Thái", "Bò Mỹ"],                     elapsed: 8,  target: 18, priority: "ok",    station: "Bếp nóng" },
+  ];
+
+  const shifts = [
+    { name: "Ca sáng", start: "06:00", end: "14:00", on: 12, total: 14,
+      members: makeMembers(14, 12) },
+    { name: "Ca trưa", start: "11:00", end: "15:00", on: 18, total: 20,
+      members: makeMembers(20, 18) },
+    { name: "Ca chiều", start: "15:00", end: "19:00", on: 8, total: 10,
+      members: makeMembers(10, 8) },
+    { name: "Ca tối", start: "17:00", end: "23:00", on: 22, total: 26,
+      members: makeMembers(26, 22) },
+    { name: "Ca đêm", start: "22:00", end: "06:00", on: 4, total: 6,
+      members: makeMembers(6, 4) },
+  ];
+
+  const topDishes = [
+    { name: "Bò Wagyu áp chảo",  qty: 84, price: 1_280_000, cat: "Món chính · Beef", rating: 4.9, bg: "#fef3c7" },
+    { name: "Tôm hùm nướng bơ", qty: 62, price: 2_450_000, cat: "Hải sản",         rating: 4.9, bg: "#fee2e2" },
+    { name: "Súp bào ngư",      qty: 56, price: 680_000,   cat: "Khai vị",         rating: 4.8, bg: "#dbeafe" },
+    { name: "Pizza Margherita", qty: 48, price: 320_000,   cat: "Ý · Lò nướng",    rating: 4.6, bg: "#fce7f3" },
+    { name: "Sashimi set",      qty: 42, price: 890_000,   cat: "Nhật · Bếp lạnh", rating: 4.7, bg: "#dcfce7" },
+  ];
+
+  const categoryMix = [
+    { name: "Món chính",       value: 168_400_000, pct: 38, color: "#f59e0b" },
+    { name: "Hải sản",         value: 132_800_000, pct: 30, color: "#0ea5e9" },
+    { name: "Khai vị / Súp",   value: 53_100_000,  pct: 12, color: "#8b5cf6" },
+    { name: "Tráng miệng",     value: 44_200_000,  pct: 10, color: "#f43f5e" },
+    { name: "Đồ uống",         value: 44_300_000,  pct: 10, color: "#10b981" },
+  ];
+
+  const rev14 = Array.from({ length: 14 }, (_, i) => ({
+    d: `${i + 1}/8`,
+    rev: Math.round(280_000_000 + Math.sin(i / 3) * 60_000_000 + (i % 7 === 5 ? 80_000_000 : 0)),
+    guests: Math.round(180 + Math.cos(i / 2) * 50),
+  }));
+
+  const peakHours = [
+    { h: "10h", guests: 18, peak: false },
+    { h: "11h", guests: 42, peak: false },
+    { h: "12h", guests: 156, peak: true },
+    { h: "13h", guests: 184, peak: true },
+    { h: "14h", guests: 96, peak: false },
+    { h: "15h", guests: 32, peak: false },
+    { h: "16h", guests: 24, peak: false },
+    { h: "17h", guests: 48, peak: false },
+    { h: "18h", guests: 142, peak: true },
+    { h: "19h", guests: 198, peak: true },
+    { h: "20h", guests: 176, peak: true },
+    { h: "21h", guests: 88, peak: false },
+    { h: "22h", guests: 32, peak: false },
+  ];
+
+  const reservations = [
+    { id: "R001", time: "11:30", name: "Nguyễn Minh K.", phone: "0901 234 567", branchCode: "LP1", branchName: "Sài Gòn", table: "Bàn 05 (4 chỗ)", guests: 4, note: "Góc view, hoa tươi", status: "confirmed" },
+    { id: "R002", time: "12:00", name: "Lê Hoa Phương", phone: "0912 345 678", branchCode: "LP3", branchName: "Phú Quốc", table: "Bàn 22 (6 chỗ)", guests: 6, note: "Sinh nhật, bánh kem", status: "seated" },
+    { id: "R003", time: "12:15", name: "Trần Văn Nam", phone: "0923 456 789", branchCode: "LP2", branchName: "Đà Lạt", table: "Bàn 09 (2 chỗ)", guests: 2, note: "Window seat", status: "incoming" },
+    { id: "R004", time: "13:00", name: "Cty TNHH ABC", phone: "0934 567 890", branchCode: "LP1", branchName: "Sài Gòn", table: "Phòng VIP 2 (10 chỗ)", guests: 8, note: "Set menu 1.2tr/ng", status: "waiting" },
+    { id: "R005", time: "18:30", name: "Sarah Lee",     phone: "+82 10 1234 5678", branchCode: "LP3", branchName: "Phú Quốc", table: "Terrace (4 chỗ)", guests: 4, note: "Allergic shrimp", status: "confirmed" },
+    { id: "R006", time: "19:00", name: "Phạm Thị Lan", phone: "0945 678 901", branchCode: "LP4", branchName: "Nha Trang", table: "Bàn 14 (4 chỗ)", guests: 4, note: "Anniversary", status: "seated" },
+    { id: "R007", time: "19:30", name: "Đỗ Quang Huy", phone: "0956 789 012", branchCode: "LP1", branchName: "Sài Gòn", table: "Phòng VIP 1 (12 chỗ)", guests: 10, note: "Business dinner", status: "confirmed" },
+    { id: "R008", time: "20:00", name: "Walk-in",       phone: "—",                 branchCode: "LP3", branchName: "Phú Quốc", table: "Bàn 28 (2 chỗ)", guests: 2, note: "", status: "waiting" },
+    { id: "R009", time: "20:30", name: "Đoàn VNG (24)", phone: "0967 890 123", branchCode: "LP1", branchName: "Sài Gòn", table: "Sảnh lớn (24 chỗ)", guests: 24, note: "Set menu 1.8tr", status: "incoming" },
+  ];
+
+  const topTables = [
+    { id: "12", area: "LP3 · Terrace ocean view", turns: 9,  rev: 18_400_000, avgStay: 4 },
+    { id: "VIP2", area: "LP1 · Phòng VIP 2",      turns: 3,  rev: 12_600_000, avgStay: 8 },
+    { id: "22", area: "LP3 · Beachfront",          turns: 11, rev: 9_200_000,  avgStay: 6 },
+    { id: "VIP1", area: "LP1 · Phòng VIP 1",      turns: 2,  rev: 8_800_000,  avgStay: 10 },
+    { id: "09", area: "LP4 · Garden",              turns: 7,  rev: 6_400_000,  avgStay: 4 },
+  ];
+
+  const inventory = [
+    { name: "Bò Wagyu A5 (Nhật)", stock: 4, max: 30, unit: "kg",   days: 1 },
+    { name: "Tôm hùm Alaska",    stock: 6, max: 40, unit: "con",  days: 2 },
+    { name: "Bào ngư Đài Loan",   stock: 18, max: 60, unit: "con", days: 3 },
+    { name: "Rau xà lách organic",stock: 12, max: 50, unit: "kg",  days: 2 },
+    { name: "Pho mát Burrata",    stock: 22, max: 40, unit: "cục",  days: 4 },
+    { name: "Rượu vang Château",  stock: 28, max: 80, unit: "chai", days: 6 },
+    { name: "Gạo Japonica",       stock: 240, max: 500, unit: "kg", days: 14 },
+    { name: "Dầu ô-liu extra",    stock: 18, max: 50, unit: "chai", days: 7 },
+  ];
+
+  const pos = [
+    { code: "PO-2607-0142", supplier: "Cty TNHH Wagyu Japan", eta: "Hôm nay 14:00", items: 6,  amount: 18_400_000, status: "shipped" },
+    { code: "PO-2607-0143", supplier: "Hải sản Phú Quốc",    eta: "Hôm nay 16:30", items: 12, amount: 8_200_000,  status: "received" },
+    { code: "PO-2607-0144", supplier: "Rau củ Đà Lạt Organic", eta: "Mai 06:00",   items: 18, amount: 2_400_000,  status: "pending" },
+    { code: "PO-2607-0145", supplier: "Cty TNHH Rượu Đà Lạt", eta: "30/07 10:00", items: 8,  amount: 24_800_000, status: "shipped" },
+    { code: "PO-2607-0146", supplier: "Phô mai Âu Cheese Co.", eta: "31/07 09:00", items: 5,  amount: 6_400_000,  status: "pending" },
+  ];
+
+  const reviews = [
+    { name: "Nguyễn Minh Khôi", branch: "LP1 · Sài Gòn", time: "12 phút trước", rating: 5, text: "Bò Wagyu mềm như tan trong miệng. Set menu đáng tiền!", dish: "Bò Wagyu áp chảo" },
+    { name: "Sarah Lee",        branch: "LP3 · Phú Quốc", time: "1 giờ trước",   rating: 5, text: "Phục vụ chu đáo, đầu bếp thay đổi món khi biết tôi dị ứng tôm.", dish: "Sashimi set" },
+    { name: "Lê Hoa Phương",    branch: "LP3 · Phú Quốc", time: "3 giờ trước",   rating: 4, text: "View biển đẹp. Phần hơi nhỏ so với giá.", dish: "Tôm hùm nướng bơ" },
+    { name: "Trần Văn Nam",     branch: "LP2 · Đà Lạt",   time: "Hôm qua",       rating: 5, text: "Pizza lò củi chín tới, nhân viên nhiệt tình.", dish: "Pizza Margherita" },
+    { name: "Đỗ Quang Huy",     branch: "LP4 · Nha Trang", time: "Hôm qua",       rating: 4, text: "Không gian lãng mạn, hợp hẹn hò cặp đôi.", dish: "Lẩu Thái hải sản" },
+  ];
+
+  const tips = [
+    { name: "Nguyễn Văn An", orders: 28, commission: 4_200_000, tips: 1_840_000 },
+    { name: "Trần Thị Bình", orders: 24, commission: 3_600_000, tips: 1_560_000 },
+    { name: "Lê Quốc Cường", orders: 19, commission: 2_850_000, tips: 980_000 },
+    { name: "Phạm Hồng Duyên", orders: 32, commission: 4_800_000, tips: 2_120_000 },
+    { name: "Đỗ Minh Khoa",  orders: 15, commission: 2_250_000, tips: 720_000 },
+    { name: "Võ Thị Lan",    orders: 21, commission: 3_150_000, tips: 1_260_000 },
+  ];
+
+  const issues = [
+    { priority: "high",   title: "Bếp nóng LP1 quá tải ca tối", desc: "Đơn #A251 trễ 2 phút. Cần tăng 1 đầu bếp phụ.", time: "5 phút trước", handler: "Đầu bếp Trần Văn B" },
+    { priority: "medium", title: "Khách phàn nàn độ ồn LP3",     desc: "Phòng 22 — bàn karaoke gần. Đã chuyển bàn.",  time: "12 phút trước", handler: "Quản lý Lê Hoa P" },
+    { priority: "medium", title: "Thiếu bào ngư LP4",            desc: "Đã đặt thêm 30 con từ nhà cung cấp Đài Loan.", time: "30 phút trước", handler: "Bếp Phạm Hồng D" },
+    { priority: "low",    title: "Tủ lạnh bảo quản rung nhẹ",  desc: "LP2 · Bếp lạnh. Lịch sửa 30/07 14:00.",       time: "1 giờ trước",  handler: "Kỹ thuật Hoàng" },
+  ];
+
+  /* ═══ INBOX ĐA KÊNH — dữ liệu mô phỏng thật ═══ */
+  const channels = [
+    { id: "zalo",      short: "Zalo",      name: "Zalo OA · Le Palmier",      tone: "bg-blue-50 text-blue-700 border-blue-200",        dot: "bg-[#0068FF]", unread: 14 },
+    { id: "messenger", short: "Messenger", name: "Facebook Messenger",        tone: "bg-cyan-50 text-cyan-700 border-cyan-200",        dot: "bg-gradient-to-r from-cyan-400 to-blue-500", unread: 9 },
+    { id: "tiktok",    short: "TikTok",    name: "TikTok DM @lepalmier.vn",  tone: "bg-ink-900 text-white border-ink-900",            dot: "bg-black", unread: 7 },
+    { id: "instagram", short: "IG",        name: "Instagram @lepalmier",      tone: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200", dot: "bg-gradient-to-r from-fuchsia-400 to-rose-400", unread: 5 },
+    { id: "facebook",  short: "FB",        name: "Facebook Page /le.palmier", tone: "bg-blue-50 text-blue-700 border-blue-200",        dot: "bg-[#1877F2]", unread: 4 },
+    { id: "sms",       short: "SMS",       name: "SMS Brandname LE PALMIER",  tone: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500", unread: 3 },
+    { id: "email",     short: "Email",     name: "Email contact@lepalmier.vn",tone: "bg-rose-50 text-rose-700 border-rose-200",        dot: "bg-rose-500", unread: 2 },
+  ];
+
+  const conversations = [
+    {
+      id: "c1",
+      channel: "zalo",
+      name: "Nguyễn Minh K.",
+      phone: "0901 234 567",
+      verified: true,
+      handle: "@minhkhanh.zalo",
+      lastTime: "09:24",
+      unread: 2,
+      branchCode: "LP3",
+      tag: "VIP",
+      context: {
+        orderCode: "#A261",
+        table: "Bàn 14 (4 chỗ)",
+        branchCode: "LP3 · Phú Quốc",
+        guests: 4,
+        time: "12:30 hôm nay",
+        value: "4.250.000đ",
+        sla: "5 phút",
+      },
+      typing: true,
+      quickReplies: ["Cảm ơn anh/chị đã phản hồi", "Bếp đang chuẩn bị", "Báo quản lý kiểm tra"],
+      messages: [
+        { from: "customer", text: "Cho mình hỏi món Wagyu còn không ạ?", time: "09:18", author: "Nguyễn Minh K." },
+        { from: "staff",    text: "Dạ còn ạ, bếp vừa nhập thêm 2kg Wagyu A5 sáng nay ạ 🙏", time: "09:19" },
+        { from: "customer", text: "Mình muốn đặt thêm phần bào ngư Đài Loan cho 4 người, có cần báo trước không?", time: "09:22", author: "Nguyễn Minh K." },
+        { from: "staff",    text: "Dạ anh/chị cho em xin đơn hiện tại để em cập nhật nhé ạ", time: "09:23" },
+      ],
+    },
+    {
+      id: "c2",
+      channel: "messenger",
+      name: "Sarah Lee",
+      phone: "+82 10 1234 5678",
+      verified: true,
+      handle: "sarah.lee.kr",
+      lastTime: "09:21",
+      unread: 1,
+      branchCode: "LP3",
+      tag: "Quốc tế",
+      context: {
+        orderCode: "#A255",
+        table: "Terrace (4 chỗ)",
+        branchCode: "LP3 · Phú Quốc",
+        guests: 4,
+        time: "13:00 hôm nay",
+        value: "6.800.000đ",
+      },
+      quickReplies: ["Confirm reservation", "Send menu PDF", "Call back"],
+      messages: [
+        { from: "customer", text: "Hi! I have a booking at 13:00 today. Can I change to outdoor terrace?", time: "09:15", author: "Sarah Lee" },
+        { from: "staff",    text: "Hi Sarah! Yes, we have a terrace table available ocean view. Confirm please 🙏", time: "09:18" },
+        { from: "customer", text: "Perfect! And can the chef avoid shrimp in all dishes? My friend is allergic.", time: "09:21", author: "Sarah Lee" },
+      ],
+    },
+    {
+      id: "c3",
+      channel: "tiktok",
+      name: "@ngocxinh.dalat",
+      phone: "—",
+      handle: "@ngocxinh.dalat",
+      lastTime: "09:20",
+      unread: 3,
+      tag: "Influencer",
+      context: null,
+      quickReplies: ["Gửi voucher 20%", "Mời quay review", "Cảm ơn review"],
+      messages: [
+        { from: "customer", text: "Mình vừa quay clip Le Palmier Đà Lạt được 1.2tr view! 🥰 Cảm ơn team nhiều nha", time: "09:08" },
+        { from: "customer", text: "Cho mình hỏi combo set menu cho 4 người giá sao vậy shop?", time: "09:14" },
+        { from: "customer", text: "Reply nhanh giúp mình nha, view đang tăng mạnh 🔥", time: "09:20" },
+      ],
+    },
+    {
+      id: "c4",
+      channel: "instagram",
+      name: "@tran_lan_phuong",
+      phone: "0932 111 222",
+      handle: "@tran_lan_phuong",
+      lastTime: "09:18",
+      unread: 0,
+      branchCode: "LP1",
+      tag: "Sự kiện",
+      context: {
+        orderCode: "Event 28/08",
+        branchCode: "LP1 · Sài Gòn",
+        guests: 60,
+        time: "18:30 · 28/08",
+        value: "84.000.000đ",
+      },
+      quickReplies: ["Gửi proposal", "Gọi tư vấn"],
+      messages: [
+        { from: "customer", text: "Em muốn đặt tiệc sinh nhật 60 khách cuối tháng 8 có set menu không ạ?", time: "08:42" },
+        { from: "staff",    text: "Dạ có ạ, bên em có set A/B/C cho 60 khách, em gửi proposal qua email nhé ạ", time: "08:46" },
+        { from: "customer", text: "Ok em gửi qua email phuong.tran@gmail.com nha. Cảm ơn!", time: "08:50" },
+        { from: "staff",    text: "Dạ nhận được rồi ạ, báo sales đầu giờ chiều liên hệ anh/chị nha 🙏", time: "09:18", read: true },
+      ],
+    },
+    {
+      id: "c5",
+      channel: "facebook",
+      name: "Đoàn VNG (24)",
+      phone: "0967 890 123",
+      handle: "Đoàn VNG · doanvng.vn",
+      lastTime: "09:12",
+      unread: 0,
+      branchCode: "LP1",
+      tag: "Doanh nghiệp",
+      context: {
+        orderCode: "Banquet 24 khách",
+        table: "Sảnh lớn (24 chỗ)",
+        branchCode: "LP1 · Sài Gòn",
+        guests: 24,
+        time: "20:30 hôm nay",
+        value: "42.000.000đ",
+      },
+      quickReplies: ["Confirm set menu", "Gửi bill"],
+      messages: [
+        { from: "customer", text: "Team mình đến 20:00, bàn đã chuẩn bị chưa?", time: "08:30" },
+        { from: "staff",    text: "Dạ rồi ạ, đầu bếp đang chuẩn bị set menu 1.8tr, view bàn biển ạ", time: "08:35" },
+        { from: "customer", text: "OK cảm ơn, đến giờ mình qua", time: "08:40" },
+        { from: "staff",    text: "Dạ đón tiếp đoàn anh/chị ạ", time: "09:12", read: true },
+      ],
+    },
+    {
+      id: "c6",
+      channel: "sms",
+      name: "Phạm Văn Tuấn",
+      phone: "0988 765 432",
+      handle: "+84 988 765 432",
+      lastTime: "08:55",
+      unread: 0,
+      branchCode: "LP2",
+      tag: "Đặt bàn",
+      context: {
+        orderCode: "R011",
+        table: "Bàn 09 (2 chỗ)",
+        branchCode: "LP2 · Đà Lạt",
+        guests: 2,
+        time: "19:30 tối nay",
+      },
+      quickReplies: [],
+      messages: [
+        { from: "system",  text: "Hệ thống Le Palmier: Cảm ơn anh/chị đã đặt bàn tại LP2 Đà Lạt 19:30 tối nay", time: "08:00" },
+        { from: "customer", text: "OK xác nhận. Có cho mang theo chó nhỏ 3kg không?", time: "08:42" },
+        { from: "staff",    text: "LE PALMIER: Dạ có ạ, khu vực garden cho phép mang pet dưới 5kg. Anh/chị lưu ý vòng yếm cho pet ạ", time: "08:55", read: true },
+      ],
+    },
+    {
+      id: "c7",
+      channel: "email",
+      name: "Kevin Wong — Tour operator",
+      phone: "—",
+      handle: "kevin@discoverytravel.asia",
+      lastTime: "08:40",
+      unread: 1,
+      tag: "Đối tác",
+      context: {
+        orderCode: "MOU 28/08",
+        branchCode: "Tất cả",
+        guests: 200,
+        time: "Tháng 8-10/2026",
+        value: "2.4 tỷ",
+      },
+      quickReplies: ["Trả lời sau", "Chuyển sales"],
+      messages: [
+        { from: "customer", text: "Subject: Group booking 200 pax — Aug/Sep 2026", time: "08:30", author: "Kevin Wong" },
+        { from: "customer", text: "Dear Le Palmier team, we have 200 pax Singapore market Aug-Sep looking for 3 nights all-inclusive. Please quote.", time: "08:30" },
+        { from: "system",   text: "Email tự động phân loại → Sales Manager", time: "08:31" },
+      ],
+    },
+    {
+      id: "c8",
+      channel: "zalo",
+      name: "Lê Hoa Phương",
+      phone: "0912 345 678",
+      handle: "@phuong.le",
+      lastTime: "08:20",
+      unread: 0,
+      branchCode: "LP1",
+      tag: "Phàn nàn",
+      context: {
+        orderCode: "#A247",
+        branchCode: "LP1 · Sài Gòn",
+        time: "Tối qua",
+      },
+      quickReplies: ["Gửi voucher xin lỗi", "Gọi quản lý"],
+      messages: [
+        { from: "customer", text: "Tối qua mình tới LP1, bếp nóng chậm 30 phút. Hơi thất vọng 😞", time: "22:15" },
+        { from: "staff",    text: "Dạ em xin lỗi anh/chị ạ, ca tối qua bếp đông quá. Em gửi voucher 500k xin lỗi nha ạ", time: "22:30" },
+        { from: "customer", text: "Ok cảm ơn em, nhân viên phục vụ Bình nhiệt tình lắm", time: "22:45" },
+        { from: "system",   text: "→ Ticket #IC-241 đóng (handled by Bình)", time: "08:20" },
+      ],
+    },
+    {
+      id: "c9",
+      channel: "tiktok",
+      name: "@foodie.hcm",
+      phone: "—",
+      handle: "@foodie.hcm",
+      lastTime: "08:00",
+      unread: 0,
+      tag: "Influencer",
+      context: null,
+      quickReplies: [],
+      messages: [
+        { from: "customer", text: "Shop ơi cho mình quay set Wagyu review free được không? Mình 380k followers", time: "07:30" },
+        { from: "staff",    text: "Dạ được ạ, bên em có chương trình FOC review cho KOL từ 50k followers. Em gửi brief qua email nhé!", time: "07:55" },
+        { from: "customer", text: "Ok gửi nha, mail: foodie.hcm@gmail.com", time: "08:00" },
+      ],
+    },
+    {
+      id: "c10",
+      channel: "messenger",
+      name: "Trần Văn Nam",
+      phone: "0923 456 789",
+      lastTime: "07:45",
+      unread: 0,
+      branchCode: "LP2",
+      tag: "Đặt bàn",
+      context: {
+        orderCode: "R003",
+        table: "Bàn 09 (2 chỗ)",
+        branchCode: "LP2 · Đà Lạt",
+        guests: 2,
+        time: "12:15 hôm nay",
+      },
+      quickReplies: [],
+      messages: [
+        { from: "customer", text: "Cho mình hỏi bàn 09 có view vườn không?", time: "07:30" },
+        { from: "staff",    text: "Dạ có ạ, bàn 09 view vườn hoa đào phía sau ạ 🌸", time: "07:40" },
+        { from: "customer", text: "Perfect, giữ giúp mình nhé. Cảm ơn", time: "07:45" },
+      ],
+    },
+    {
+      id: "c11",
+      channel: "whatsapp",
+      name: "+971 50 123 4567",
+      phone: "+971 50 123 4567",
+      lastTime: "07:20",
+      unread: 0,
+      tag: "Quốc tế",
+      context: null,
+      quickReplies: [],
+      messages: [
+        { from: "customer", text: "Hi, do you have halal food options? I am from Dubai visiting next week.", time: "07:15" },
+        { from: "staff",    text: "Hello! Yes, Le Palmier has certified halal kitchen options. We will prepare a welcome package for you 🙏", time: "07:20" },
+      ],
+    },
+  ];
+
+  return {
+    heroMeta,
+    restaurants,
+    revToday: 331_900_000,
+    ordersToday: 486,
+    guestsToday: 1_624,
+    avgBill: 2_140_000,
+    tablesOccupied: 72,
+    tablesTotal: 96,
+    tableOcc: 75,
+    avgWait: 8,
+    kitchen,
+    shifts,
+    topDishes,
+    categoryMix,
+    rev14,
+    peakHours,
+    reservations,
+    guestsRsv: 60,
+    topTables,
+    inventory,
+    pos,
+    reviews,
+    tips,
+    issues,
+    channels,
+    conversations,
+  };
+}
+
+function makeTables(total, presets) {
+  return Array.from({ length: total }, (_, i) => {
+    const p = presets[i] || { id: String(i + 1).padStart(2, "0"), status: "vacant" };
+    return { id: p.id, label: "", status: p.status };
+  });
+}
+
+function makeMembers(total, on) {
+  const names = ["NV", "QL", "BV", "PT", "TN", "TN", "LT", "LT", "TH", "PD",
+                 "TV", "TT", "PV", "PV", "CL", "CL", "DH", "DH", "HD", "HD",
+                 "MH", "TN", "TT", "DC", "DC", "HH"];
+  return Array.from({ length: total }, (_, i) => ({
+    name: names[i % names.length] + " " + (i + 1),
+    status: i < on ? "on" : "off",
+  }));
+}

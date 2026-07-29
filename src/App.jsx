@@ -1,0 +1,156 @@
+import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Sidebar from "./components/Sidebar";
+import Topbar from "./components/Topbar";
+import { BranchProvider } from "./context/BranchContext";
+import { ThemeProvider } from "./context/ThemeContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import Dashboard from "./pages/Dashboard";
+import Branches from "./pages/Branches";
+import Rooms from "./pages/Rooms";
+import Bookings from "./pages/Bookings";
+import Staff from "./pages/Staff";
+import Guests from "./pages/Guests";
+import Services from "./pages/Services";
+import Reports from "./pages/Reports";
+import ReportDetail from "./pages/ReportDetail";
+import RevenueTimeline from "./pages/RevenueTimeline";
+import RevenueStructure from "./pages/RevenueStructure";
+import OccupancyByRoom from "./pages/OccupancyByRoom";
+import Forecast from "./pages/Forecast";
+import TopAgencies from "./pages/TopAgencies";
+import PeriodComparison from "./pages/PeriodComparison";
+import Messages from "./pages/Messages";
+import Settings from "./pages/Settings";
+import Help from "./pages/Help";
+import Profile from "./pages/Profile";
+import RestaurantOperations from "./pages/RestaurantOperations";
+import Marketing from "./pages/Marketing";
+import Posts from "./pages/Posts";
+import PostCategories from "./pages/PostCategories";
+import Login from "./pages/Login";
+import Notifications from "./pages/Notifications";
+import Chatbot from "./components/Chatbot";
+import Footer from "./components/Footer";
+
+/* Auth gate — nếu chưa đăng nhập, redirect /login (giữ route hiện tại) */
+function RequireAuth({ children }) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
+function AppLayout() {
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 1024) setMobileOpen(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = mobileOpen ? "hidden" : prev || "";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
+
+  return (
+    <div className="flex min-h-screen" style={{ backgroundColor: "var(--bg-app)" }}>
+      <Sidebar
+        collapsed={collapsed}
+        mobileOpen={mobileOpen}
+        onCloseMobile={() => setMobileOpen(false)}
+      />
+      <div className="flex-1 min-w-0 flex flex-col">
+        <Topbar
+          onToggleSidebar={() => {
+            if (window.innerWidth < 1024) {
+              setMobileOpen(!mobileOpen);
+            } else {
+              setCollapsed(!collapsed);
+            }
+          }}
+        />
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/branches" element={<Branches />} />
+            <Route path="/rooms" element={<Rooms />} />
+            <Route path="/bookings" element={<Bookings />} />
+            <Route path="/staff" element={<Staff />} />
+            <Route path="/guests" element={<Guests />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/reports/detail" element={<ReportDetail />} />
+            <Route path="/reports/revenue-timeline" element={<RevenueTimeline />} />
+            <Route path="/reports/revenue-structure" element={<RevenueStructure />} />
+            <Route path="/reports/occupancy-by-room" element={<OccupancyByRoom />} />
+            <Route path="/reports/forecast" element={<Forecast />} />
+            <Route path="/reports/top-agencies" element={<TopAgencies />} />
+            <Route path="/reports/period-comparison" element={<PeriodComparison />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/profile"  element={<Profile />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/restaurant-ops" element={<RestaurantOperations />} />
+            <Route path="/marketing" element={<Marketing />} />
+            <Route path="/posts" element={<Posts />} />
+            <Route path="/post-categories" element={<PostCategories />} />
+          </Routes>
+          <div>
+            <Footer />
+          </div>
+        </main>
+      </div>
+      <Chatbot />
+    </div>
+  );
+}
+
+/* Router — login nằm ngoài layout, các trang khác bắt buộc auth */
+function AppRouter() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/*"
+        element={
+          <RequireAuth>
+            <AppLayout />
+          </RequireAuth>
+        }
+      />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <BranchProvider>
+            <AppRouter />
+          </BranchProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  );
+}

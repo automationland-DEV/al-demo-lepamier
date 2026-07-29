@@ -1,0 +1,327 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================
+   THEME TOKENS (light + dark + 6 accent colors)
+   ========================================================= */
+:root {
+  color-scheme: light;
+
+  /* Layout / typography */
+  --font-scale: 1;
+  --density-scale: 1;
+
+  /* Light surface palette (default = navy accent) */
+  --bg-app: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f6f7f9;
+  --surface-3: #eceef2;
+  --border: #d5d9e1;
+  --border-soft: #eceef2;
+  --fg: #1f2531;
+  --fg-muted: #67738b;
+  --fg-subtle: #8792a8;
+  --on-accent: #ffffff;
+
+  /* Accent (navy default) */
+  --accent: #1d4ed8;
+  --accent-strong: #1e3a8a;
+  --accent-soft: #dbeafe;
+  --accent-fg: #1e3a8a;
+  --accent-hover: #1d4ed8;
+}
+
+[data-theme="light"][data-accent="navy"]   { --accent: #2563eb; --accent-strong: #1e3a8a; --accent-soft: #dbeafe; --accent-fg: #1e3a8a; --accent-hover: #1d4ed8; }
+[data-theme="light"][data-accent="green"]  { --accent: #10b981; --accent-strong: #047857; --accent-soft: #d1fae5; --accent-fg: #065f46; --accent-hover: #059669; }
+[data-theme="light"][data-accent="purple"] { --accent: #8b5cf6; --accent-strong: #6d28d9; --accent-soft: #ede9fe; --accent-fg: #5b21b6; --accent-hover: #7c3aed; }
+[data-theme="light"][data-accent="orange"] { --accent: #f97316; --accent-strong: #c2410c; --accent-soft: #ffedd5; --accent-fg: #9a3412; --accent-hover: #ea580c; }
+[data-theme="light"][data-accent="red"]    { --accent: #ef4444; --accent-strong: #b91c1c; --accent-soft: #fee2e2; --accent-fg: #991b1b; --accent-hover: #dc2626; }
+[data-theme="light"][data-accent="amber"]  { --accent: #f59e0b; --accent-strong: #b45309; --accent-soft: #fef3c7; --accent-fg: #92400e; --accent-hover: #d97706; }
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-app: #0b0e14;
+  --surface: #141821;
+  --surface-2: #1a1f2b;
+  --surface-3: #232938;
+  --border: #2a313e;
+  --border-soft: #1f2531;
+  --fg: #e8ebf2;
+  --fg-muted: #a0a8b8;
+  --fg-subtle: #6b7385;
+  --on-accent: #ffffff;
+}
+
+[data-theme="dark"][data-accent="navy"]   { --accent: #60a5fa; --accent-strong: #93c5fd; --accent-soft: #1e3a8a; --accent-fg: #93c5fd; --accent-hover: #3b82f6; }
+[data-theme="dark"][data-accent="green"]  { --accent: #34d399; --accent-strong: #6ee7b7; --accent-soft: #064e3b; --accent-fg: #6ee7b7; --accent-hover: #10b981; }
+[data-theme="dark"][data-accent="purple"] { --accent: #a78bfa; --accent-strong: #c4b5fd; --accent-soft: #4c1d95; --accent-fg: #c4b5fd; --accent-hover: #8b5cf6; }
+[data-theme="dark"][data-accent="orange"] { --accent: #fb923c; --accent-strong: #fdba74; --accent-soft: #7c2d12; --accent-fg: #fdba74; --accent-hover: #f97316; }
+[data-theme="dark"][data-accent="red"]    { --accent: #f87171; --accent-strong: #fca5a5; --accent-soft: #7f1d1d; --accent-fg: #fca5a5; --accent-hover: #ef4444; }
+[data-theme="dark"][data-accent="amber"]  { --accent: #fbbf24; --accent-strong: #fcd34d; --accent-soft: #78350f; --accent-fg: #fcd34d; --accent-hover: #f59e0b; }
+
+/* =========================================================
+   SEMANTIC STATE TOKENS — đổi theo theme/accent
+   ========================================================= */
+
+/* Light — default (navy) */
+[data-theme="light"][data-accent="navy"] {
+  --success: #10b981; --success-soft: #d1fae5; --success-fg: #065f46; --success-border: #a7f3d0;
+  --warning: #f59e0b; --warning-soft: #fef3c7; --warning-fg: #92400e; --warning-border: #fde68a;
+  --danger:  #ef4444; --danger-soft:  #fee2e2; --danger-fg:  #991b1b; --danger-border:  #fecaca;
+  --info:    #0ea5e9; --info-soft:    #e0f2fe; --info-fg:    #075985; --info-border:    #bae6fd;
+  --highlight: #8b5cf6; --highlight-soft: #ede9fe; --highlight-fg: #5b21b6; --highlight-border: #ddd6fe;
+}
+[data-theme="light"][data-accent="green"] {
+  --success: #059669; --success-soft: #d1fae5; --success-fg: #064e3b; --success-border: #a7f3d0;
+  --warning: #d97706; --warning-soft: #fef3c7; --warning-fg: #78350f; --warning-border: #fde68a;
+  --danger:  #dc2626; --danger-soft:  #fee2e2; --danger-fg:  #7f1d1d; --danger-border:  #fecaca;
+  --info:    #0891b2; --info-soft:    #cffafe; --info-fg:    #155e75; --info-border:    #a5f3fc;
+  --highlight: #7c3aed; --highlight-soft: #ede9fe; --highlight-fg: #4c1d95; --highlight-border: #ddd6fe;
+}
+[data-theme="light"][data-accent="purple"] {
+  --success: #10b981; --success-soft: #d1fae5; --success-fg: #065f46; --success-border: #a7f3d0;
+  --warning: #f59e0b; --warning-soft: #fef3c7; --warning-fg: #92400e; --warning-border: #fde68a;
+  --danger:  #f43f5e; --danger-soft:  #ffe4e6; --danger-fg:  #9f1239; --danger-border:  #fecdd3;
+  --info:    #6366f1; --info-soft:    #e0e7ff; --info-fg:    #3730a3; --info-border:    #c7d2fe;
+  --highlight: #06b6d4; --highlight-soft: #cffafe; --highlight-fg: #155e75; --highlight-border: #a5f3fc;
+}
+[data-theme="light"][data-accent="orange"] {
+  --success: #16a34a; --success-soft: #dcfce7; --success-fg: #14532d; --success-border: #bbf7d0;
+  --warning: #b45309; --warning-soft: #fef3c7; --warning-fg: #78350f; --warning-border: #fde68a;
+  --danger:  #b91c1c; --danger-soft:  #fee2e2; --danger-fg:  #7f1d1d; --danger-border:  #fecaca;
+  --info:    #0284c7; --info-soft:    #e0f2fe; --info-fg:    #075985; --info-border:    #bae6fd;
+  --highlight: #7c3aed; --highlight-soft: #ede9fe; --highlight-fg: #4c1d95; --highlight-border: #ddd6fe;
+}
+[data-theme="light"][data-accent="red"] {
+  --success: #10b981; --success-soft: #d1fae5; --success-fg: #065f46; --success-border: #a7f3d0;
+  --warning: #d97706; --warning-soft: #fef3c7; --warning-fg: #78350f; --warning-border: #fde68a;
+  --danger:  #dc2626; --danger-soft:  #fee2e2; --danger-fg:  #7f1d1d; --danger-border:  #fecaca;
+  --info:    #0ea5e9; --info-soft:    #e0f2fe; --info-fg:    #075985; --info-border:    #bae6fd;
+  --highlight: #8b5cf6; --highlight-soft: #ede9fe; --highlight-fg: #5b21b6; --highlight-border: #ddd6fe;
+}
+[data-theme="light"][data-accent="amber"] {
+  --success: #10b981; --success-soft: #d1fae5; --success-fg: #065f46; --success-border: #a7f3d0;
+  --warning: #d97706; --warning-soft: #fef3c7; --warning-fg: #78350f; --warning-border: #fde68a;
+  --danger:  #ef4444; --danger-soft:  #fee2e2; --danger-fg:  #991b1b; --danger-border:  #fecaca;
+  --info:    #0c91e9; --info-soft:    #e0f2fe; --info-fg:    #075985; --info-border:    #bae6fd;
+  --highlight: #8b5cf6; --highlight-soft: #ede9fe; --highlight-fg: #5b21b6; --highlight-border: #ddd6fe;
+}
+
+/* Dark — default (navy) */
+[data-theme="dark"][data-accent="navy"] {
+  --success: #34d399; --success-soft: #064e3b; --success-fg: #6ee7b7; --success-border: #047857;
+  --warning: #fbbf24; --warning-soft: #78350f; --warning-fg: #fcd34d; --warning-border: #b45309;
+  --danger:  #f87171; --danger-soft:  #7f1d1d; --danger-fg:  #fca5a5; --danger-border:  #b91c1c;
+  --info:    #38bdf8; --info-soft:    #0c4a6e; --info-fg:    #7dd3fc; --info-border:    #0369a1;
+  --highlight: #a78bfa; --highlight-soft: #4c1d95; --highlight-fg: #c4b5fd; --highlight-border: #6d28d9;
+}
+[data-theme="dark"][data-accent="green"] {
+  --success: #6ee7b7; --success-soft: #064e3b; --success-fg: #a7f3d0; --success-border: #047857;
+  --warning: #fbbf24; --warning-soft: #78350f; --warning-fg: #fcd34d; --warning-border: #b45309;
+  --danger:  #f87171; --danger-soft:  #7f1d1d; --danger-fg:  #fca5a5; --danger-border:  #b91c1c;
+  --info:    #22d3ee; --info-soft:    #155e75; --info-fg:    #67e8f9; --info-border:    #0e7490;
+  --highlight: #a78bfa; --highlight-soft: #4c1d95; --highlight-fg: #c4b5fd; --highlight-border: #6d28d9;
+}
+[data-theme="dark"][data-accent="purple"] {
+  --success: #34d399; --success-soft: #064e3b; --success-fg: #6ee7b7; --success-border: #047857;
+  --warning: #fbbf24; --warning-soft: #78350f; --warning-fg: #fcd34d; --warning-border: #b45309;
+  --danger:  #fb7185; --danger-soft:  #881337; --danger-fg:  #fda4af; --danger-border:  #be123c;
+  --info:    #818cf8; --info-soft:    #312e81; --info-fg:    #a5b4fc; --info-border:    #4338ca;
+  --highlight: #22d3ee; --highlight-soft: #155e75; --highlight-fg: #67e8f9; --highlight-border: #0e7490;
+}
+[data-theme="dark"][data-accent="orange"] {
+  --success: #4ade80; --success-soft: #14532d; --success-fg: #86efac; --success-border: #166534;
+  --warning: #fcd34d; --warning-soft: #78350f; --warning-fg: #fde047; --warning-border: #a16207;
+  --danger:  #f87171; --danger-soft:  #7f1d1d; --danger-fg:  #fca5a5; --danger-border:  #b91c1c;
+  --info:    #38bdf8; --info-soft:    #0c4a6e; --info-fg:    #7dd3fc; --info-border:    #0369a1;
+  --highlight: #a78bfa; --highlight-soft: #4c1d95; --highlight-fg: #c4b5fd; --highlight-border: #6d28d9;
+}
+[data-theme="dark"][data-accent="red"] {
+  --success: #34d399; --success-soft: #064e3b; --success-fg: #6ee7b7; --success-border: #047857;
+  --warning: #fbbf24; --warning-soft: #78350f; --warning-fg: #fcd34d; --warning-border: #b45309;
+  --danger:  #fca5a5; --danger-soft:  #7f1d1d; --danger-fg:  #fecaca; --danger-border:  #991b1b;
+  --info:    #38bdf8; --info-soft:    #0c4a6e; --info-fg:    #7dd3fc; --info-border:    #0369a1;
+  --highlight: #a78bfa; --highlight-soft: #4c1d95; --highlight-fg: #c4b5fd; --highlight-border: #6d28d9;
+}
+[data-theme="dark"][data-accent="amber"] {
+  --success: #34d399; --success-soft: #064e3b; --success-fg: #6ee7b7; --success-border: #047857;
+  --warning: #fcd34d; --warning-soft: #78350f; --warning-fg: #fde047; --warning-border: #a16207;
+  --danger:  #f87171; --danger-soft:  #7f1d1d; --danger-fg:  #fca5a5; --danger-border:  #b91c1c;
+  --info:    #38bdf8; --info-soft:    #0c4a6e; --info-fg:    #7dd3fc; --info-border:    #0369a1;
+  --highlight: #a78bfa; --highlight-soft: #4c1d95; --highlight-fg: #c4b5fd; --highlight-border: #6d28d9;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  font-size: calc(14px * var(--font-scale));
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg shadow-card border;
+    background-color: var(--surface);
+    border-color: var(--border);
+  }
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-[13px] font-semibold transition;
+    background-color: var(--accent);
+    color: var(--on-accent);
+  }
+  .btn-primary:hover {
+    background-color: var(--accent-hover);
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-3 py-2 rounded-md text-[13px] font-medium transition;
+    color: var(--fg-muted);
+  }
+  .btn-ghost:hover {
+    background-color: var(--surface-3);
+  }
+  .btn-outline {
+    @apply inline-flex items-center gap-2 px-3 py-2 rounded-md text-[13px] font-medium border transition;
+    background-color: var(--surface);
+    border-color: var(--border);
+    color: var(--fg);
+  }
+  .btn-outline:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .input {
+    @apply w-full px-3 py-2 rounded-md border text-[13px] transition;
+    background-color: var(--surface);
+    border-color: var(--border);
+    color: var(--fg);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium;
+  }
+  .stat-card {
+    @apply card p-4 flex flex-col gap-0 relative;
+  }
+  .table-th {
+    @apply px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider border-b;
+    color: var(--fg-muted);
+    background-color: var(--surface-2);
+    border-color: var(--border);
+  }
+  .table-td {
+    @apply px-4 py-3 text-[13px] border-b;
+    color: var(--fg);
+    border-color: var(--border-soft);
+  }
+}
+
+/* Density tweaks - applied via .density-* on <html> */
+.density-compact .p-6 { padding: calc(1.5rem * 0.8); }
+.density-compact .p-5 { padding: calc(1.25rem * 0.8); }
+.density-compact .p-4 { padding: calc(1rem * 0.8); }
+.density-compact .py-3 { padding-top: calc(0.75rem * 0.8); padding-bottom: calc(0.75rem * 0.8); }
+.density-compact .py-2 { padding-top: calc(0.5rem * 0.8); padding-bottom: calc(0.5rem * 0.8); }
+.density-compact .gap-6 { gap: calc(1.5rem * 0.8); }
+.density-compact .gap-5 { gap: calc(1.25rem * 0.8); }
+.density-compact .gap-4 { gap: calc(1rem * 0.8); }
+
+.density-spacious .p-6 { padding: calc(1.5rem * 1.25); }
+.density-spacious .p-5 { padding: calc(1.25rem * 1.25); }
+.density-spacious .p-4 { padding: calc(1rem * 1.25); }
+.density-spacious .gap-6 { gap: calc(1.5rem * 1.25); }
+.density-spacious .gap-5 { gap: calc(1.25rem * 1.25); }
+.density-spacious .gap-4 { gap: calc(1rem * 1.25); }
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-subtle);
+}
+
+/* =========================================================
+   INK COLOR ALIASES — dùng text-ink-*, bg-ink-*, border-ink-*
+   nhưng render từ CSS var để phản ứng dark mode
+   ========================================================= */
+.text-ink-900 { color: var(--fg) !important; }
+.text-ink-800 { color: var(--fg) !important; }
+.text-ink-700 { color: var(--fg) !important; }
+.text-ink-600 { color: var(--fg-muted) !important; }
+.text-ink-500 { color: var(--fg-muted) !important; }
+.text-ink-400 { color: var(--fg-subtle) !important; }
+.text-ink-300 { color: var(--fg-subtle) !important; }
+
+.bg-ink-50  { background-color: var(--bg-app) !important; }
+.bg-ink-100 { background-color: var(--surface-3) !important; }
+.bg-ink-200 { background-color: var(--border) !important; }
+.bg-ink-50\/40 { background-color: color-mix(in oklab, var(--bg-app) 40%, transparent) !important; }
+.bg-ink-50\/60 { background-color: color-mix(in oklab, var(--bg-app) 60%, transparent) !important; }
+.bg-ink-50\/70 { background-color: color-mix(in oklab, var(--bg-app) 70%, transparent) !important; }
+.bg-ink-50\/80 { background-color: color-mix(in oklab, var(--bg-app) 80%, transparent) !important; }
+.bg-ink-100\/80 { background-color: color-mix(in oklab, var(--surface-3) 80%, transparent) !important; }
+
+.border-ink-100 { border-color: var(--border-soft) !important; }
+.border-ink-200 { border-color: var(--border) !important; }
+.border-ink-300 { border-color: var(--border) !important; }
+.border-ink-400 { border-color: var(--fg-subtle) !important; }
+
+.hover\:bg-ink-50:hover { background-color: var(--surface-3) !important; }
+.hover\:bg-ink-100:hover { background-color: var(--surface-3) !important; }
+.hover\:bg-ink-50\/30:hover { background-color: color-mix(in oklab, var(--bg-app) 30%, transparent) !important; }
+.hover\:bg-ink-50\/40:hover { background-color: color-mix(in oklab, var(--bg-app) 40%, transparent) !important; }
+.hover\:bg-ink-100\/30:hover { background-color: color-mix(in oklab, var(--surface-3) 30%, transparent) !important; }
+
+.divide-ink-100 > * + * { border-color: var(--border-soft) !important; }
+
+/* Brand (blue) — alias an toàn theo theme */
+.bg-brand-50  { background-color: var(--accent-soft) !important; }
+.bg-brand-100 { background-color: var(--accent-soft) !important; }
+.bg-brand-200 { background-color: var(--accent) !important; }
+.bg-brand-500 { background-color: var(--accent) !important; }
+.bg-brand-600 { background-color: var(--accent) !important; }
+.bg-brand-700 { background-color: var(--accent-strong) !important; }
+.bg-brand-800 { background-color: var(--accent-strong) !important; }
+.bg-brand-900 { background-color: var(--accent-strong) !important; }
+.bg-brand-gradient { background-image: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important; }
+
+.text-brand-600 { color: var(--accent) !important; }
+.text-brand-700 { color: var(--accent-strong) !important; }
+.text-brand-800 { color: var(--accent-strong) !important; }
+.text-brand-900 { color: var(--accent-strong) !important; }
+
+.border-brand-200 { border-color: var(--accent) !important; }
+.border-brand-300 { border-color: var(--accent) !important; }
+
+.hover\:bg-brand-50:hover { background-color: var(--accent-soft) !important; }
+.hover\:text-brand-700:hover { color: var(--accent-strong) !important; }
+.hover\:border-brand-300:hover { border-color: var(--accent) !important; }
+
+/* Marquee track — leaves room for the LIVE chip on >= sm */
+.marquee-track { padding-left: 0; }
+@media (min-width: 640px) {
+  .marquee-track { padding-left: 76px; }
+}
