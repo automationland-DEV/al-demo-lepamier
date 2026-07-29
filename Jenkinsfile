@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    // Kích hoạt NodeJS đã cài trong Jenkins (cần plugin NodeJS và cài đặt Tool tên là 'node20')
+    tools {
+        nodejs 'node20'
+    }
+
     // Định nghĩa các biến môi trường nếu cần thiết
     environment {
         // Thay thế bằng IP hoặc Domain của VPS thực tế hoặc cấu hình trong Jenkins Global Environment
