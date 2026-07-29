@@ -10,7 +10,7 @@ pipeline {
     environment {
         // Thay thế bằng IP hoặc Domain của VPS thực tế hoặc cấu hình trong Jenkins Global Environment
         VPS_HOST = '45.119.215.71' 
-        VPS_USER = 'al-demo-lepamier'
+        VPS_USER = 'root'
     }
 
     stages {
