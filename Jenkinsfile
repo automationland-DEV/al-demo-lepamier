@@ -25,8 +25,6 @@ pipeline {
             steps {
                 // Yêu cầu Jenkins Agent đã cài đặt sẵn Node.js (phiên bản 20)
                 sh 'npm install'
-                // Bỏ qua lỗi linting tạm thời để không bị fail quá trình Build
-                sh 'npm run lint --if-present || true'
                 sh 'npm run build'
             }
         }
