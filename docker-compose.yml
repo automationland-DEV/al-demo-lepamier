@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: al-demo-lepamier
+    # Map port 3344 ở máy host vào port 4433 trong container
+    ports:
+      - "3344:4433"
+    # Mount volume để code cập nhật ngay lập tức (hot-reload) mà không cần build lại
+    volumes:
+      - .:/app
+      - /app/node_modules
+    # Môi trường giúp hot-reload hoạt động ổn định trên Docker (đặc biệt là Windows)
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
