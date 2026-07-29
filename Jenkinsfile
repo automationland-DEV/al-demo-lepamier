@@ -50,6 +50,7 @@ pipeline {
                             git reset --hard origin/main
                             
                             # 3. Build lại và chạy container
+                            docker compose down
                             docker compose up -d --build
                             docker ps
 EOF
