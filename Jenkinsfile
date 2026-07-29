@@ -30,10 +30,6 @@ pipeline {
         }
 
         stage('Deploy') {
-            when {
-                // Chỉ deploy khi có push/merge vào nhánh dev
-                branch 'main'
-            }
             steps {
                 // Sử dụng SSH Agent plugin trong Jenkins để ssh vào VPS
                 // ID 'vps-deploy-ssh-key' tương ứng với Credential bạn đã có sẵn trên Jenkins
