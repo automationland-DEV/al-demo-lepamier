@@ -21,10 +21,21 @@ pipeline {
             }
         }
 
-        stage('Verify & Build') {
+        stage('Install Dependencies') {
             steps {
-                // Yêu cầu Jenkins Agent đã cài đặt sẵn Node.js (phiên bản 20)
                 sh 'npm install'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                // Chạy Unit Test (nếu có cấu hình trong package.json)
+                sh 'npm run test --if-present'
+            }
+        }
+
+        stage('Build') {
+            steps {
                 sh 'npm run build'
             }
         }
