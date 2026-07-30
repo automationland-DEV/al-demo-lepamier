@@ -1,9 +1,9 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:20'
-            args '-u root'
-        }
+    agent any
+
+    // Kích hoạt NodeJS đã cài trong Jenkins (cần plugin NodeJS và cài đặt Tool tên là 'node20')
+    tools {
+        nodejs 'node20'
     }
 
     // Định nghĩa các biến môi trường nếu cần thiết
