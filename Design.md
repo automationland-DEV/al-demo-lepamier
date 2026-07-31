@@ -430,15 +430,15 @@ Màu chuỗi lấy từ §2.2. Một chuỗi → gradient thương hiệu. Nhi�
 
 | Mẫu | Áp dụng cho | Đặc thù |
 |---|---|---|
-| **A** Danh sách | Bookings · Staff ✅ · Services · Branches · Posts | §4 đầy đủ. Có toggle Thẻ/Bảng |
+| **A** Danh sách | Bookings · Staff ✅ · Services ✅ · Branches · Posts ✅ | §4 đầy đủ. Có toggle Thẻ/Bảng |
 | **B** Chi tiết | Branches (chi tiết) | Header có ảnh/avatar lớn + tab pill |
 | **C** Dashboard | Dashboard | Tối đa 4 khối lớn, không nhồi 17 section |
 | **D** Danh sách + panel bên | Guests | Danh sách 2fr / panel 1fr sticky; <1024px thành drawer |
 | **E** Sơ đồ lưới dày đặc | Rooms | Ô 64px, nền `--surface`, **chỉ 1 chấm trạng thái**, không tô nền ô |
-| **F** Cây phân cấp | PostCategories | Tối đa 3 cấp, thụt 24px |
+| **F** Cây phân cấp | PostCategories ✅ | Tối đa 3 cấp, thụt 24px |
 | **G** Feed + chọn nhiều | Notifications | Nhóm theo ngày, thanh bulk thay chỗ toolbar |
-| **H** Form / Cài đặt | Settings · Profile | Nav trái 220px + nội dung max 720px. Toggle lưu ngay, input cần nút Lưu |
-| **I** Hội thoại 2 cột | Messages | Danh sách 320px + chat 1fr, bong bóng max 65% |
+| **H** Form / Cài đặt | Settings · Profile · Services ✅ (form CRUD trong Sheet) | Nav trái 220px + nội dung max 720px. Toggle lưu ngay, input cần nút Lưu |
+| **I** Hội thoại 2 cột | Messages ✅ | Danh sách 320px + chat 1fr, bong bóng max 65%. Mở rộng: inbox hợp nhất nhiều kênh (chip lọc kênh), thanh ngữ cảnh đơn hàng/booking phía trên khung chat khi hội thoại có gắn đơn, gợi ý trả lời nhanh theo ngữ cảnh |
 | **J** Hub nhiều tab | Marketing ✅ · RestaurantOperations · Reports | Tab pill + `<Section>` phân đoạn |
 | **K** Trang con báo cáo | 6 trang `/reports/*` | 1 biểu đồ chính + 1 bảng |
 | **L** Trang mục lục | ReportDetail | Lưới thẻ gradient |
@@ -564,18 +564,20 @@ Quy tắc chữ: nút = **động từ + danh từ** (`Thêm nhân viên`, `Xu�
 
 | Trang | Trạng thái |
 |---|---|
-| `Staff.jsx` | ✅ v3 — **file tham chiếu mẫu A** |
-| `Marketing.jsx` | ✅ v3 — **file tham chiếu mẫu J** |
+| `Staff.jsx` | ✅ v3 — **file tham chiếu mẫu A** (danh sách) |
+| `Marketing.jsx` | ✅ v3 — **file tham chiếu mẫu J** (hub nhiều tab) |
+| `Posts.jsx` | ✅ v3 — mẫu A, có dải "việc cần làm" theo trạng thái |
+| `PostCategories.jsx` | ✅ v3 — mẫu F (cây phân cấp) |
+| `Services.jsx` | ✅ v3 — mẫu A + H, CRUD đầy đủ (tạo/sửa/xóa/nhân bản/tạm ngưng), form có validate |
+| `Messages.jsx` | ✅ v3 — **file tham chiếu mẫu I** (hội thoại 2 cột, inbox đa kênh + ngữ cảnh đơn/booking) |
 | `Rooms.jsx` | ⬜ Ưu tiên 1 — gộp 5 khối lọc thành 1 toolbar, thẻ phòng bỏ nền màu |
 | `Guests.jsx` | ⬜ Ưu tiên 2 — mẫu D, gần giống Staff nên nhanh |
 | `Bookings.jsx` | ⬜ Ưu tiên 3 — mẫu A, đã có Pagination sẵn |
 | `Branches.jsx` | ⬜ Mẫu A + B |
-| `Posts.jsx` · `PostCategories.jsx` | ⬜ Mẫu A / F |
 | `RestaurantOperations.jsx` | ⬜ Mẫu J, 1820 dòng — nặng nhất |
 | `Reports.jsx` + 6 trang `/reports/*` | ⬜ Mẫu J / K |
 | `Notifications.jsx` | ⬜ Mẫu G |
 | `Settings.jsx` · `Profile.jsx` | ⬜ Mẫu H — cần bổ sung spec form chi tiết khi làm |
-| `Messages.jsx` | ⬜ Mẫu I |
 | `Help.jsx` · `Login.jsx` | ⬜ Mẫu M / N |
 | `Dashboard.jsx` | ⬜ Làm cuối — cần cắt từ 17 khối xuống 4 trước khi restyle |
 

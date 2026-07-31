@@ -89,14 +89,6 @@ function lightnessFor(h, s, targetLum) {
   return (lo + hi) / 2;
 }
 
-/**
- * Sinh n bộ màu cùng tông với accent.
- *
- * Điểm mấu chốt: **mọi bộ có cùng độ sáng cảm nhận**, chỉ khác độ bão hòa.
- * Nếu để độ sáng HSL chạy tự do thì ô icon đầu sẽ rất đậm còn ô cuối nhạt
- * hẳn — nhìn như lỗi chứ không như hệ thống. Cân bằng theo relative luminance
- * chứ không theo L của HSL, vì L không phản ánh đúng cảm nhận của mắt.
- */
 const LUM_ICON = 0.15;   // nền ô icon: đủ tối để icon trắng đạt tương phản
 const LUM_TO   = 0.30;   // điểm cuối gradient: sáng hơn một bậc
 const LUM_INK  = 0.055;  // chữ trên nền pastel
