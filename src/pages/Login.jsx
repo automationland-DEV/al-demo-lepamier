@@ -24,28 +24,6 @@ const DEMO_ACCOUNTS = [
     tone: "accent",
     badge: "Admin",
   },
-  {
-    id: "manager",
-    email: "manager.pq@lepalmier.vn",
-    password: "••••••••",
-    role: "Quản lý chi nhánh",
-    avatar: "TL",
-    name: "Trần Linh",
-    desc: "Phú Quốc · LP3",
-    tone: "info",
-    badge: "Manager",
-  },
-  {
-    id: "staff",
-    email: "staff.sg@lepalmier.vn",
-    password: "••••••••",
-    role: "Lễ tân",
-    avatar: "PV",
-    name: "Phạm Vy",
-    desc: "Sài Gòn · LP1 · ca sáng",
-    tone: "success",
-    badge: "Staff",
-  },
 ];
 
 const STATS = [
@@ -128,104 +106,111 @@ export default function Login() {
       {/* LEFT — form */}
       <div className="flex-1 flex flex-col px-5 sm:px-10 py-8 sm:py-10 max-w-full lg:max-w-[640px] w-full">
         {/* Logo */}
-        <div className="flex items-center gap-2.5 mb-8 sm:mb-12">
+        <div className="flex items-center gap-3 mb-8 sm:mb-12 animate-fadeIn">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-display font-bold text-[18px] shadow-pop"
-            style={{ backgroundColor: "var(--accent)" }}
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-display font-extrabold text-[19px] shadow-lg shadow-brand-500/20"
+            style={{ background: "linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%)" }}
           >
             LP
           </div>
           <div className="leading-tight">
-            <div className="font-display font-bold text-ink-900 text-[15px]">Le Palmier</div>
-            <div className="text-[10px] uppercase tracking-wider font-bold text-ink-500">Hospitality Cloud</div>
+            <div className="font-display font-bold text-ink-900 text-[16px] tracking-tight">Le Palmier</div>
+            <div className="text-[10px] uppercase tracking-wider font-extrabold text-ink-500">Hospitality Cloud</div>
           </div>
         </div>
 
         <div className="flex-1 flex flex-col justify-center max-w-[440px]">
           {/* Heading */}
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-3"
-              style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent-fg)" }}>
-              <Sparkles className="w-3 h-3" /> Welcome back · v2.4
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 shadow-sm border"
+              style={{ 
+                backgroundColor: "var(--accent-soft)", 
+                color: "var(--accent-fg)",
+                borderColor: "color-mix(in oklab, var(--accent) 20%, transparent)"
+              }}>
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" /> Welcome back · Le Palmier v2.4
             </div>
-            <h1 className="font-display font-bold text-ink-900 text-[28px] sm:text-[32px] leading-tight">
-              Đăng nhập vào hệ thống quản trị
+            <h1 className="font-display font-extrabold text-ink-900 text-[30px] sm:text-[34px] leading-tight tracking-tight">
+              Đăng nhập hệ thống
             </h1>
-            <p className="text-[14px] text-ink-500 mt-1.5">
-              Quản lý chuỗi khách sạn · F&B · marketing & CSKH trên một nền tảng duy nhất
+            <p className="text-[13.5px] text-ink-500 mt-2 leading-relaxed">
+              Quản trị hợp nhất chuỗi khách sạn, resort, nhà hàng & F&B trên một mặt phẳng duy nhất.
             </p>
           </div>
 
-          {/* Demo accounts chips */}
-          <div className="mt-5">
-            <div className="text-[10.5px] uppercase font-bold tracking-wider text-ink-500 mb-2">
-              Demo · chọn nhanh tài khoản mẫu
+          {/* Demo account card */}
+          <div className="mt-6">
+            <div className="text-[10px] uppercase font-bold tracking-widest text-ink-400 mb-2">
+              Tài khoản dùng thử (Demo Account)
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div>
               {DEMO_ACCOUNTS.map((acc) => {
-                const isActive = selected.id === acc.id;
                 return (
-                  <button
+                  <div
                     key={acc.id}
-                    type="button"
                     onClick={() => pickAccount(acc)}
-                    className="rounded-md border p-2.5 text-left transition"
-                    style={{
-                      backgroundColor: isActive ? "var(--accent-soft)" : "var(--surface)",
-                      borderColor: isActive ? "var(--accent)" : "var(--border)",
-                      borderWidth: isActive ? "2px" : "1px",
-                    }}
+                    className="w-full rounded-2xl border-2 p-4 text-left transition-all duration-300 shadow-sm bg-gradient-to-r from-brand-50/50 to-indigo-50/30 border-brand-200/80 hover:shadow-md cursor-pointer group"
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3.5">
                       <div
-                        className="w-8 h-8 rounded-md text-white flex items-center justify-center font-bold text-[11px] shrink-0"
-                        style={{ backgroundColor: `var(--${acc.tone})` }}
+                        className="w-10 h-10 rounded-xl text-white flex items-center justify-center font-bold text-[13px] shrink-0 shadow-md bg-gradient-to-tr from-brand-500 to-indigo-650"
                       >
                         {acc.avatar}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-ink-900 text-[12.5px] truncate">{acc.name}</div>
-                        <div className="text-[10px] text-ink-500 truncate">{acc.role}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-ink-900 text-[14px]">{acc.name}</span>
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-brand-600 text-white shadow-sm">
+                            {acc.badge}
+                          </span>
+                        </div>
+                        <div className="text-[11.5px] text-ink-500 mt-1 font-medium">{acc.role} · {acc.desc}</div>
                       </div>
-                      {isActive && <CheckCircle2 className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--accent)" }} />}
+                      <div className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      </div>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="mt-5 space-y-3">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {/* Email */}
             <div>
-              <label className="text-[11px] uppercase font-bold tracking-wider text-ink-500 flex items-center gap-1">
-                <Mail className="w-3 h-3" /> Email
+              <label className="text-[10px] uppercase font-bold tracking-widest text-ink-400 flex items-center gap-1.5 mb-1.5">
+                <Mail className="w-3.5 h-3.5 text-ink-400" /> Địa chỉ Email
               </label>
-              <input
-                type="email"
-                className="input mt-1.5"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@lepalmier.vn"
-                autoComplete="email"
-              />
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" />
+                <input
+                  type="email"
+                  className="input pl-10 py-2.5 bg-ink-50/50 border-ink-200 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 rounded-xl text-[13px] transition-all duration-200"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="email@lepalmier.vn"
+                  autoComplete="email"
+                />
+              </div>
             </div>
 
             {/* Password */}
             <div>
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] uppercase font-bold tracking-wider text-ink-500 flex items-center gap-1">
-                  <Lock className="w-3 h-3" /> Mật khẩu
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[10px] uppercase font-bold tracking-widest text-ink-400 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-ink-400" /> Mật khẩu truy cập
                 </label>
-                <button type="button" className="text-[11px] font-semibold hover:underline" style={{ color: "var(--accent)" }}>
+                <button type="button" className="text-[11px] font-bold hover:underline" style={{ color: "var(--accent)" }}>
                   Quên mật khẩu?
                 </button>
               </div>
-              <div className="relative mt-1.5">
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" />
                 <input
                   type={show ? "text" : "password"}
-                  className="input pr-9 font-mono"
+                  className="input pl-10 pr-10 py-2.5 bg-ink-50/50 border-ink-200 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 rounded-xl text-[13px] transition-all duration-200 font-mono"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -234,7 +219,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShow(!show)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-900"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-900 transition-colors"
                   tabIndex={-1}
                 >
                   {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -243,19 +228,19 @@ export default function Login() {
             </div>
 
             {/* Remember + error */}
-            <div className="flex items-center justify-between text-[12px]">
-              <label className="flex items-center gap-1.5 text-ink-700 cursor-pointer select-none">
+            <div className="flex items-center justify-between text-[12px] pt-1">
+              <label className="flex items-center gap-2 text-ink-700 cursor-pointer select-none font-medium text-[12.5px]">
                 <input
                   type="checkbox"
                   checked={remember}
                   onChange={(e) => setRemember(e.target.checked)}
-                  className="rounded"
+                  className="rounded border-ink-300 w-4 h-4 text-brand-600 focus:ring-brand-500"
                   style={{ accentColor: "var(--accent)" }}
                 />
                 Duy trì đăng nhập 30 ngày
               </label>
               {error && (
-                <span className="text-rose-700 font-semibold">{error}</span>
+                <span className="text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-100 animate-pulse">{error}</span>
               )}
             </div>
 
@@ -263,46 +248,49 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full justify-center !py-2.5 !text-[14px] disabled:opacity-60"
+              className="w-full py-3 px-4 rounded-xl text-[14px] font-bold text-white shadow-lg flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.01] active:scale-95 disabled:opacity-60"
+              style={{
+                background: "linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%)",
+                boxShadow: "0 4px 14px 0 rgba(0, 0, 0, 0.1)"
+              }}
             >
               {loading ? (
                 <>
-                  <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                  Đang xác thực…
+                  <span className="w-4.5 h-4.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                  Đang xác thực tài khoản…
                 </>
               ) : (
                 <>
-                  <LogIn className="w-4 h-4" /> Đăng nhập
+                  <LogIn className="w-4.5 h-4.5" /> Đăng nhập hệ thống
                 </>
               )}
             </button>
 
-            {/* Quick login — nút lớn demo */}
+            {/* Quick login */}
             <button
               type="button"
               onClick={() => handleQuickLogin(selected)}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md text-[13px] font-bold border-2 transition"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[13.5px] font-bold border transition-all duration-300 hover:scale-[1.01] active:scale-95 bg-white shadow-sm"
               style={{
-                backgroundColor: "var(--surface)",
-                borderColor: "var(--accent)",
                 color: "var(--accent)",
+                borderColor: "color-mix(in oklab, var(--accent) 30%, transparent)"
               }}
             >
-              <Zap className="w-4 h-4" />
+              <Zap className="w-4 h-4 text-amber-500 fill-amber-500 animate-pulse" />
               Đăng nhập nhanh với tài khoản mẫu
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
           {/* SSO */}
-          <div className="mt-5">
-            <div className="flex items-center gap-3 text-[10.5px] text-ink-400 uppercase font-bold tracking-wider">
-              <span className="flex-1 h-px" style={{ backgroundColor: "var(--border)" }} />
-              <span>hoặc đăng nhập với</span>
-              <span className="flex-1 h-px" style={{ backgroundColor: "var(--border)" }} />
+          <div className="mt-6">
+            <div className="flex items-center gap-3 text-[10px] text-ink-400 uppercase font-bold tracking-widest">
+              <span className="flex-1 h-px bg-ink-150" />
+              <span>hoặc đăng nhập bằng</span>
+              <span className="flex-1 h-px bg-ink-150" />
             </div>
-            <div className="grid grid-cols-3 gap-2 mt-3">
+            <div className="grid grid-cols-3 gap-3 mt-3.5">
               {[
                 { name: "Google",   Icon: Fingerprint, color: "#ea4335" },
                 { name: "Microsoft", Icon: ShieldCheck, color: "#0078d4" },
@@ -312,10 +300,9 @@ export default function Login() {
                   key={p.name}
                   type="button"
                   onClick={() => handleQuickLogin(selected)}
-                  className="flex items-center justify-center gap-1.5 py-2 rounded-md border text-[12px] font-semibold hover:border-ink-900 transition"
-                  style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", color: "var(--fg)" }}
+                  className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-ink-200 text-[12.5px] font-semibold bg-white hover:bg-ink-50 hover:border-ink-300 text-ink-700 transition active:scale-95 shadow-sm"
                 >
-                  <p.Icon className="w-3.5 h-3.5" style={{ color: p.color }} />
+                  <p.Icon className="w-4 h-4" style={{ color: p.color }} />
                   {p.name}
                 </button>
               ))}
@@ -323,116 +310,67 @@ export default function Login() {
           </div>
 
           {/* Footer */}
-          <div className="mt-6 text-center text-[11px] text-ink-500">
+          <div className="mt-6 text-center text-[12px] text-ink-500 font-medium">
             Chưa có tài khoản?{" "}
             <a href="#" className="font-bold hover:underline" style={{ color: "var(--accent)" }}>
               Liên hệ sales
             </a>
-            <span className="mx-2">·</span>
-            <a href="#" className="hover:underline">Điều khoản</a>
-            <span className="mx-2">·</span>
-            <a href="#" className="hover:underline">Bảo mật</a>
+            <span className="mx-2 text-ink-300">·</span>
+            <a href="#" className="hover:underline text-ink-400">Điều khoản</a>
+            <span className="mx-2 text-ink-300">·</span>
+            <a href="#" className="hover:underline text-ink-400">Bảo mật</a>
           </div>
         </div>
 
         {/* Footer note */}
-        <div className="text-[10.5px] text-ink-400 text-center mt-6">
+        <div className="text-[10.5px] text-ink-400 text-center mt-8">
           © 2026 Le Palmier Hospitality Group · v2.4.1 · Đồng bộ {new Date().toLocaleDateString("vi-VN")}
         </div>
       </div>
 
       {/* RIGHT — showcase */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden"
-        style={{
-          background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%)",
-        }}>
-        <div className="absolute inset-0 bg-soft-grid opacity-25" />
-        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-30 blur-3xl" style={{ backgroundColor: "#fff" }} />
-        <div className="absolute -bottom-40 -left-20 w-96 h-96 rounded-full opacity-20 blur-3xl" style={{ backgroundColor: "#fcd34d" }} />
+      <div className="hidden lg:flex flex-1 relative overflow-hidden">
+        {/* Background Image */}
+        <img
+          src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=80"
+          alt="Luxury Resort"
+          className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-700 hover:scale-105"
+        />
 
-        <div className="relative z-10 flex flex-col p-8 xl:p-12 text-white w-full">
+        {/* Dynamic Dark overlay matching the theme's active accent color */}
+        <div
+          className="absolute inset-0 z-10 transition-all duration-300"
+          style={{
+            background: "linear-gradient(135deg, color-mix(in oklab, var(--accent-strong) 20%, transparent) 0%, color-mix(in oklab, var(--fg) 50%, transparent) 100%)",
+          }}
+        />
+
+        {/* Ambient glows */}
+        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-20 blur-3xl z-10" style={{ backgroundColor: "var(--accent)" }} />
+        <div className="absolute -bottom-40 -left-20 w-96 h-96 rounded-full opacity-10 blur-3xl z-10" style={{ backgroundColor: "var(--accent-soft)" }} />
+
+        <div className="relative z-20 flex flex-col p-8 xl:p-12 text-white w-full h-full justify-between">
           {/* Top brand */}
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20">
-              <Crown className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-sm">
+              <Crown className="w-5 h-5 text-white" />
             </div>
             <div className="leading-tight">
-              <div className="font-display font-bold text-[16px]">Le Palmier Group</div>
-              <div className="text-[10px] uppercase tracking-wider font-semibold text-white/70">
+              <div className="font-display font-bold text-[16px] text-white">Le Palmier Group</div>
+              <div className="text-[10px] uppercase tracking-wider font-semibold text-white/75">
                 Hospitality · F&B · Travel
               </div>
             </div>
           </div>
 
-          {/* Hero copy */}
-          <div className="flex-1 flex flex-col justify-center max-w-[520px]">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-[10.5px] uppercase font-bold tracking-wider w-fit mb-4">
-              <Sparkles className="w-3 h-3" /> #1 Hospitality Cloud Việt Nam
-            </div>
-            <h2 className="font-display font-bold text-[36px] xl:text-[44px] leading-tight">
-              Quản trị chuỗi khách sạn, F&B & marketing — một mặt phẳng duy nhất.
+          {/* Minimal Center Info to highlight the image */}
+          <div className="my-auto mx-auto max-w-[500px] bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 shadow-lg animate-fadeIn -translate-y-12 text-center">
+            <h2 className="font-display font-bold text-[28px] leading-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+              Quản trị chuỗi khách sạn & F&B trên một mặt phẳng duy nhất.
             </h2>
-            <p className="text-[14px] text-white/80 mt-3 leading-relaxed">
-              Đồng bộ 4 chi nhánh · 682 phòng · 48 nhân viên · AI forecast · realtime BI. Tất cả chỉ trong một dashboard.
+            <p className="text-[13.5px] text-white/90 mt-2 leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+              Giải pháp tối giản, đồng bộ và chuyên nghiệp.
             </p>
-
-            {/* Stats */}
-            <div className="grid grid-cols-4 gap-2 mt-6">
-              {STATS.map((s, i) => (
-                <div key={i} className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-md p-3">
-                  <s.Icon className="w-4 h-4 mb-1.5 text-white/80" />
-                  <div className="font-display font-bold text-[20px] tabular-nums leading-none">{s.value}</div>
-                  <div className="text-[10px] text-white/70 uppercase tracking-wider font-semibold mt-1">{s.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Feature list */}
-            <div className="grid grid-cols-2 gap-2 mt-5">
-              {FEATURES.map((f) => (
-                <div key={f.label} className="flex items-start gap-2.5 bg-white/10 backdrop-blur-sm border border-white/15 rounded-md p-2.5">
-                  <div className="w-8 h-8 rounded-md bg-white/15 flex items-center justify-center shrink-0">
-                    <f.Icon className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-semibold text-[12.5px]">{f.label}</div>
-                    <div className="text-[10.5px] text-white/70">{f.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Testimonial */}
-          <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-lg p-4 mt-6">
-            <div className="flex items-center gap-1 mb-1.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="w-3 h-3 fill-amber-300 text-amber-300" />
-              ))}
-            </div>
-            <p className="text-[12.5px] text-white/90 leading-relaxed italic">
-              &ldquo;Từ khi dùng Le Palmier Cloud, occupancy tăng 24%, chi phí OTA giảm 38%. Tôi đã cắt 2 phần mềm riêng lẻ và gộp về một nền tảng duy nhất.&rdquo;
-            </p>
-            <div className="flex items-center gap-2 mt-2.5">
-              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-[11px] font-bold">HS</div>
-              <div className="flex-1">
-                <div className="text-[12px] font-bold">Hoàng Sơn</div>
-                <div className="text-[10px] text-white/70">CEO · Nha Trang Coast Hotels</div>
-              </div>
-              <StatusPill tone="accent">Verified</StatusPill>
-            </div>
-          </div>
-
-          {/* Bottom bar */}
-          <div className="flex items-center justify-between mt-6 text-[10.5px] text-white/70">
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5" /> SOC2 · ISO 27001 · GDPR
-            </div>
-            <div className="flex items-center gap-3">
-              <span>Tiếng Việt</span>
-              <span>·</span>
-              <span>GMT+7</span>
-            </div>
           </div>
         </div>
       </div>
