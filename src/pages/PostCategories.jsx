@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Modal } from "../components/DashboardPrimitives";
 import { Icons } from "../components/Icons";
 import { usePalette, scoreTone, TONE } from "../theme/palette";
 
@@ -16,41 +17,95 @@ export default function PostCategories() {
   const PALETTE = useMemo(() => seriesMap(TONE_KEYS), [seriesMap]);
   const KPI = useMemo(() => series(4), [series]);
   const data = useMemo(() => buildData(), []);
+  const [treeState, setTreeState] = useState(data.tree);
   const [expanded, setExpanded] = useState({ c1: true });
   const [search, setSearch] = useState("");
 
   const toggle = (id) => setExpanded((s) => ({ ...s, [id]: !s[id] }));
 
-  const allOpen = data.tree.every((c) => !c.children.length || expanded[c.id]);
+  const allOpen = treeState.every((c) => !c.children.length || expanded[c.id]);
   const toggleAll = () =>
-    setExpanded(allOpen ? {} : Object.fromEntries(data.tree.map((c) => [c.id, true])));
+    setExpanded(allOpen ? {} : Object.fromEntries(treeState.map((c) => [c.id, true])));
 
   // Lọc: giữ danh mục gốc nếu chính nó hoặc con khớp từ khoá
   const tree = useMemo(() => {
-    if (!search) return data.tree;
+    if (!search) return treeState;
     const q = search.toLowerCase();
     const hit = (c) => c.name.toLowerCase().includes(q) || c.slug.includes(q);
-    return data.tree
+    return treeState
       .map((c) => {
         if (hit(c)) return c;
         const kids = c.children.filter(hit);
         return kids.length ? { ...c, children: kids } : null;
       })
       .filter(Boolean);
-  }, [data.tree, search]);
+  }, [treeState, search]);
 
-  const totalPosts = data.tree.reduce((n, c) => n + c.posts, 0);
+  // Modal for creating category
+  const [createCatOpen, setCreateCatOpen] = useState(false);
+  const [editingCatId, setEditingCatId] = useState(null);
+  const [catDraft, setCatDraft] = useState(() => ({ name: "", slug: "", tone: TONE_KEYS[0], icon: "Newspaper", children: [] }));
+
+  const ICON_OPTIONS = [
+    "FolderTree", "Layers", "FileText", "Hash",
+    "Star", "Sparkles", "Search", "Newspaper",
+  ];
+  const getIconName = (iconComp) => ICON_OPTIONS.find((name) => Icons[name] === iconComp) || "Newspaper";
+  const resetCatDraft = () => ({ name: "", slug: "", tone: TONE_KEYS[0], icon: "Newspaper", children: [] });
+  const openEditCategory = (cat) => {
+    setEditingCatId(cat.id);
+    setCatDraft({
+      name: cat.name,
+      slug: cat.slug,
+      tone: cat.tone,
+      icon: getIconName(cat.icon),
+      children: cat.children.map((child) => child.name),
+    });
+    setCreateCatOpen(true);
+  };
+  const closeCatModal = () => {
+    setCreateCatOpen(false);
+    setEditingCatId(null);
+    setCatDraft(resetCatDraft());
+  };
+
+  const addChildInput = () => setCatDraft((d) => ({ ...d, children: [...d.children, ""] }));
+  const updateChildInput = (idx, val) => setCatDraft((d) => ({ ...d, children: d.children.map((c, i) => i === idx ? val : c) }));
+  const removeChildInput = (idx) => setCatDraft((d) => ({ ...d, children: d.children.filter((_, i) => i !== idx) }));
+
+  const saveCategory = () => {
+    if (!catDraft.name.trim()) return;
+    const id = editingCatId || `c${Date.now()}`;
+    const slug = catDraft.slug.trim() || catDraft.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    const newCat = {
+      id,
+      name: catDraft.name,
+      slug,
+      posts: 0,
+      views: "0",
+      updated: "Mới",
+      seo: 80,
+      tone: catDraft.tone,
+      icon: Icons[catDraft.icon] || Newspaper,
+      featured: false,
+      children: catDraft.children.filter(Boolean).map((n, i) => ({ id: `${id}-${i}`, name: n, slug: n.toLowerCase().replace(/[^a-z0-9]+/g, "-"), posts: 0, views: "0", seo: 78 })),
+    };
+    setTreeState((s) => editingCatId ? s.map((c) => c.id === editingCatId ? newCat : c) : [newCat, ...s]);
+    closeCatModal();
+  };
+
+  const totalPosts = treeState.reduce((n, c) => n + c.posts, 0);
   const maxTag = Math.max(...data.tags.map((t) => t.count));
 
   // Danh mục cần chú ý: SEO dưới 85, sắp xếp thấp nhất trước
   const needsWork = useMemo(() => {
     const flat = [];
-    data.tree.forEach((c) => {
+    treeState.forEach((c) => {
       flat.push(c);
       c.children.forEach((k) => flat.push({ ...k, parent: c.name, tone: c.tone }));
     });
     return flat.filter((c) => c.seo < 85).sort((a, b) => a.seo - b.seo).slice(0, 5);
-  }, [data.tree]);
+  }, [treeState]);
 
   return (
     <div className="max-w-[1360px] mx-auto pb-10">
@@ -67,9 +122,9 @@ export default function PostCategories() {
             Danh mục bài viết
           </h1>
           <div className="flex items-center gap-2.5 mt-2.5 text-[13px] flex-wrap" style={{ color: "var(--fg-muted)" }}>
-            <span><b className="font-extrabold" style={{ color: "var(--fg)" }}>{data.tree.length}</b> danh mục gốc</span>
+            <span><b className="font-extrabold" style={{ color: "var(--fg)" }}>{treeState.length}</b> danh mục gốc</span>
             <span className="opacity-40">•</span>
-            <span><b className="font-extrabold" style={{ color: "var(--fg)" }}>{data.subCount}</b> danh mục con</span>
+            <span><b className="font-extrabold" style={{ color: "var(--fg)" }}>{treeState.reduce((s,c)=>s + c.children.length,0)}</b> danh mục con</span>
             <span className="opacity-40">•</span>
             <span><b className="font-extrabold tabular-nums" style={{ color: "var(--fg)" }}>{totalPosts}</b> bài viết</span>
           </div>
@@ -78,13 +133,79 @@ export default function PostCategories() {
         <div className="flex items-center gap-2.5 flex-wrap">
           <GhostBtn icon={Filter}>Lọc</GhostBtn>
           <GhostBtn icon={Download}>Xuất</GhostBtn>
-          <button className="glowbtn inline-flex items-center gap-2 h-11 px-5 rounded-full text-[13px] font-bold text-white"
+          <button onClick={() => {
+                    setEditingCatId(null);
+                    setCatDraft(resetCatDraft());
+                    setCreateCatOpen(true);
+                  }}
+                  className="glowbtn inline-flex items-center gap-2 h-11 px-5 rounded-full text-[13px] font-bold text-white"
                   style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})`,
                            boxShadow: "0 8px 20px -8px rgba(139,92,246,.65)" }}>
             <Plus className="w-4 h-4" /> Tạo danh mục
           </button>
         </div>
       </div>
+
+      <Modal open={createCatOpen} onClose={closeCatModal} title={editingCatId ? "Chỉnh sửa danh mục" : "Tạo danh mục mới"} icon={FolderTree} width="max-w-lg"
+             footer={
+               <>
+                 <button onClick={closeCatModal} className="h-10 px-4 rounded-full border text-[13px] font-bold" style={{ borderColor: "var(--border)", color: "var(--fg-muted)" }}>Hủy</button>
+                 <button onClick={saveCategory} className="h-10 px-5 rounded-full text-white text-[13px] font-bold" style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>{editingCatId ? "Lưu" : "Tạo"}</button>
+               </>
+             }>
+        <div className="space-y-3">
+          <div>
+            <div className="text-[12px] font-bold mb-1" style={{ color: "var(--fg-muted)" }}>Tên danh mục</div>
+            <input value={catDraft.name} onChange={(e) => setCatDraft((d) => ({ ...d, name: e.target.value }))}
+                   className="w-full h-11 px-3 rounded-md text-[14px] border" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--fg)" }} />
+          </div>
+
+          <div>
+            <div className="text-[12px] font-bold mb-1" style={{ color: "var(--fg-muted)" }}>Slug (tùy chọn)</div>
+            <input value={catDraft.slug} onChange={(e) => setCatDraft((d) => ({ ...d, slug: e.target.value }))}
+                   className="w-full h-11 px-3 rounded-md text-[14px] border" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--fg)" }} />
+          </div>
+
+          <div>
+            <div className="text-[12px] font-bold mb-2" style={{ color: "var(--fg-muted)" }}>Icon danh mục</div>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                "FolderTree", "Layers", "FileText", "Hash",
+                "Star", "Sparkles", "Search", "Newspaper",
+              ].map((name) => {
+                const Icon = Icons[name];
+                const active = catDraft.icon === name;
+                return (
+                  <button key={name} type="button"
+                          onClick={() => setCatDraft((d) => ({ ...d, icon: name }))}
+                          className="h-11 rounded-xl border flex items-center justify-center transition"
+                          style={{
+                            borderColor: active ? "#8b5cf6" : "var(--border)",
+                            backgroundColor: active ? "rgba(139,92,246,.08)" : "var(--surface)",
+                            color: active ? "#7c3aed" : "var(--fg)",
+                          }}>
+                    <Icon className="w-5 h-5" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <div className="text-[12px] font-bold mb-1" style={{ color: "var(--fg-muted)" }}>Danh mục con</div>
+            <div className="space-y-2">
+              {catDraft.children.map((ch, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input value={ch} onChange={(e) => updateChildInput(i, e.target.value)}
+                         className="flex-1 h-10 px-3 rounded-md text-[14px] border" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--fg)" }} />
+                  <button onClick={() => removeChildInput(i)} className="h-10 w-10 rounded-md text-[14px] border" style={{ borderColor: "var(--border)" }}>×</button>
+                </div>
+              ))}
+              <button onClick={addChildInput} className="inline-flex items-center gap-2 h-10 px-3 rounded-full text-[13px] font-bold border" style={{ borderColor: "var(--border)" }}>+ Thêm danh mục con</button>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       {/* ═══ KPI ═══ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
@@ -154,7 +275,8 @@ export default function PostCategories() {
               <div className="space-y-1">
                 {tree.map((c) => (
                   <RootNode key={c.id} cat={c} total={totalPosts} c={PALETTE[c.tone]}
-                            open={!!expanded[c.id]} onToggle={() => toggle(c.id)} />
+                            open={!!expanded[c.id]} onToggle={() => toggle(c.id)}
+                            onEdit={() => openEditCategory(c)} />
                 ))}
               </div>
             )}
@@ -227,7 +349,7 @@ export default function PostCategories() {
 }
 
 /* ═══════════════ NÚT GỐC ═══════════════ */
-function RootNode({ cat, total, open, onToggle, c }) {
+function RootNode({ cat, total, open, onToggle, c, onEdit }) {
   const share = Math.round((cat.posts / total) * 100);
   const t = scoreTone(cat.seo);
 
@@ -291,7 +413,7 @@ function RootNode({ cat, total, open, onToggle, c }) {
           </div>
         </div>
 
-        <RowActions />
+        <RowActions onEdit={onEdit} />
       </div>
 
       {/* Danh mục con */}
@@ -299,7 +421,7 @@ function RootNode({ cat, total, open, onToggle, c }) {
         <div className="pl-[52px] pr-3 pb-3">
           <div className="border-l-2 pl-3 space-y-0.5" style={{ borderColor: c.soft }}>
             {cat.children.map((k) => (
-              <ChildNode key={k.id} cat={k} c={c} parentPosts={cat.posts} />
+              <ChildNode key={k.id} cat={k} c={c} parentPosts={cat.posts} onEdit={() => openEditCategory({ ...k, children: [] })} />
             ))}
           </div>
         </div>
@@ -309,7 +431,7 @@ function RootNode({ cat, total, open, onToggle, c }) {
 }
 
 /* ═══════════════ NÚT CON ═══════════════ */
-function ChildNode({ cat, c, parentPosts }) {
+function ChildNode({ cat, c, parentPosts, onEdit }) {
   const share = Math.round((cat.posts / parentPosts) * 100);
   const t = scoreTone(cat.seo);
 
@@ -341,17 +463,18 @@ function ChildNode({ cat, c, parentPosts }) {
         <span className="text-[11.5px] font-extrabold tabular-nums" style={{ color: t.ink }}>{cat.seo}</span>
       </div>
 
-      <RowActions small />
+      <RowActions small onEdit={onEdit} />
     </div>
   );
 }
 
-function RowActions({ small }) {
+function RowActions({ small, onEdit }) {
   const s = small ? "w-7 h-7" : "w-8 h-8";
   const i = small ? "w-3.5 h-3.5" : "w-4 h-4";
   return (
     <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition">
       <button title="Chỉnh sửa" aria-label="Chỉnh sửa"
+              onClick={onEdit}
               className={`${s} rounded-lg flex items-center justify-center transition hover:bg-ink-100`}
               style={{ color: "#7c3aed" }}>
         <Edit2 className={i} />

@@ -1,7 +1,8 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { Icons } from "../components/Icons";
 import Pagination from "../components/Pagination";
+import { Modal } from "../components/DashboardPrimitives";
 import { usePalette, TONE, scoreTone } from "../theme/palette";
 
 const {
@@ -36,6 +37,41 @@ const parseNum = (v) => {
 
 const fmtNum = (n) => (n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(Math.round(n)));
 
+function formatToday() {
+  const now = new Date();
+  return `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
+}
+
+function getBlankPost() {
+  return {
+    id: null,
+    title: "",
+    excerpt: "",
+    category: CAT_KEYS[0],
+    author: "Nguyễn Văn A",
+    date: formatToday(),
+    readTime: "5 phút",
+    status: "draft",
+    postType: "Bài viết",
+    scheduledAt: "",
+    reviewer: "",
+    error: "",
+    tags: [],
+    featured: false,
+    cover: "",
+    views: "—",
+    likes: "—",
+    shares: "—",
+    comments: "—",
+    seo: 72,
+    readability: 78,
+    kw: 1.6,
+    backlinks: 0,
+    mainKeywords: [],
+    chart: Array.from({ length: 14 }, (_, d) => ({ d: `${d + 1}/7`, v: 0 })),
+  };
+}
+
 export default function Posts() {
   const { brand: BRAND, series, seriesMap } = usePalette();
   const CAT = useMemo(() => seriesMap(CAT_KEYS), [seriesMap]);
@@ -44,23 +80,50 @@ export default function Posts() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [active, setActive] = useState(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [draft, setDraft] = useState(() => getBlankPost());
   const [page, setPage] = useState(1);
   const pageSize = view === "grid" ? 9 : 10;
 
+  const fileInputRef = useRef(null);
+
+  const onPickCover = (e) => {
+    const f = e?.target?.files?.[0];
+    if (!f) return;
+    const url = URL.createObjectURL(f);
+    setDraft((d) => ({ ...d, cover: url }));
+  };
+
+  const removeCover = () => setDraft((d) => ({ ...d, cover: "" }));
+
+  const saveNewPost = () => {
+    const next = { ...draft, id: `p${Date.now()}`, date: formatToday() };
+    setPosts((s) => [next, ...s]);
+    setCreateOpen(false);
+    setDraft(getBlankPost());
+  };
+
   const data = useMemo(() => buildData(), []);
+  const [posts, setPosts] = useState(() => data.posts);
+
+  useEffect(() => {
+    if (!createOpen) {
+      setDraft(getBlankPost());
+    }
+  }, [createOpen]);
 
   // Lượt xem trung bình của bài đã đăng — dùng làm mốc so sánh trên từng thẻ
   const avgViews = useMemo(() => {
-    const pub = data.posts.filter((p) => p.status === "published");
+    const pub = posts.filter((p) => p.status === "published");
     return pub.reduce((s, p) => s + parseNum(p.views), 0) / Math.max(pub.length, 1);
-  }, [data.posts]);
+  }, [posts]);
 
   const needsAction = useMemo(
-    () => data.posts.filter((p) => NEEDS_ACTION.includes(p.status)),
-    [data.posts]
+    () => posts.filter((p) => NEEDS_ACTION.includes(p.status)),
+    [posts]
   );
 
-  const list = useMemo(() => data.posts.filter((p) => {
+  const list = useMemo(() => posts.filter((p) => {
     if (filter === "action") return NEEDS_ACTION.includes(p.status);
     if (filter !== "all" && p.status !== filter) return false;
     if (search) {
@@ -70,7 +133,7 @@ export default function Posts() {
           || p.tags.some((t) => t.includes(q));
     }
     return true;
-  }), [data.posts, filter, search]);
+  }), [posts, filter, search]);
 
   const totalPages = Math.ceil(list.length / pageSize);
   const paginated = useMemo(
@@ -80,7 +143,7 @@ export default function Posts() {
 
   useEffect(() => setPage(1), [filter, search, view]);
 
-  const published = data.posts.filter((p) => p.status === "published").length;
+  const published = posts.filter((p) => p.status === "published").length;
 
   return (
     <div className="max-w-[1360px] mx-auto pb-10">
@@ -108,7 +171,8 @@ export default function Posts() {
         <div className="flex items-center gap-2.5 flex-wrap">
           <GhostBtn icon={Filter}>Lọc</GhostBtn>
           <GhostBtn icon={Download}>Xuất</GhostBtn>
-          <button className="glowbtn inline-flex items-center gap-2 h-11 px-5 rounded-full text-[13px] font-bold text-white"
+          <button onClick={() => setCreateOpen(true)}
+                  className="glowbtn inline-flex items-center gap-2 h-11 px-5 rounded-full text-[13px] font-bold text-white"
                   style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})`,
                            boxShadow: "0 8px 20px -8px rgba(139,92,246,.65)" }}>
             <Plus className="w-4 h-4" /> Viết bài mới
@@ -212,6 +276,96 @@ export default function Posts() {
           </div>
         </div>
       )}
+
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Tạo bài viết mới" icon={FileText} width="max-w-3xl"
+             footer={
+               <>
+                 <button onClick={() => setCreateOpen(false)}
+                         className="h-10 px-4 rounded-full border text-[13px] font-bold"
+                         style={{ borderColor: "var(--border)", color: "var(--fg-muted)" }}>
+                   Hủy
+                 </button>
+                 <button onClick={saveNewPost}
+                         className="h-10 px-5 rounded-full text-white text-[13px] font-bold"
+                         style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
+                   Tạo bài viết
+                 </button>
+               </>
+             }>
+        <div className="flex flex-col gap-4" style={{ maxHeight: '78vh' }}>
+          <div className="rounded-2xl border-dashed border-2 p-6 h-96 relative"
+               style={{ borderColor: "var(--border)", backgroundColor: "var(--surface-3)" }}>
+            {draft.cover ? (
+              <img src={draft.cover} alt="cover" className="absolute inset-0 w-full h-full object-cover rounded-xl" />
+            ) : (
+              <div className="flex flex-col items-center gap-3 z-10 text-[13px] text-center" style={{ color: "var(--fg-muted)" }}>
+                <FileText className="w-12 h-12" />
+                <div className="font-semibold">Ảnh bìa (tùy chọn)</div>
+                <div className="text-sm">Kéo thả hoặc chọn ảnh JPG/PNG (dưới 5MB)</div>
+              </div>
+            )}
+
+            <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+              <button onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-2 h-9 px-3 rounded-full bg-white/8 text-[13px] font-bold"
+                      style={{ border: "1px solid var(--border)", color: "var(--fg)" }}>
+                Chọn ảnh
+              </button>
+              {draft.cover && (
+                <button onClick={removeCover}
+                        className="inline-flex items-center gap-2 h-9 px-3 rounded-full border text-[13px] font-bold"
+                        style={{ borderColor: "var(--border)", color: "var(--fg-muted)", background: "var(--surface)" }}>
+                  Xóa
+                </button>
+              )}
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onPickCover} />
+            </div>
+          </div>
+
+          <div className="overflow-y-auto px-1" style={{ paddingRight: 8 }}>
+            <div className="space-y-4 pb-4">
+              <div>
+                <Label>Tiêu đề</Label>
+                <input value={draft.title} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+                       placeholder="Viết tiêu đề hấp dẫn..."
+                       className="w-full h-12 px-3 rounded-md text-[15px] border"
+                       style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--fg)" }} />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label>Danh mục</Label>
+                  <select value={draft.category} onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
+                          className="w-full h-11 px-3 rounded-md text-[14px] border"
+                          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--fg)" }}>
+                    {CAT_KEYS.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label>Thẻ (phân cách bằng dấu phẩy)</Label>
+                  <input value={draft.tags.join(",")} onChange={(e) => setDraft((d) => ({ ...d, tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) }))}
+                         placeholder="ví dụ: phu-quoc, summer, check-in"
+                         className="w-full h-11 px-3 rounded-md text-[14px] border"
+                         style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--fg)" }} />
+                </div>
+              </div>
+
+              <div>
+                <Label>Tóm tắt</Label>
+                <textarea value={draft.excerpt} onChange={(e) => setDraft((d) => ({ ...d, excerpt: e.target.value }))}
+                          placeholder="Viết tóm tắt ngắn (dùng cho thẻ mô tả)…"
+                          className="w-full min-h-[120px] p-3 rounded-md text-[14px] border"
+                          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "var(--fg)" }} />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input id="featured" type="checkbox" checked={draft.featured} onChange={(e) => setDraft((d) => ({ ...d, featured: e.target.checked }))} />
+                <label htmlFor="featured" style={{ color: "var(--fg-muted)" }} className="text-sm">Đánh dấu là nổi bật</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       {active && <PostDrawer post={active} avg={avgViews} cat={CAT} brand={BRAND} onClose={() => setActive(null)} />}
     </div>
