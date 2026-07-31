@@ -248,15 +248,20 @@ export default function Messages() {
                 .map((c, index) => {
                   const isActive = c.id === activeId;
                   return (
-                    <button
+                    /* Hàng là <div> chứ không phải <button>: bên trong còn nút menu
+                       và popover, lồng button trong button là HTML không hợp lệ. */
+                    <div
                       key={c.id}
-                      onClick={() => handleSelectConv(c.id)}
                       style={{
                         borderLeftColor: isActive ? "var(--accent)" : "transparent",
                       }}
-                      className={`w-full flex items-start gap-3 p-3.5 border-l-4 transition text-left group relative ${
+                      className={`border-l-4 transition group relative ${
                         isActive ? "bg-ink-50/70" : "hover:bg-ink-50/30"
                       }`}
+                    >
+                    <button
+                      onClick={() => handleSelectConv(c.id)}
+                      className="w-full flex items-start gap-3 p-3.5 text-left"
                     >
                       <div className="relative shrink-0 mt-0.5">
                         <img src={c.avatar} alt={c.name} className="w-11 h-11 rounded-full object-cover border border-ink-200 shadow-sm" />
@@ -285,14 +290,12 @@ export default function Messages() {
                         </div>
                         <div className="text-[11.5px] text-ink-500 truncate mt-1 pr-6">{c.lastMsg}</div>
                       </div>
+                    </button>
 
                       {/* Three-dots menu icon on hover */}
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveItemMenuId(activeItemMenuId === c.id ? null : c.id);
-                        }}
+                        onClick={() => setActiveItemMenuId(activeItemMenuId === c.id ? null : c.id)}
                         className={`absolute right-2.5 bottom-2.5 w-7 h-7 rounded-full border border-ink-200 bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-ink-50 text-ink-600 z-10 transition-all duration-150 active:scale-90 ${
                           activeItemMenuId === c.id ? "opacity-100" : ""
                         }`}
@@ -314,10 +317,7 @@ export default function Messages() {
                             <button
                               key={opt.label}
                               type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                opt.action();
-                              }}
+                              onClick={opt.action}
                               className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-[12px] font-medium rounded-lg transition text-left ${
                                 opt.danger
                                   ? "text-red-600 hover:bg-red-50"
@@ -330,7 +330,7 @@ export default function Messages() {
                           ))}
                         </div>
                       )}
-                    </button>
+                    </div>
                   );
                 })}
               {filteredConversations.length === 0 && (
@@ -425,7 +425,7 @@ export default function Messages() {
                       <div
                         className={`px-4 py-2.5 rounded-2xl shadow-sm text-[13.5px] leading-relaxed ${
                           isUs
-                            ? "bg-brand-600 text-white rounded-tr-sm"
+                            ? "bg-brand-600 text-on-accent rounded-tr-sm"
                             : "bg-white text-ink-900 border border-ink-200 rounded-tl-sm"
                         }`}
                       >

@@ -1,27 +1,29 @@
 import { Icons } from "./Icons";
-import { Card, Badge } from "./DashboardPrimitives";
+import { Card, Badge, TONE_ALIAS } from "./DashboardPrimitives";
 
 const { TrendingUp, TrendingDown } = Icons;
 
-const ACCENTS = {
-  violet:  { bar: "border-l-violet-500",  text: "text-violet-700",  soft: "bg-violet-50",   icon: "bg-violet-100 text-violet-700",  barBg: "bg-violet-100" },
-  amber:   { bar: "border-l-amber-500",   text: "text-amber-700",   soft: "bg-amber-50",    icon: "bg-amber-100 text-amber-700",    barBg: "bg-amber-100" },
-  rose:    { bar: "border-l-rose-500",    text: "text-rose-700",    soft: "bg-rose-50",     icon: "bg-rose-100 text-rose-700",      barBg: "bg-rose-100" },
-  emerald: { bar: "border-l-emerald-500", text: "text-emerald-700", soft: "bg-emerald-50",  icon: "bg-emerald-100 text-emerald-700",barBg: "bg-emerald-100" },
-  blue:    { bar: "border-l-blue-500",    text: "text-blue-700",    soft: "bg-blue-50",     icon: "bg-blue-100 text-blue-700",      barBg: "bg-blue-100" },
-  ink:     { bar: "border-l-ink-700",     text: "text-ink-700",     soft: "bg-ink-100",     icon: "bg-ink-200 text-ink-700",        barBg: "bg-ink-100" },
-  cyan:    { bar: "border-l-cyan-500",    text: "text-cyan-700",    soft: "bg-cyan-50",     icon: "bg-cyan-100 text-cyan-700",      barBg: "bg-cyan-100" },
-};
+/** Trả bộ màu CSS var cho một tone. Thay cho bảng class Tailwind cứng trước đây
+ *  (violet-500/blue-700/…) vốn không đổi theo theme lẫn accent. */
+function toneVars(name) {
+  const t = TONE_ALIAS[name] || name || "accent";
+  return {
+    solid: t === "accent" ? "var(--accent)" : `var(--${t})`,
+    soft: `var(--${t}-soft)`,
+    fg: `var(--${t}-fg)`,
+    border: t === "accent" ? "var(--accent)" : `var(--${t}-border)`,
+  };
+}
 
 /** KPI lớn — đồng bộ khắp các section */
-export function KPIBig({ label, value, sub, dotColor = "bg-blue-600", icon: Icon, accent = "blue", trend }) {
-  const a = ACCENTS[accent] || ACCENTS.blue;
+export function KPIBig({ label, value, sub, icon: Icon, accent = "blue", trend }) {
+  const a = toneVars(accent);
   return (
     <Card className="relative overflow-hidden">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: a.solid }} />
             <span className="text-[11px] uppercase tracking-wider text-ink-500 font-semibold truncate">
               {label}
             </span>
@@ -32,7 +34,10 @@ export function KPIBig({ label, value, sub, dotColor = "bg-blue-600", icon: Icon
           {sub && <div className="text-[11px] sm:text-[12px] text-ink-500 mt-2 sm:mt-2.5 leading-relaxed">{sub}</div>}
         </div>
         {Icon && (
-          <div className={`w-11 h-11 rounded-md ${a.icon} flex items-center justify-center shrink-0`}>
+          <div
+            className="w-11 h-11 rounded-md flex items-center justify-center shrink-0"
+            style={{ backgroundColor: a.soft, color: a.fg }}
+          >
             <Icon className="w-5 h-5" />
           </div>
         )}
@@ -44,14 +49,17 @@ export function KPIBig({ label, value, sub, dotColor = "bg-blue-600", icon: Icon
 
 /** KPI accent (border-left) — dùng cho grid nhỏ */
 export function KPIAccent({ label, value, sub, accent = "violet", icon: Icon }) {
-  const a = ACCENTS[accent] || ACCENTS.violet;
+  const a = toneVars(accent);
   return (
-    <div className={`bg-white border border-ink-200 border-l-4 ${a.bar} rounded-md px-3 sm:px-4 py-2.5 sm:py-3 relative overflow-hidden min-w-0`}>
+    <div
+      className="bg-white border border-ink-200 border-l-4 rounded-md px-3 sm:px-4 py-2.5 sm:py-3 relative overflow-hidden min-w-0"
+      style={{ borderLeftColor: a.solid }}
+    >
       <div className="flex items-center justify-between gap-2">
-        <span className={`text-[10px] uppercase tracking-wider font-semibold ${a.text} truncate`}>
+        <span className="text-[10px] uppercase tracking-wider font-semibold truncate" style={{ color: a.fg }}>
           {label}
         </span>
-        {Icon && <Icon className={`w-4 h-4 ${a.text} opacity-80 shrink-0`} strokeWidth={2.2} />}
+        {Icon && <Icon className="w-4 h-4 opacity-80 shrink-0" strokeWidth={2.2} style={{ color: a.fg }} />}
       </div>
       <div className="text-[16px] sm:text-[18px] md:text-[22px] font-display font-bold text-ink-900 mt-1 sm:mt-1.5 tabular-nums leading-none break-all">
         {value}
@@ -62,12 +70,13 @@ export function KPIAccent({ label, value, sub, accent = "violet", icon: Icon }) 
 }
 
 /** Strip metric — 5 cột ngang hàng */
-export function StripMetric({ value, label, dotColor, last, icon: Icon }) {
+export function StripMetric({ value, label, tone = "blue", last, icon: Icon }) {
+  const a = toneVars(tone);
   return (
     <div className={`flex-1 px-2 sm:px-4 text-center min-w-0 ${last ? "" : "border-r border-ink-100"}`}>
       {Icon && <Icon className="w-4 h-4 text-ink-400 mx-auto mb-1.5" />}
       <div className="flex items-center justify-center gap-2 mb-1">
-        <span className={`w-2 h-2 rounded-full ${dotColor} shrink-0`} />
+        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: a.solid }} />
         <span className="text-[14px] sm:text-[16px] md:text-[22px] font-display font-bold text-ink-900 tabular-nums leading-none break-all">
           {value}
         </span>
@@ -80,15 +89,21 @@ export function StripMetric({ value, label, dotColor, last, icon: Icon }) {
 }
 
 /** Status cell — icon + count + label */
-export function StatusCell({ count, label, dotColor, pct, icon: Icon }) {
+export function StatusCell({ count, label, tone = "blue", pct, icon: Icon }) {
+  const a = toneVars(tone);
   return (
-    <div className="flex items-center gap-2.5 sm:gap-3 px-2.5 sm:px-3.5 py-2 sm:py-2.5 bg-white border border-ink-200 rounded-md hover:border-blue-300 transition min-w-0">
+    <div
+      className="flex items-center gap-2.5 sm:gap-3 px-2.5 sm:px-3.5 py-2 sm:py-2.5 bg-white border border-ink-200 rounded-md transition min-w-0 hover:border-brand-300"
+    >
       {Icon ? (
-        <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-md ${dotColor.replace("bg-", "bg-").replace("-500", "-50")} ${dotColor.replace("bg-", "text-").replace("-500", "-700")} flex items-center justify-center shrink-0`}>
+        <div
+          className="w-8 h-8 sm:w-9 sm:h-9 rounded-md flex items-center justify-center shrink-0"
+          style={{ backgroundColor: a.soft, color: a.fg }}
+        >
           <Icon className="w-4 h-4" />
         </div>
       ) : (
-        <span className={`w-2.5 h-2.5 rounded-full ${dotColor} shrink-0`} />
+        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: a.solid }} />
       )}
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-1.5">
@@ -124,28 +139,33 @@ function DeltaIndicator({ value, suffix = "%", label }) {
 }
 
 /** Mini progress bar inline */
-export function MiniBar({ value, max = 100, color = "bg-blue-600", height = "h-1.5" }) {
+export function MiniBar({ value, max = 100, tone = "blue", height = "h-1.5" }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
+  const a = toneVars(tone);
   return (
     <div className={`${height} bg-ink-100 rounded-full overflow-hidden`}>
-      <div className={`${height} ${color} rounded-full transition-all`} style={{ width: `${pct}%` }} />
+      <div
+        className={`${height} rounded-full transition-all`}
+        style={{ width: `${pct}%`, backgroundColor: a.solid }}
+      />
     </div>
   );
 }
 
 /** Occupancy gauge đồng bộ đẹp */
-export function OccupancyGauge({ value, total, occupied, label = "Công suất" }) {
+export function OccupancyGauge({ total, occupied, label = "Công suất" }) {
   const pct = Math.round((occupied / total) * 100);
   const radius = 70;
   const stroke = 12;
   const c = 2 * Math.PI * radius;
   const dash = (pct / 100) * c;
-  const color = pct >= 80 ? "#10b981" : pct >= 60 ? "#f59e0b" : "#f43f5e";
+  /* Ngưỡng hiệu suất → tone semantic, không hardcode hex */
+  const color = pct >= 80 ? "var(--success)" : pct >= 60 ? "var(--warning)" : "var(--danger)";
   return (
       <div className="flex items-center gap-5">
       <div className="relative w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 shrink-0">
         <svg viewBox="0 0 160 160" className="w-full h-full -rotate-90">
-          <circle cx="80" cy="80" r={radius} stroke="#eef1f6" strokeWidth={stroke} fill="none" />
+          <circle cx="80" cy="80" r={radius} stroke="var(--surface-3)" strokeWidth={stroke} fill="none" />
           <circle
             cx="80" cy="80" r={radius}
             stroke={color} strokeWidth={stroke} fill="none"
@@ -162,11 +182,11 @@ export function OccupancyGauge({ value, total, occupied, label = "Công suất" 
       </div>
       <div className="flex-1 space-y-2.5 min-w-0">
         {[
-          { label: "Có khách", value: occupied, color: "bg-violet-500" },
-          { label: "Trống", value: total - occupied, color: "bg-emerald-500" },
+          { label: "Có khách", value: occupied, tone: "highlight" },
+          { label: "Trống", value: total - occupied, tone: "success" },
         ].map((r) => (
           <div key={r.label} className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${r.color} shrink-0`} />
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: `var(--${r.tone})` }} />
             <span className="text-[12px] text-ink-700 truncate flex-1">{r.label}</span>
             <span className="text-[12px] font-bold tabular-nums">{r.value}</span>
             <span className="text-[10px] text-ink-500 tabular-nums w-10 text-right">
@@ -177,7 +197,7 @@ export function OccupancyGauge({ value, total, occupied, label = "Công suất" 
         <div className="pt-2 border-t border-ink-100">
           <div className="text-[10px] uppercase tracking-wider text-ink-500 font-semibold mb-1">Mục tiêu</div>
           <div className="flex items-center gap-2">
-            <MiniBar value={pct} max={85} color="bg-blue-600" height="h-1.5" />
+            <MiniBar value={pct} max={85} tone="blue" height="h-1.5" />
             <span className="text-[11px] font-bold text-ink-900 tabular-nums">85%</span>
           </div>
         </div>

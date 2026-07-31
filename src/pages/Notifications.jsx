@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import Card from "../components/Card";
 import { Icons } from "../components/Icons";
-import { StatusPill, AccentPill, Trend } from "../components/Semantic";
+import { StatusPill, AccentPill, Trend, TONE } from "../components/Semantic";
 
 const {
   Bell, Calendar, Filter, MoreHorizontal, Check, CheckCheck,
@@ -73,6 +73,10 @@ const PRIORITY_META = {
   info:   { label: "Bình thường", tone: "info",   weight: 2 },
   low:    { label: "Thấp",      tone: "neutral", weight: 1 },
 };
+
+/* Trả bộ màu của một mức ưu tiên. Luôn đi qua TONE thay vì tự nối chuỗi
+   `var(--${tone}-soft)` — tone "neutral" không có biến CSS tương ứng. */
+const toneOf = (priority) => TONE[PRIORITY_META[priority]?.tone] || TONE.neutral;
 
 const CHANNELS = [
   { id: "inapp", label: "Trong app",   Icon: Bell,         desc: "Hiển thị ngay trên hệ thống",      default: true },
@@ -704,8 +708,8 @@ function ScheduleEditor({ schedule, onChange }) {
           <div
             className="w-11 h-11 rounded-md flex items-center justify-center shrink-0"
             style={{
-              backgroundColor: schedule.enabled ? `var(--${PRIORITY_META[schedule.priority].tone}-soft)` : "var(--surface-3)",
-              color: schedule.enabled ? `var(--${PRIORITY_META[schedule.priority].tone}-fg)` : "var(--fg-muted)",
+              backgroundColor: schedule.enabled ? toneOf(schedule.priority).bg : "var(--surface-3)",
+              color: schedule.enabled ? toneOf(schedule.priority).fg : "var(--fg-muted)",
             }}
           >
             <Bell className="w-5 h-5" />
@@ -767,9 +771,9 @@ function ScheduleEditor({ schedule, onChange }) {
                     onClick={() => update("priority", k)}
                     className="px-2.5 py-1 rounded-md text-[12px] font-semibold border transition"
                     style={{
-                      backgroundColor: schedule.priority === k ? `var(--${v.tone}-soft)` : "var(--surface)",
-                      borderColor: schedule.priority === k ? `var(--${v.tone})` : "var(--border)",
-                      color: schedule.priority === k ? `var(--${v.tone}-fg)` : "var(--fg-muted)",
+                      backgroundColor: schedule.priority === k ? toneOf(k).bg : "var(--surface)",
+                      borderColor: schedule.priority === k ? toneOf(k).solid : "var(--border)",
+                      color: schedule.priority === k ? toneOf(k).fg : "var(--fg-muted)",
                     }}
                   >
                     {v.label}
@@ -1211,9 +1215,9 @@ function NewRuleModal({ onClose, onCreate }) {
                     onClick={() => setPrio(k)}
                     className="px-2 py-1.5 rounded-md text-[12px] font-semibold border"
                     style={{
-                      backgroundColor: prio === k ? `var(--${v.tone}-soft)` : "var(--surface)",
-                      borderColor: prio === k ? `var(--${v.tone})` : "var(--border)",
-                      color: prio === k ? `var(--${v.tone}-fg)` : "var(--fg-muted)",
+                      backgroundColor: prio === k ? toneOf(k).bg : "var(--surface)",
+                      borderColor: prio === k ? toneOf(k).solid : "var(--border)",
+                      color: prio === k ? toneOf(k).fg : "var(--fg-muted)",
                     }}
                   >
                     {v.label}
@@ -1501,17 +1505,20 @@ function NotificationDetail({ n, isRead, isPinned, onPin, onRead }) {
 /* ═══════════════════════════════════════════════════════════
    UI primitives
    ═══════════════════════════════════════════════════════════ */
+/* tone nhận thẳng khóa semantic (success/warning/danger/info/highlight/accent/neutral).
+   Trước đây map qua PRIORITY_META — bảng đó chỉ có urgent/high/info/low nên
+   tone="accent"/"danger"/"success" trả undefined và làm crash cả trang. */
 function StatTile({ label, value, tone = "neutral" }) {
-  const t = PRIORITY_META[tone === "neutral" ? "low" : tone].tone;
+  const t = TONE[tone] || TONE.neutral;
   return (
     <div
       className="rounded-md border p-2.5"
       style={{
-        backgroundColor: `var(--${t}-soft)`,
-        borderColor: `var(--${t}-border)`,
+        backgroundColor: t.bg,
+        borderColor: t.border,
       }}
     >
-      <div className="text-[10px] uppercase font-bold tracking-wider" style={{ color: `var(--${t}-fg)` }}>{label}</div>
+      <div className="text-[10px] uppercase font-bold tracking-wider" style={{ color: t.fg }}>{label}</div>
       <div className="font-display font-bold text-ink-900 text-[18px] tabular-nums leading-none mt-1">{value}</div>
     </div>
   );

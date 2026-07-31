@@ -597,7 +597,7 @@ export default function Reports() {
           <button className="px-2.5 py-1 rounded-md border border-ink-200 text-ink-600 hover:border-brand-300 hover:text-brand-700 flex items-center gap-1">
             <Eye className="w-3 h-3" /> Chia sẻ dashboard
           </button>
-          <button className="px-2.5 py-1 rounded-md bg-brand-700 text-white hover:bg-brand-800 flex items-center gap-1 font-bold">
+          <button className="px-2.5 py-1 rounded-md bg-brand-700 text-on-accent hover:bg-brand-800 flex items-center gap-1 font-bold">
             <Download className="w-3 h-3" /> Xuất PDF executive
           </button>
         </div>

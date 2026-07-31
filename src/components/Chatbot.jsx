@@ -69,7 +69,7 @@ function Message({ role, text, time, suggestions, onSuggest }) {
       <div className={`max-w-[80%] ${isUser ? "order-1" : "order-1"}`}>
         {!isUser && (
           <div className="flex items-center gap-1.5 mb-1">
-            <div className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full bg-brand-600 text-on-accent flex items-center justify-center">
               <Sparkles className="w-3 h-3" />
             </div>
             <span className="text-[10px] font-semibold text-ink-500">Hotel Assistant</span>
@@ -78,7 +78,7 @@ function Message({ role, text, time, suggestions, onSuggest }) {
         <div
           className={`px-3 py-2 rounded-2xl text-[13px] leading-relaxed whitespace-pre-line ${
             isUser
-              ? "bg-brand-600 text-white rounded-tr-sm"
+              ? "bg-brand-600 text-on-accent rounded-tr-sm"
               : "bg-white border border-ink-200 text-ink-800 rounded-tl-sm"
           }`}
         >
@@ -248,7 +248,7 @@ export default function Chatbot() {
           ref={panelRef}
           className="fixed bottom-20 left-3 right-3 sm:left-auto sm:right-6 sm:bottom-24 z-50 sm:w-[360px] max-w-[100vw] sm:max-w-[calc(100vw-2rem)] h-[min(560px,calc(100vh-6rem))] sm:h-[520px] max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-8rem)] rounded-2xl shadow-2xl border border-ink-200 bg-ink-50 flex flex-col overflow-hidden animate-[slideUp_0.2s_ease-out]"
         >
-          <div className="px-3 sm:px-4 py-2.5 sm:py-3 bg-brand-600 text-white flex items-center gap-2.5 sm:gap-3">
+          <div className="px-3 sm:px-4 py-2.5 sm:py-3 bg-brand-600 text-on-accent flex items-center gap-2.5 sm:gap-3">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/20 flex items-center justify-center shrink-0">
               <Sparkles className="w-4 h-4" />
             </div>
@@ -304,7 +304,7 @@ export default function Chatbot() {
             <button
               type="submit"
               disabled={!input.trim()}
-              className="w-9 h-9 rounded-lg bg-brand-600 text-white flex items-center justify-center disabled:bg-ink-300 disabled:cursor-not-allowed hover:bg-brand-700 transition shrink-0"
+              className="w-9 h-9 rounded-lg bg-brand-600 text-on-accent flex items-center justify-center disabled:bg-ink-300 disabled:cursor-not-allowed hover:bg-brand-700 transition shrink-0"
               aria-label="Gửi"
             >
               <Send className="w-4 h-4" />

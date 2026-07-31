@@ -76,6 +76,7 @@ function AppLayout() {
         collapsed={collapsed}
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
+        onToggleCollapse={() => setCollapsed((c) => !c)}
       />
       <div className="flex-1 min-w-0 flex flex-col">
         <Topbar
@@ -87,7 +88,9 @@ function AppLayout() {
             }
           }}
         />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden">
+        {/* overflow-x-clip chứ không phải hidden: `hidden` khiến overflow-y thành
+            `auto`, biến main thành vùng cuộn và làm hỏng mọi position:sticky bên trong. */}
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-clip">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/branches" element={<Branches />} />

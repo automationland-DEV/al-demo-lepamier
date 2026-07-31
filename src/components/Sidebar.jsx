@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { Icons } from "./Icons";
 import BranchSelector from "./BranchSelector";
-import { X } from "lucide-react";
+import { X, Menu } from "lucide-react";
 
 const {
   LayoutDashboard, Building2, BedDouble, CalendarCheck, Users, UserCog,
@@ -56,7 +56,7 @@ const navGroups = [
   },
 ];
 
-export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile }) {
+export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, onToggleCollapse }) {
   // Desktop: collapsed icon-only · Mobile: luôn expanded khi mở drawer
   const isMobile = mobileOpen;
   const effectiveCollapsed = isMobile ? false : collapsed;
@@ -84,30 +84,61 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile }
           color: "var(--fg)",
         }}
       >
-        {/* Logo */}
+        {/* Logo + nút thu gọn.
+            Nút ba gạch nằm ở đây (sát thương hiệu) cho desktop; trên mobile
+            sidebar là drawer nên nút mở nằm ở Topbar, chỗ này là nút đóng. */}
         <div
-          className="h-[60px] flex items-center gap-2.5 px-4 border-b shrink-0"
+          className={`h-[60px] flex items-center border-b shrink-0 ${
+            effectiveCollapsed ? "justify-center px-2" : "gap-2 px-3"
+          }`}
           style={{ borderColor: "var(--border)" }}
         >
-          <img
-            src="/img/logo.png"
-            alt="Le Palmier"
-            className="h-9 w-auto shrink-0 object-contain"
-          />
-          {!effectiveCollapsed && (
-            <div className="leading-tight min-w-0 flex-1">
-              <div className="font-semibold text-[14px] tracking-tight truncate" style={{ color: "var(--fg)" }}>
-                Le Palmier
+          {effectiveCollapsed ? (
+            /* Thu gọn: chỉ hiện logo — bấm vào logo để mở rộng lại */
+            <button
+              onClick={onToggleCollapse}
+              className="p-1.5 rounded-md hover:bg-ink-100 transition inline-flex items-center justify-center min-h-[44px] min-w-[44px]"
+              aria-label="Mở rộng thanh bên"
+              title="Mở rộng thanh bên"
+              aria-expanded={false}
+            >
+              <img src="/img/logo.png" alt="Le Palmier" className="h-8 w-auto object-contain" />
+            </button>
+          ) : (
+            <>
+              <img
+                src="/img/logo.png"
+                alt="Le Palmier"
+                className="h-8 w-auto shrink-0 object-contain"
+              />
+              <div className="leading-tight min-w-0 flex-1">
+                <div className="font-semibold text-[14px] tracking-tight truncate" style={{ color: "var(--fg)" }}>
+                  Le Palmier
+                </div>
+                <div className="text-[10px] uppercase tracking-[0.12em] font-medium truncate" style={{ color: "var(--fg-muted)" }}>
+                  Resort Group
+                </div>
               </div>
-              <div className="text-[10px] uppercase tracking-[0.12em] font-medium truncate" style={{ color: "var(--fg-muted)" }}>
-                Resort Group
-              </div>
-            </div>
+
+              {/* Nút thu gọn nằm bên PHẢI thương hiệu. Mobile dùng nút đóng bên dưới. */}
+              {!isMobile && (
+                <button
+                  onClick={onToggleCollapse}
+                  className="p-2 rounded-md hover:bg-ink-100 text-ink-600 transition shrink-0 inline-flex items-center justify-center min-h-[40px] min-w-[40px]"
+                  aria-label="Thu gọn thanh bên"
+                  title="Thu gọn thanh bên"
+                  aria-expanded={true}
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+              )}
+            </>
           )}
+
           {isMobile && (
             <button
               onClick={onCloseMobile}
-              className="ml-auto p-2 rounded-md hover:bg-ink-100 text-ink-600 inline-flex items-center justify-center min-h-[40px] min-w-[40px]"
+              className="p-2 rounded-md hover:bg-ink-100 text-ink-600 inline-flex items-center justify-center min-h-[40px] min-w-[40px] shrink-0"
               aria-label="Đóng menu"
             >
               <X className="w-5 h-5" />

@@ -71,7 +71,7 @@ export default function Pagination({
               onClick={() => onPageChange(page)}
               className={`w-8 h-8 text-xs font-bold rounded-lg transition duration-200 ${
                 isActive
-                  ? "bg-brand-500 text-white shadow-sm ring-2 ring-brand-200"
+                  ? "bg-brand-500 text-on-accent shadow-sm ring-2 ring-brand-200"
                   : "bg-white text-ink-700 border border-ink-200 hover:border-brand-300 hover:text-brand-600"
               }`}
             >

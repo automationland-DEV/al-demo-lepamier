@@ -1,5 +1,5 @@
 import { Icons } from "./Icons";
-import { Card, Badge } from "./DashboardPrimitives";
+import { Card, Badge, TONE_ALIAS } from "./DashboardPrimitives";
 import { KPIAccent, StatusCell } from "./DashboardKPIs";
 import { formatVND } from "../utils/format";
 
@@ -11,7 +11,7 @@ const {
 } = Icons;
 
 /* ─────────── § Vận hành phòng — 8 KPI + status grid ─────────── */
-export function OperationsGrid({ data }) {
+export function OperationsGrid({ data, onOpenLog }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <Card
@@ -38,7 +38,10 @@ export function OperationsGrid({ data }) {
           <div className="flex items-center gap-1.5">
             <Clock className="w-3 h-3" /> Đồng bộ lần cuối: {data.lastSync}
           </div>
-          <button className="text-blue-700 font-semibold hover:underline flex items-center gap-1">
+          <button
+            onClick={onOpenLog}
+            className="text-blue-700 font-semibold hover:underline flex items-center gap-1 min-h-[32px]"
+          >
             Xem nhật ký vận hành <ChevronRight className="w-3 h-3" />
           </button>
         </div>
@@ -46,12 +49,12 @@ export function OperationsGrid({ data }) {
 
       <Card title="Trạng thái phòng" subtitle={`Tổng ${data.totalRooms} phòng`} icon={BedDouble} accent="emerald">
         <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
-          <StatusCell count={data.vacant}   label="Trống"     dotColor="bg-emerald-500" pct={Math.round(data.vacant / data.totalRooms * 100)} icon={BedDouble} />
-          <StatusCell count={data.inHouse}  label="Đang ở"    dotColor="bg-violet-500"  pct={Math.round(data.inHouse / data.totalRooms * 100)} icon={Users} />
-          <StatusCell count={data.dirty}    label="Chờ dọn"   dotColor="bg-amber-500"   pct={Math.round(data.dirty / data.totalRooms * 100)} icon={Clock} />
-          <StatusCell count={data.cleaning} label="Đang dọn"  dotColor="bg-amber-300"   pct={Math.round(data.cleaning / data.totalRooms * 100)} icon={Sparkles} />
-          <StatusCell count={data.ready}    label="Sẵn sàng"  dotColor="bg-blue-500"    pct={Math.round(data.ready / data.totalRooms * 100)} icon={BedDouble} />
-          <StatusCell count={data.ooo}      label="OOO"       dotColor="bg-rose-500"    pct={Math.round(data.ooo / data.totalRooms * 100)} icon={Wrench} />
+          <StatusCell count={data.vacant}   label="Trống"     tone="emerald" pct={Math.round(data.vacant / data.totalRooms * 100)} icon={BedDouble} />
+          <StatusCell count={data.inHouse}  label="Đang ở"    tone="violet"  pct={Math.round(data.inHouse / data.totalRooms * 100)} icon={Users} />
+          <StatusCell count={data.dirty}    label="Chờ dọn"   tone="amber"   pct={Math.round(data.dirty / data.totalRooms * 100)} icon={Clock} />
+          <StatusCell count={data.cleaning} label="Đang dọn"  tone="cyan"    pct={Math.round(data.cleaning / data.totalRooms * 100)} icon={Sparkles} />
+          <StatusCell count={data.ready}    label="Sẵn sàng"  tone="blue"    pct={Math.round(data.ready / data.totalRooms * 100)} icon={BedDouble} />
+          <StatusCell count={data.ooo}      label="OOO"       tone="rose"    pct={Math.round(data.ooo / data.totalRooms * 100)} icon={Wrench} />
         </div>
       </Card>
     </div>
@@ -59,12 +62,15 @@ export function OperationsGrid({ data }) {
 }
 
 /* ─────────── § Top phòng sắp tới ─────────── */
-export function TopRooms({ items = [] }) {
+export function TopRooms({ items = [], onSelect }) {
   return (
-    <Card title="Top phòng bán chạy" subtitle="Tuần này · theo doanh thu" icon={Star} accent="amber">
+    <Card title="Top phòng bán chạy" subtitle="Tuần này · theo doanh thu · bấm để xem chi tiết" icon={Star} accent="amber">
       <div className="space-y-1.5 sm:space-y-2">
         {items.map((it, i) => (
-          <div key={i} className="flex items-center gap-2.5 sm:gap-3 p-2 sm:p-2.5 rounded-md hover:bg-ink-50 transition border border-transparent hover:border-ink-100">
+          <button
+            key={i}
+            onClick={() => onSelect?.(it)}
+            className="w-full text-left flex items-center gap-2.5 sm:gap-3 p-2 sm:p-2.5 rounded-md hover:bg-ink-50 transition border border-transparent hover:border-ink-100 active:scale-[.99]">
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-amber-50 text-amber-700 flex items-center justify-center font-display font-bold text-[12px] sm:text-[14px] tabular-nums shrink-0">
               {i + 1}
             </div>
@@ -78,7 +84,8 @@ export function TopRooms({ items = [] }) {
                 <ArrowUpRight className="w-3 h-3" /> {it.growth}%
               </div>
             </div>
-          </div>
+            <ChevronRight className="w-4 h-4 text-ink-400 shrink-0" />
+          </button>
         ))}
       </div>
     </Card>
@@ -237,34 +244,55 @@ export function ActivityTimeline({ items = [] }) {
 }
 
 /* ─────────── § Quick action tiles ─────────── */
-export function QuickActions({ actions = [] }) {
-  const palette = {
-    blue:    "bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200",
-    emerald: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200",
-    amber:   "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200",
-    rose:    "bg-rose-50 text-rose-700 hover:bg-rose-100 border-rose-200",
-    violet:  "bg-violet-50 text-violet-700 hover:bg-violet-100 border-violet-200",
-    cyan:    "bg-cyan-50 text-cyan-700 hover:bg-cyan-100 border-cyan-200",
-  };
-  return (
-      <Card title="Thao tác nhanh" subtitle="Truy cập 1 chạm" icon={Sparkles} accent="violet">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-2.5">
-        {actions.map((a, i) => {
-          const Icon = a.icon || Coffee;
-          return (
-            <button
-              key={i}
-              className={`p-2.5 sm:p-3 rounded-md border ${palette[a.tone] || palette.blue} transition flex flex-col items-start gap-1 sm:gap-1.5 text-left min-w-0`}
-            >
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-white/60 flex items-center justify-center shrink-0">
+export function QuickActions({ actions = [], onAction, bare = false }) {
+  /* 2 cột thay vì 3: ô nằm trong cột 1/3 màn hình nên 3 cột làm nhãn bị cắt
+     ("Check-in nh…", "Trả phòng & tha…"). */
+  const grid = (
+    <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+      {actions.map((a, i) => {
+        const Icon = a.icon || Coffee;
+        const t = TONE_ALIAS[a.tone] || a.tone || "accent";
+        const solid = t === "accent" ? "var(--accent)" : `var(--${t})`;
+        return (
+          <button
+            key={i}
+            onClick={() => onAction?.(a.key)}
+            title={a.label}
+            className="p-2.5 sm:p-3 rounded-md border transition flex flex-col items-start gap-1 sm:gap-1.5 text-left min-w-0 hover:-translate-y-0.5 hover:shadow-sm active:scale-[.97] active:translate-y-0"
+            style={{
+              backgroundColor: `var(--${t}-soft)`,
+              color: `var(--${t}-fg)`,
+              borderColor: t === "accent" ? "var(--accent)" : `var(--${t}-border)`,
+            }}
+          >
+            <div className="flex items-center gap-2 w-full min-w-0">
+              <div
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-md flex items-center justify-center shrink-0"
+                style={{ backgroundColor: solid, color: "var(--on-accent)" }}
+              >
                 <Icon className="w-4 h-4" />
               </div>
-              <div className="text-[12px] sm:text-[12.5px] font-semibold leading-tight truncate w-full">{a.label}</div>
-              {a.sub && <div className="text-[9.5px] sm:text-[10px] opacity-75 leading-tight truncate w-full">{a.sub}</div>}
-            </button>
-          );
-        })}
-      </div>
+              {typeof a.badge === "number" && a.badge > 0 && (
+                <span
+                  className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full tabular-nums shrink-0"
+                  style={{ backgroundColor: "var(--surface)", color: `var(--${t}-fg)` }}
+                >
+                  {a.badge}
+                </span>
+              )}
+            </div>
+            <div className="text-[12px] sm:text-[12.5px] font-semibold leading-tight w-full">{a.label}</div>
+            {a.sub && <div className="text-[9.5px] sm:text-[10px] opacity-75 leading-tight w-full">{a.sub}</div>}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  if (bare) return grid;
+  return (
+    <Card title="Thao tác nhanh" subtitle="Truy cập 1 chạm" icon={Sparkles} accent="violet">
+      {grid}
     </Card>
   );
 }
