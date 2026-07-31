@@ -87,6 +87,7 @@ function AppLayout() {
         collapsed={collapsed}
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
+        onToggleCollapse={() => setCollapsed((c) => !c)}
       />
       <div className="flex-1 min-w-0 flex flex-col">
         <Topbar
@@ -98,11 +99,16 @@ function AppLayout() {
             }
           }}
         />
+        {/* Trang thường dùng overflow-x-clip chứ không phải hidden: `hidden` khiến
+            overflow-y thành `auto`, biến main thành vùng cuộn và làm hỏng mọi
+            position:sticky bên trong (mục lục Dashboard, panel Khách tham quan).
+            Riêng trang app-shell vẫn giữ overflow-hidden vì nó cố định chiều cao
+            và tự quản lý cuộn bên trong. */}
         <main
           className={
             isFullHeightPage
               ? "flex flex-col p-4 md:p-6 lg:p-8 overflow-hidden"
-              : "flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden"
+              : "flex-1 p-4 md:p-6 lg:p-8 overflow-x-clip"
           }
           style={isFullHeightPage ? { height: "calc(100vh - 61px)" } : undefined}
         >

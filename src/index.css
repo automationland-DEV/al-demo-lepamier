@@ -33,6 +33,15 @@
   --accent-soft: #dbeafe;
   --accent-fg: #1e3a8a;
   --accent-hover: #1d4ed8;
+
+  /* Tone "neutral" — khớp với TONE.neutral trong components/Semantic.jsx.
+     Nhiều nơi dựng biến động `var(--${tone}-soft)` từ tên tone; thiếu bộ này
+     thì mọi phần tử tone="neutral" render mất nền/viền/chữ.
+     Trỏ tới token bề mặt nên tự đúng ở cả light lẫn dark, không cần khai lại. */
+  --neutral: var(--fg-subtle);
+  --neutral-soft: var(--surface-3);
+  --neutral-fg: var(--fg-muted);
+  --neutral-border: var(--border);
 }
 
 [data-theme="light"][data-accent="navy"]   { --accent: #2563eb; --accent-strong: #1e3a8a; --accent-soft: #dbeafe; --accent-fg: #1e3a8a; --accent-hover: #1d4ed8; }
@@ -54,7 +63,10 @@
   --fg: #e8ebf2;
   --fg-muted: #a0a8b8;
   --fg-subtle: #6b7385;
-  --on-accent: #ffffff;
+  /* Ở dark mode các accent là sắc pastel SÁNG (vd green #34d399), nên chữ đè lên
+     nền accent phải là màu tối — dùng #ffffff cho tương phản ~1.7:1, không đọc được.
+     Giá trị này đạt >= 4.5:1 với cả --accent lẫn --accent-hover của 6 accent. */
+  --on-accent: #0b0e14;
 }
 
 [data-theme="dark"][data-accent="navy"]   { --accent: #60a5fa; --accent-strong: #93c5fd; --accent-soft: #1e3a8a; --accent-fg: #93c5fd; --accent-hover: #3b82f6; }
@@ -330,11 +342,87 @@ body {
 .hover\:bg-brand-50:hover { background-color: var(--accent-soft) !important; }
 .hover\:text-brand-700:hover { color: var(--accent-strong) !important; }
 .hover\:border-brand-300:hover { border-color: var(--accent) !important; }
+.hover\:border-brand-400:hover,
+.hover\:border-brand-500:hover,
+.hover\:border-brand-600:hover { border-color: var(--accent) !important; }
+.focus\:border-brand-600:focus { border-color: var(--accent) !important; }
+.border-brand-100 { border-color: color-mix(in oklab, var(--accent) 25%, var(--surface)) !important; }
 
-/* Marquee track — leaves room for the LIVE chip on >= sm */
-.marquee-track { padding-left: 0; }
+/* =========================================================
+   BỀ MẶT TRẮNG CỨNG — bg-white được dùng khắp nơi cho card,
+   panel, dropdown, drawer. Không ánh xạ thì mọi bề mặt đó
+   vẫn trắng ở dark mode, chữ sáng đè lên -> không đọc được.
+   Lưu ý: bg-white/10, bg-white/20… là class KHÁC nên không
+   bị ảnh hưởng — hiệu ứng kính trên ảnh tối vẫn giữ nguyên.
+   ========================================================= */
+.bg-white { background-color: var(--surface) !important; }
+.hover\:bg-white:hover { background-color: var(--surface) !important; }
+.focus\:bg-white:focus { background-color: var(--surface) !important; }
+
+/* Sắc ink còn thiếu — chấm trạng thái, viền mờ, trạng thái disabled.
+   KHÔNG ánh xạ bg-ink-700/800/900: chúng luôn đi kèm text-white để tạo
+   chip tối, vốn đã đúng ở cả hai theme. */
+.bg-ink-300 { background-color: var(--border) !important; }
+.bg-ink-400 { background-color: var(--fg-subtle) !important; }
+.bg-ink-500 { background-color: var(--fg-muted) !important; }
+.disabled\:bg-ink-300:disabled { background-color: var(--border) !important; }
+
+/* Ring */
+.ring-white { --tw-ring-color: var(--surface) !important; }
+.ring-ink-100 { --tw-ring-color: var(--border-soft) !important; }
+.ring-ink-200 { --tw-ring-color: var(--border) !important; }
+.ring-brand-100,
+.ring-brand-200 { --tw-ring-color: color-mix(in oklab, var(--accent) 35%, transparent) !important; }
+
+/* Chữ/icon đặt trên nền accent. Dùng thay cho text-white ở những chỗ nền
+   là bg-brand-* (tức var(--accent)) — accent ở dark mode là sắc sáng. */
+.text-on-accent { color: var(--on-accent) !important; }
+
+/* Thanh cuộn ngang ẩn — dùng cho mục lục dính trên mobile */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Marquee track — chừa chỗ cho nút loa cố định bên trái (hiện ở mọi khổ) */
+.marquee-track { padding-left: 46px; }
 @media (min-width: 640px) {
-  .marquee-track { padding-left: 76px; }
+  .marquee-track { padding-left: 88px; }
+}
+
+/* =========================================================
+   ANIMATION DÙNG CHUNG — trước đây mỗi trang tự khai báo
+   trong <style> nên animate-fadeIn ở Login không chạy
+   ========================================================= */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes floatSoft {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+@keyframes shine {
+  0%       { transform: translateX(-130%); }
+  55%,100% { transform: translateX(240%); }
+}
+
+.animate-fadeIn  { animation: fadeIn .5s ease-out both; }
+.animate-slideUp { animation: slideUp .55s cubic-bezier(.22, 1, .36, 1) both; }
+.animate-floatSoft { animation: floatSoft 7s ease-in-out infinite; }
+
+/* Tôn trọng thiết lập giảm chuyển động của hệ điều hành */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* =========================================================
