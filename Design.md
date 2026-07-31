@@ -54,13 +54,63 @@ Khai báo trong `src/index.css`, tự đổi theo light/dark và 6 accent ngư�
 
 ### 2.2 Bảng gradient — trái tim của hệ thống
 
-Mọi gradient đều là `linear-gradient(135deg, from, to)`. **Chỉ lấy từ các bảng dưới đây.**
+Mọi gradient đều là `linear-gradient(135deg, from, to)`.
 
-**Thương hiệu** — nút chính, tab đang chọn, ô icon section header, chip nhãn trang:
+> ⛔ **Không hardcode hex gradient trong trang nữa.** Lấy qua `usePalette()` từ
+> `src/theme/palette.js` — nếu không, công tắc Đơn sắc/Đa sắc trong Cài đặt sẽ
+> không tác động được tới trang của bạn.
 
-```js
-const BRAND = { from: "#6366f1", to: "#a855f7" };
+```jsx
+import { usePalette, TONE, scoreTone } from "../theme/palette";
+
+function MyPage() {
+  const { brand, series, seriesMap, isMulti } = usePalette();
+
+  const KPI  = useMemo(() => series(4), [series]);              // 4 bộ màu KPI
+  const ROLE = useMemo(() => seriesMap(ROLE_KEYS), [seriesMap]); // gán theo khóa
+
+  // brand.from / brand.to        → nút chính, chip nhãn trang, tab đang chọn
+  // KPI[i].from / .to            → ô icon KPI
+  // ROLE[key].from/.to/.soft/.ink → gradient · nền pill · chữ trên pill
+}
 ```
+
+Component con nằm ngoài hàm trang thì **tự gọi `usePalette()`** thay vì nhận
+qua prop — nó là hook nên dùng trong component là hợp lệ.
+
+### Ba loại màu — xử lý khác nhau
+
+| Loại | Ví dụ | Đổi theo Đơn sắc/Đa sắc? |
+|---|---|---|
+| **Phân loại** | Vai trò nhân viên · danh mục bài viết · chuỗi KPI · nhóm danh mục | ✅ Có |
+| **Ngữ nghĩa** | Thành công · cảnh báo · lỗi · điểm SEO | ❌ Không — đổi là mất nghĩa |
+| **Thương hiệu ngoài** | Facebook · YouTube · TikTok · Zalo | ❌ Không — là nhận diện của họ |
+
+Màu ngữ nghĩa lấy từ hằng `TONE` và hàm `scoreTone(v)` trong cùng module.
+
+### Hai chế độ
+
+**Đa sắc** (`accent = "multi"`) — mỗi nhóm một màu riêng, lấy theo thứ tự:
+
+| # | from | to |
+|---|---|---|
+| 1 | `#6366f1` | `#8b5cf6` indigo |
+| 2 | `#10b981` | `#14b8a6` emerald |
+| 3 | `#f59e0b` | `#f97316` amber |
+| 4 | `#0ea5e9` | `#3b82f6` sky |
+| 5 | `#f43f5e` | `#ec4899` rose |
+| 6 | `#d946ef` | `#a855f7` fuchsia |
+| 7 | `#84cc16` | `#10b981` lime |
+
+**Đơn sắc** (6 accent còn lại) — `monoSeries()` sinh dải cùng tông với accent,
+độ sáng đi từ 36% (bộ đầu) tới 62% (bộ cuối). Người dùng chọn accent Xanh lục
+thì cả 7 vai trò đều xanh lục, khác nhau ở độ đậm nhạt.
+
+Cần thêm một nhóm phân loại mới? Chỉ cần thêm khóa vào mảng truyền cho
+`seriesMap()` — **không thêm hex**.
+
+**Thương hiệu** — `brand.from` / `brand.to`. Ở chế độ Đa sắc là indigo→tím,
+ở chế độ đơn sắc là chính accent người dùng chọn.
 
 **KPI** — thứ tự cố định, ô thứ n dùng gradient thứ n:
 
@@ -190,6 +240,25 @@ Khai báo sẵn ở cuối `src/index.css`. **Dùng trực tiếp, không tự v
 | `.glowbtn` | Hover nhấc 1px + quầng sáng. Dùng cho nút gradient |
 | `.noscroll` | Ẩn thanh cuộn cho hàng chip cuộn ngang |
 | `.floaty` | Icon trôi lên xuống 3s |
+
+### 3.1 Nền trang — phẳng
+
+Nền trang là **một màu phẳng `var(--bg-app)`**. Không vệt sáng, không gradient wash, không hoa văn, không canvas.
+
+Container gốc của trang chỉ cần:
+
+```jsx
+<div className="max-w-[1360px] mx-auto pb-10">
+```
+
+Chiều sâu đến **hoàn toàn từ bề mặt thẻ**: thẻ trắng nổi trên nền xám sâu (§3.9 — chênh lệch `--bg-app` / `--surface`), viền 1px, `shadow-card`, và quầng gradient mờ **bên trong** từng thẻ (`KpiCard`, `StaffCard`). Không cần và không được thêm gì ở tầng nền.
+
+> **Hai thứ đã thử và đã gỡ bỏ, đừng làm lại:**
+>
+> 1. **Canvas 3D động** — khối cầu chiếu phối cảnh, phản ứng theo chuột và cuộn trang. Trên phần mềm quản trị mở 40 lần/ngày, chuyển động ở nền gây nhiễu chứ không tăng giá trị.
+> 2. **Vệt gradient tím tĩnh** ở đầu trang. Nó làm nền "bẩn" và cạnh tranh với chính các thẻ gradient là thứ đáng được nhìn.
+>
+> Chuyển động chỉ được xảy ra khi người dùng tương tác trực tiếp: hover thẻ (`.lift`), đổi tab, chấm trạng thái live.
 
 ---
 
@@ -361,15 +430,15 @@ Màu chuỗi lấy từ §2.2. Một chuỗi → gradient thương hiệu. Nhi�
 
 | Mẫu | Áp dụng cho | Đặc thù |
 |---|---|---|
-| **A** Danh sách | Bookings · Staff ✅ · Services · Branches · Posts | §4 đầy đủ. Có toggle Thẻ/Bảng |
+| **A** Danh sách | Bookings · Staff ✅ · Services ✅ · Branches · Posts ✅ | §4 đầy đủ. Có toggle Thẻ/Bảng |
 | **B** Chi tiết | Branches (chi tiết) | Header có ảnh/avatar lớn + tab pill |
 | **C** Dashboard | Dashboard | Tối đa 4 khối lớn, không nhồi 17 section |
 | **D** Danh sách + panel bên | Guests | Danh sách 2fr / panel 1fr sticky; <1024px thành drawer |
 | **E** Sơ đồ lưới dày đặc | Rooms | Ô 64px, nền `--surface`, **chỉ 1 chấm trạng thái**, không tô nền ô |
-| **F** Cây phân cấp | PostCategories | Tối đa 3 cấp, thụt 24px |
+| **F** Cây phân cấp | PostCategories ✅ | Tối đa 3 cấp, thụt 24px |
 | **G** Feed + chọn nhiều | Notifications | Nhóm theo ngày, thanh bulk thay chỗ toolbar |
-| **H** Form / Cài đặt | Settings · Profile | Nav trái 220px + nội dung max 720px. Toggle lưu ngay, input cần nút Lưu |
-| **I** Hội thoại 2 cột | Messages | Danh sách 320px + chat 1fr, bong bóng max 65% |
+| **H** Form / Cài đặt | Settings · Profile · Services ✅ (form CRUD trong Sheet) | Nav trái 220px + nội dung max 720px. Toggle lưu ngay, input cần nút Lưu |
+| **I** Hội thoại 2 cột | Messages ✅ | Danh sách 320px + chat 1fr, bong bóng max 65%. Mở rộng: inbox hợp nhất nhiều kênh (chip lọc kênh), thanh ngữ cảnh đơn hàng/booking phía trên khung chat khi hội thoại có gắn đơn, gợi ý trả lời nhanh theo ngữ cảnh |
 | **J** Hub nhiều tab | Marketing ✅ · RestaurantOperations · Reports | Tab pill + `<Section>` phân đoạn |
 | **K** Trang con báo cáo | 6 trang `/reports/*` | 1 biểu đồ chính + 1 bảng |
 | **L** Trang mục lục | ReportDetail | Lưới thẻ gradient |
@@ -495,18 +564,20 @@ Quy tắc chữ: nút = **động từ + danh từ** (`Thêm nhân viên`, `Xu�
 
 | Trang | Trạng thái |
 |---|---|
-| `Staff.jsx` | ✅ v3 — **file tham chiếu mẫu A** |
-| `Marketing.jsx` | ✅ v3 — **file tham chiếu mẫu J** |
+| `Staff.jsx` | ✅ v3 — **file tham chiếu mẫu A** (danh sách) |
+| `Marketing.jsx` | ✅ v3 — **file tham chiếu mẫu J** (hub nhiều tab) |
+| `Posts.jsx` | ✅ v3 — mẫu A, có dải "việc cần làm" theo trạng thái |
+| `PostCategories.jsx` | ✅ v3 — mẫu F (cây phân cấp) |
+| `Services.jsx` | ✅ v3 — mẫu A + H, CRUD đầy đủ (tạo/sửa/xóa/nhân bản/tạm ngưng), form có validate |
+| `Messages.jsx` | ✅ v3 — **file tham chiếu mẫu I** (hội thoại 2 cột, inbox đa kênh + ngữ cảnh đơn/booking) |
 | `Rooms.jsx` | ⬜ Ưu tiên 1 — gộp 5 khối lọc thành 1 toolbar, thẻ phòng bỏ nền màu |
 | `Guests.jsx` | ⬜ Ưu tiên 2 — mẫu D, gần giống Staff nên nhanh |
 | `Bookings.jsx` | ⬜ Ưu tiên 3 — mẫu A, đã có Pagination sẵn |
 | `Branches.jsx` | ⬜ Mẫu A + B |
-| `Posts.jsx` · `PostCategories.jsx` | ⬜ Mẫu A / F |
 | `RestaurantOperations.jsx` | ⬜ Mẫu J, 1820 dòng — nặng nhất |
 | `Reports.jsx` + 6 trang `/reports/*` | ⬜ Mẫu J / K |
 | `Notifications.jsx` | ⬜ Mẫu G |
 | `Settings.jsx` · `Profile.jsx` | ⬜ Mẫu H — cần bổ sung spec form chi tiết khi làm |
-| `Messages.jsx` | ⬜ Mẫu I |
 | `Help.jsx` · `Login.jsx` | ⬜ Mẫu M / N |
 | `Dashboard.jsx` | ⬜ Làm cuối — cần cắt từ 17 khối xuống 4 trước khi restyle |
 

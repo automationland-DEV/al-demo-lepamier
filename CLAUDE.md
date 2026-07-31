@@ -16,7 +16,7 @@ Sau đó mở file tham chiếu tương ứng và **copy công thức từ đó 
 Hai file này đã theo v3. Mọi trang khác **chưa migrate** — đừng lấy chúng làm mẫu. Bảng trạng thái migrate ở `Design.md` §14.
 
 Ba lỗi hay gặp nhất:
-1. Tự nghĩ ra cặp màu gradient mới → chỉ được lấy từ `Design.md` §2.2.
+1. **Hardcode hex gradient trong trang** → phải lấy qua `usePalette()` từ `src/theme/palette.js`. Người dùng chọn được Đơn sắc (6 accent) hoặc Đa sắc trong Cài đặt; hardcode là trang của bạn không đổi theo. Xem `Design.md` §2.2.
 2. Viết `bg-white`, `text-ink-900`, `border-ink-200` → phải dùng `var(--surface)`, `var(--fg)`, `var(--border)`, nếu không dark mode vỡ.
 3. Viết lại `.lift` / `.glowbtn` trong thẻ `<style>` của trang → chúng đã là class toàn cục trong `src/index.css`.
 

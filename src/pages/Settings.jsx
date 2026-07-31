@@ -319,13 +319,15 @@ function ColorConfig() {
               >
                 <span
                   className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-white shadow-sm"
-                  style={{ backgroundColor: swatch }}
+                  style={a.swatch ? { background: a.swatch } : { backgroundColor: swatch }}
                 >
                   {isActive && <Check className="w-4 h-4" />}
                 </span>
                 <div className="min-w-0 text-left">
                   <div className="text-[13px] font-semibold text-ink-900 truncate">{a.label}</div>
-                  <div className="text-[10px] text-ink-500 font-mono">{swatch}</div>
+                  <div className={`text-[10px] text-ink-500 truncate ${a.desc ? "" : "font-mono"}`}>
+                    {a.desc || swatch}
+                  </div>
                 </div>
               </button>
             );
@@ -342,7 +344,12 @@ function ColorConfig() {
           </div>
         </div>
         <div className="text-[11.5px] leading-relaxed" style={{ color: "var(--fg-muted)" }}>
-          Đổi màu chủ đạo & chế độ sẽ tự động áp dụng cho: <b>button primary</b>, <b>link</b>, <b>highlight sidebar</b>, <b>chart series chính</b>, <b>gradient brand</b>, <b>status active</b>, <b>focus ring</b>, <b>dark mode surfaces</b>. Bộ màu semantic (success · warning · danger · info · highlight) tự đồng bộ theo accent.
+          Đổi màu chủ đạo & chế độ sẽ tự động áp dụng cho: <b>button primary</b>, <b>link</b>, <b>highlight sidebar</b>, <b>chart series chính</b>, <b>gradient brand</b>, <b>status active</b>, <b>focus ring</b>, <b>dark mode surfaces</b>.
+          <br /><br />
+          Chọn <b>một màu cụ thể</b> → toàn hệ thống về <b>đơn sắc</b>: mọi nhóm phân loại (vai trò nhân viên, danh mục bài viết, chuỗi KPI) dùng chung tông màu đó, chỉ khác độ sáng.
+          Chọn <b>Đa sắc</b> → mỗi nhóm một màu riêng để phân biệt nhanh hơn.
+          <br /><br />
+          <b>Không đổi trong mọi chế độ:</b> màu trạng thái (thành công · cảnh báo · lỗi) vì đổi là mất ý nghĩa, và màu thương hiệu kênh ngoài (Facebook · YouTube · TikTok) vì đó là nhận diện của họ.
         </div>
       </div>
     </div>

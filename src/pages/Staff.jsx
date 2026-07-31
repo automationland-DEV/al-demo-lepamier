@@ -4,6 +4,7 @@ import { staff, branches } from "../data/mockData";
 import { formatVND } from "../utils/format";
 import { useActiveBranch } from "../context/BranchContext";
 import Pagination from "../components/Pagination";
+import { usePalette, TONE } from "../theme/palette";
 
 const {
   Users, UserCheck, Search, Plus, MoreHorizontal, Phone, Mail, Star,
@@ -11,23 +12,12 @@ const {
   X, Sparkles, TrendingUp,
 } = Icons;
 
-/* ── Bảng màu vai trò — mỗi vai trò một gradient riêng ───────────── */
-const ROLE = {
-  manager:      { label: "Quản lý",     from: "#8b5cf6", to: "#6366f1", soft: "#f1ecfe", ink: "#6d28d9" },
-  reception:    { label: "Lễ tân",      from: "#0ea5e9", to: "#3b82f6", soft: "#e4f3fe", ink: "#0369a1" },
-  housekeeping: { label: "Buồng phòng", from: "#14b8a6", to: "#06b6d4", soft: "#d8f7f2", ink: "#0f766e" },
-  fnb:          { label: "Ẩm thực",     from: "#f59e0b", to: "#f97316", soft: "#fef1d8", ink: "#b45309" },
-  security:     { label: "An ninh",     from: "#f43f5e", to: "#ec4899", soft: "#ffe6ea", ink: "#be123c" },
-  maintenance:  { label: "Kỹ thuật",    from: "#84cc16", to: "#10b981", soft: "#eafbd6", ink: "#4d7c0f" },
-  accountant:   { label: "Kế toán",     from: "#d946ef", to: "#a855f7", soft: "#fbe9fe", ink: "#a21caf" },
+/* Nhãn vai trò — màu lấy từ usePalette() theo thứ tự khóa này */
+const ROLE_KEYS = ["manager","reception","housekeeping","fnb","security","maintenance","accountant"];
+const ROLE_LABEL = {
+  manager: "Quản lý", reception: "Lễ tân", housekeeping: "Buồng phòng",
+  fnb: "Ẩm thực", security: "An ninh", maintenance: "Kỹ thuật", accountant: "Kế toán",
 };
-
-const KPI_STYLE = [
-  { from: "#6366f1", to: "#8b5cf6" },
-  { from: "#10b981", to: "#14b8a6" },
-  { from: "#f59e0b", to: "#f97316" },
-  { from: "#0ea5e9", to: "#3b82f6" },
-];
 
 const STATUS_TABS = [
   { key: "all", label: "Tất cả" },
@@ -53,6 +43,9 @@ function initials(name = "") {
 
 export default function Staff() {
   const { activeBranchId } = useActiveBranch();
+  const { brand, series, seriesMap } = usePalette();
+  const ROLE = useMemo(() => seriesMap(ROLE_KEYS), [seriesMap]);
+  const KPI = useMemo(() => series(4), [series]);
   const [branchFilter, setBranchFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -110,20 +103,13 @@ export default function Staff() {
   };
 
   return (
-    <div className="staff-page relative max-w-[1360px] mx-auto pb-10">
-      {/* Vệt sáng nền cho chiều sâu */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-10 left-1/4 w-[560px] h-[300px] rounded-full blur-3xl opacity-[0.18]"
-        style={{ background: "radial-gradient(circle,#8b5cf6 0%,#6366f1 40%,transparent 70%)" }}
-      />
-
+    <div className="max-w-[1360px] mx-auto pb-10">
       {/* ═══ HEADER ═══ */}
       <div className="relative flex flex-wrap items-end justify-between gap-4 pt-1 pb-6">
         <div className="min-w-0">
           <div
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-[0.14em] text-white mb-3"
-            style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)" }}
+            style={{ background: `linear-gradient(135deg,${brand.from},${brand.to})` }}
           >
             <Sparkles className="w-3 h-3" /> Nhân sự
           </div>
@@ -158,8 +144,8 @@ export default function Staff() {
           <button
             className="glowbtn inline-flex items-center gap-2 h-11 px-5 rounded-full text-[13px] font-bold text-white"
             style={{
-              background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
-              boxShadow: "0 8px 20px -8px rgba(99,102,241,.6)",
+              background: `linear-gradient(135deg,${brand.from},${brand.to})`,
+              boxShadow: `0 8px 20px -8px ${brand.from}99`,
             }}
           >
             <Plus className="w-4 h-4" /> Thêm nhân viên
@@ -169,13 +155,13 @@ export default function Staff() {
 
       {/* ═══ KPI BENTO ═══ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-        <KpiCard {...KPI_STYLE[0]} icon={Users}     label="Tổng nhân viên"   value={stats.total}
+        <KpiCard {...KPI[0]} icon={Users}     label="Tổng nhân viên"   value={stats.total}
                  foot={`${stats.branches} chi nhánh · ${Object.keys(roleCounts).length} vai trò`} />
-        <KpiCard {...KPI_STYLE[1]} icon={UserCheck} label="Đang làm việc"    value={stats.active}
+        <KpiCard {...KPI[1]} icon={UserCheck} label="Đang làm việc"    value={stats.active}
                  progress={stats.activePct} foot={`${stats.activePct}% tổng nhân sự`} />
-        <KpiCard {...KPI_STYLE[2]} icon={Clock}     label="Nghỉ phép"        value={stats.leave}
+        <KpiCard {...KPI[2]} icon={Clock}     label="Nghỉ phép"        value={stats.leave}
                  foot="Cần phân ca thay" />
-        <KpiCard {...KPI_STYLE[3]} icon={Wallet}    label="Lương trung bình" value={formatVND(stats.avgSalary)}
+        <KpiCard {...KPI[3]} icon={Wallet}    label="Lương trung bình" value={formatVND(stats.avgSalary)}
                  foot="Mỗi tháng" trend="+4.2%" />
       </div>
 
@@ -183,12 +169,13 @@ export default function Staff() {
       <div className="noscroll flex items-center gap-2.5 overflow-x-auto pb-3 mb-3">
         <RoleChip active={roleFilter === "all"} onClick={() => setRoleFilter("all")}
                   from="#475569" to="#1e293b" label="Tất cả" count={stats.total} />
-        {Object.entries(ROLE).map(([key, r]) => (
+        {ROLE_KEYS.map((key) => (
           <RoleChip
             key={key}
             active={roleFilter === key}
             onClick={() => setRoleFilter(roleFilter === key ? "all" : key)}
-            from={r.from} to={r.to} label={r.label} count={roleCounts[key] || 0}
+            from={ROLE[key].from} to={ROLE[key].to}
+            label={ROLE_LABEL[key]} count={roleCounts[key] || 0}
           />
         ))}
       </div>
@@ -250,7 +237,7 @@ export default function Staff() {
         <div className="rounded-[var(--r)] border py-20 text-center"
              style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)" }}>
           <div className="floaty w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-white mb-4"
-               style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)" }}>
+               style={{ background: `linear-gradient(135deg,${brand.from},${brand.to})` }}>
             <Search className="w-7 h-7" />
           </div>
           <div className="text-[16px] font-bold" style={{ color: "var(--fg)" }}>Không tìm thấy ai cả</div>
@@ -266,7 +253,7 @@ export default function Staff() {
       ) : view === "grid" ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {paginated.map((s) => <StaffCard key={s.id} s={s} />)}
+            {paginated.map((s) => <StaffCard key={s.id} s={s} c={ROLE[s.role]} />)}
           </div>
           <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage}
                       totalItems={filtered.length} itemsPerPage={pageSize} />
@@ -376,7 +363,7 @@ function KpiCard({ icon: Icon, label, value, foot, from, to, progress, trend }) 
         <span className="truncate">{foot}</span>
         {trend && (
           <span className="ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-bold shrink-0"
-                style={{ backgroundColor: "#dcfce7", color: "#15803d" }}>
+                style={{ backgroundColor: TONE.success.bg, color: TONE.success.ink }}>
             <TrendingUp className="w-3 h-3" />{trend}
           </span>
         )}
@@ -409,8 +396,8 @@ function RoleChip({ active, onClick, label, count, from, to }) {
   );
 }
 
-function StaffCard({ s }) {
-  const r = ROLE[s.role];
+function StaffCard({ s, c }) {
+  const r = c;
   const shift = parseShift(s.shift);
   const branch = BRANCH_BY_ID[s.branchId];
 
@@ -429,7 +416,7 @@ function StaffCard({ s }) {
                style={{ color: "var(--fg)" }}>
             {s.name}
           </div>
-          <div className="mt-1.5"><RolePill role={s.role} /></div>
+          <div className="mt-1.5"><RolePill role={s.role} c={r} /></div>
         </div>
         <button aria-label="Thao tác" title="Thao tác"
                 className="p-1.5 rounded-lg shrink-0 opacity-0 group-hover:opacity-100 transition hover:bg-ink-100"
@@ -477,13 +464,13 @@ function Metric({ label, value, hint }) {
   );
 }
 
-function RolePill({ role }) {
-  const r = ROLE[role];
+function RolePill({ role, c }) {
+  const r = c;
   return (
     <span className="inline-flex items-center gap-1.5 px-2.5 h-6 rounded-full text-[11px] font-extrabold"
           style={{ backgroundColor: r.soft, color: r.ink }}>
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: `linear-gradient(135deg,${r.from},${r.to})` }} />
-      {r.label}
+      {ROLE_LABEL[role]}
     </span>
   );
 }
@@ -492,8 +479,8 @@ function StatusTag({ active }) {
   return (
     <span className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[11.5px] font-bold"
           style={active
-            ? { backgroundColor: "#dcfce7", color: "#15803d" }
-            : { backgroundColor: "#fef3c7", color: "#b45309" }}>
+            ? { backgroundColor: TONE.success.bg, color: TONE.success.ink }
+            : { backgroundColor: TONE.warning.bg, color: TONE.warning.ink }}>
       <span className={`w-1.5 h-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-amber-500"}`} />
       {active ? "Đang làm" : "Nghỉ phép"}
     </span>
@@ -506,8 +493,8 @@ function Rating({ value }) {
   return (
     <span className="inline-flex items-center gap-1 px-2 h-7 rounded-full text-[12.5px] font-extrabold tabular-nums"
           style={low
-            ? { backgroundColor: "#fff1f2", color: "#be123c" }
-            : { backgroundColor: "#fffbeb", color: "#b45309" }}>
+            ? { backgroundColor: TONE.danger.bg, color: TONE.danger.ink }
+            : { backgroundColor: TONE.warning.bg, color: TONE.warning.ink }}>
       <Star className="w-3.5 h-3.5" fill="currentColor" />
       {value}
     </span>
@@ -566,6 +553,7 @@ function PillSelect({ icon: Icon, value, onChange, children }) {
 }
 
 function Segmented({ options, value, onChange, gradient }) {
+  const { brand } = usePalette();
   return (
     <div className="inline-flex items-center gap-1 h-11 p-1 rounded-full shrink-0"
          style={{ backgroundColor: "var(--surface-2)" }}>
@@ -578,8 +566,8 @@ function Segmented({ options, value, onChange, gradient }) {
             className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[12.5px] font-bold transition-all duration-200"
             style={on
               ? gradient
-                ? { background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "#fff",
-                    boxShadow: "0 6px 14px -6px rgba(99,102,241,.7)" }
+                ? { background: `linear-gradient(135deg,${brand.from},${brand.to})`, color: "#fff",
+                    boxShadow: `0 6px 14px -6px ${brand.from}b3` }
                 : { backgroundColor: "var(--surface)", color: "var(--fg)", boxShadow: "0 1px 3px rgba(0,0,0,.12)" }
               : { color: "var(--fg-muted)" }}
           >

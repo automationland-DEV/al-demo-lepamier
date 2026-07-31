@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 import { BranchProvider } from "./context/BranchContext";
@@ -45,6 +45,17 @@ function RequireAuth({ children }) {
 function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  // Trang app-shell (chat toàn màn hình): main lấy chiều cao tuyệt đối
+  // calc(100vh - 61px) thay vì flex-1, vì flex-1 phải dựa vào tổ tiên có
+  // "definite height" — ở đây tổ tiên chỉ có min-h-screen (giá trị TỐI THIỂU,
+  // không phải cố định) nên chuỗi flex-grow không chặn được nội dung tự giãn.
+  // calc(100vh) không phụ thuộc tổ tiên nên luôn đúng, và KHÔNG áp dụng cho
+  // các route khác để không đổi cách cuộn hiện có của chúng.
+  // 61px = chiều cao thật của Topbar (60px nội dung + 1px border-bottom,
+  // đã đo bằng getBoundingClientRect — không phải 60px như class h-[60px] gợi ý).
+  const isFullHeightPage = pathname === "/messages";
 
   useEffect(() => {
     const onResize = () => {
@@ -87,7 +98,14 @@ function AppLayout() {
             }
           }}
         />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden">
+        <main
+          className={
+            isFullHeightPage
+              ? "flex flex-col p-4 md:p-6 lg:p-8 overflow-hidden"
+              : "flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden"
+          }
+          style={isFullHeightPage ? { height: "calc(100vh - 61px)" } : undefined}
+        >
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/branches" element={<Branches />} />
@@ -114,9 +132,11 @@ function AppLayout() {
             <Route path="/posts" element={<Posts />} />
             <Route path="/post-categories" element={<PostCategories />} />
           </Routes>
-          <div>
-            <Footer />
-          </div>
+          {!isFullHeightPage && (
+            <div>
+              <Footer />
+            </div>
+          )}
         </main>
       </div>
       <Chatbot />
