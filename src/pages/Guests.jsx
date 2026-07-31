@@ -5,15 +5,16 @@ import { Icons } from "../components/Icons";
 import { guests, branches } from "../data/mockData";
 import { formatVND, formatDate } from "../utils/format";
 import { useActiveBranch } from "../context/BranchContext";
+import Pagination from "../components/Pagination";
 
 const { Users, Search, Plus, Filter, MoreHorizontal, Phone, Mail, Star, Download, MessageSquare, Eye } = Icons;
 
 const TIER_COLORS = {
-  "Thường": "bg-ink-100 text-ink-700",
-  "Bạc": "bg-slate-200 text-slate-800",
-  "Vàng": "bg-amber-100 text-amber-700",
-  "Bạch kim": "bg-violet-100 text-violet-700",
-  "Kim cương": "bg-rose-100 text-rose-700",
+  "Thường": "bg-ink-100 text-ink-700 border border-ink-200",
+  "Bạc": "bg-slate-200 text-slate-800 border border-slate-300",
+  "Vàng": "bg-amber-100 text-amber-700 border border-amber-200",
+  "Bạch kim": "bg-violet-100 text-violet-700 border border-violet-200",
+  "Kim cương": "bg-rose-100 text-rose-700 border border-rose-200",
 };
 
 export default function Guests() {
@@ -21,6 +22,8 @@ export default function Guests() {
   const [tierFilter, setTierFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   // Lọc theo branch toàn cục
   const scopedGuests = useMemo(
@@ -28,11 +31,38 @@ export default function Guests() {
     [activeBranchId, isAll]
   );
 
-  const filtered = scopedGuests.filter((g) => {
-    if (tierFilter !== "all" && g.tier !== tierFilter) return false;
-    if (search && !`${g.name} ${g.email} ${g.phone}`.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [tierFilter, search, activeBranchId]);
+
+  const filtered = useMemo(() => {
+    return scopedGuests.filter((g) => {
+      if (tierFilter !== "all" && g.tier !== tierFilter) return false;
+      if (search && !`${g.name} ${g.email} ${g.phone}`.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    });
+  }, [scopedGuests, tierFilter, search]);
+
+  const totalPages = Math.ceil(filtered.length / pageSize);
+
+  const paginatedGuests = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage, pageSize]);
+
+  // Set default selected guest
+  useEffect(() => {
+    if (paginatedGuests.length > 0) {
+      // Keep previous selected if it is still in the list, otherwise select first of current page
+      const exists = paginatedGuests.some((g) => g.id === selected?.id);
+      if (!exists) {
+        setSelected(paginatedGuests[0]);
+      }
+    } else {
+      setSelected(null);
+    }
+  }, [paginatedGuests]);
 
   const tierStats = ["Thường", "Bạc", "Vàng", "Bạch kim", "Kim cương"].map((t) => ({
     tier: t,
@@ -54,29 +84,39 @@ export default function Guests() {
 
       {/* Tier cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-6">
-        {tierStats.map((t) => (
-          <button
-            key={t.tier}
-            onClick={() => setTierFilter(tierFilter === t.tier ? "all" : t.tier)}
-            className={`card p-3 sm:p-4 text-left transition ${
-              tierFilter === t.tier ? "ring-2 ring-brand-500" : "hover:shadow-card"
-            }`}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <Star className={`w-4 h-4 ${
-                t.tier === "Kim cương" ? "fill-rose-400 text-rose-400" :
-                t.tier === "Bạch kim" ? "fill-violet-400 text-violet-400" :
-                t.tier === "Vàng" ? "fill-amber-400 text-amber-400" :
-                t.tier === "Bạc" ? "fill-slate-400 text-slate-400" :
-                "fill-ink-300 text-ink-300"
-              }`} />
-              <div className="text-xs font-semibold uppercase tracking-wide text-ink-500 truncate">
-                {t.tier}
+        {tierStats.map((t) => {
+          const isActive = tierFilter === t.tier;
+          const activeBg = 
+            t.tier === "Kim cương" ? "bg-rose-50 border-rose-400 ring-2 ring-rose-100" :
+            t.tier === "Bạch kim" ? "bg-violet-50 border-violet-400 ring-2 ring-violet-100" :
+            t.tier === "Vàng" ? "bg-amber-50 border-amber-400 ring-2 ring-amber-100" :
+            t.tier === "Bạc" ? "bg-slate-100 border-slate-400 ring-2 ring-slate-200" :
+            "bg-ink-50 border-ink-400 ring-2 ring-ink-100";
+            
+          return (
+            <button
+              key={t.tier}
+              onClick={() => setTierFilter(tierFilter === t.tier ? "all" : t.tier)}
+              className={`card p-3 sm:p-4 text-left transition-all duration-300 hover:-translate-y-0.5 ${
+                isActive ? activeBg : "bg-white border-ink-200 hover:shadow-md hover:border-brand-300"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Star className={`w-4 h-4 ${
+                  t.tier === "Kim cương" ? "fill-rose-400 text-rose-400" :
+                  t.tier === "Bạch kim" ? "fill-violet-400 text-violet-400" :
+                  t.tier === "Vàng" ? "fill-amber-400 text-amber-400" :
+                  t.tier === "Bạc" ? "fill-slate-400 text-slate-400" :
+                  "fill-ink-300 text-ink-300"
+                }`} />
+                <div className="text-[10px] font-bold uppercase tracking-wide text-ink-500 truncate">
+                  {t.tier}
+                </div>
               </div>
-            </div>
-            <div className="text-2xl font-bold font-display">{t.count}</div>
-          </button>
-        ))}
+              <div className="text-2xl font-extrabold font-display leading-none mt-1.5">{t.count}</div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Search */}
@@ -108,17 +148,17 @@ export default function Guests() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.slice(0, 20).map((g) => (
+                  {paginatedGuests.map((g) => (
                     <tr
                       key={g.id}
                       onClick={() => setSelected(g)}
-                      className={`hover:bg-ink-50 transition cursor-pointer ${
-                        selected?.id === g.id ? "bg-brand-50" : ""
+                      className={`hover:bg-brand-50/20 border-b border-ink-100 transition-all cursor-pointer ${
+                        selected?.id === g.id ? "bg-brand-50/40 font-medium" : ""
                       }`}
                     >
                       <td className="table-td">
                         <div className="flex items-center gap-3">
-                          <img src={g.avatar} alt="" className="w-9 h-9 rounded-full object-cover shrink-0" />
+                          <img src={g.avatar} alt="" className="w-9 h-9 rounded-full object-cover shrink-0 ring-1 ring-ink-200" />
                           <div className="min-w-0">
                             <div className="font-semibold text-ink-900 truncate">{g.name}</div>
                             <div className="text-xs text-ink-500 truncate">{g.email}</div>
@@ -132,70 +172,88 @@ export default function Guests() {
                           {g.tier}
                         </span>
                       </td>
-                      <td className="table-td text-center font-semibold hidden sm:table-cell">{g.totalBookings}</td>
-                      <td className="table-td text-right font-bold text-ink-900">{formatVND(g.totalSpent)}</td>
+                      <td className="table-td text-center font-bold hidden sm:table-cell">{g.totalBookings}</td>
+                      <td className="table-td text-right font-extrabold text-ink-900">{formatVND(g.totalSpent)}</td>
                       <td className="table-td text-xs hidden lg:table-cell">{formatDate(g.lastVisit)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={filtered.length}
+              itemsPerPage={pageSize}
+            />
           </Card>
         </div>
 
         {/* Detail panel */}
         <Card title="Chi tiết khách hàng" subtitle={selected ? selected.id : "Chọn khách để xem chi tiết"}>
           {selected ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <img src={selected.avatar} alt="" className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover ring-4 ring-white shadow" />
+            <div className="space-y-5">
+              <div className="flex items-center gap-4 p-3 bg-gradient-to-br from-ink-50 to-ink-100/50 rounded-xl border border-ink-200">
+                <img src={selected.avatar} alt="" className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover ring-4 ring-white shadow-md shrink-0" />
                 <div className="min-w-0">
-                  <div className="font-display font-bold text-ink-900 truncate">{selected.name}</div>
-                  <span className={`badge ${TIER_COLORS[selected.tier]}`}>{selected.tier}</span>
+                  <div className="font-display font-bold text-ink-900 text-base truncate">{selected.name}</div>
+                  <span className={`badge ${TIER_COLORS[selected.tier]} mt-1.5 px-2.5 py-0.5 rounded-full font-bold shadow-sm`}>
+                    {selected.tier === "Kim cương" && "💎 "}
+                    {selected.tier}
+                  </span>
                 </div>
               </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-ink-700">
-                  <Phone className="w-4 h-4 text-ink-400" /> {selected.phone}
+              
+              <div className="space-y-3 text-[13px] bg-white p-3 rounded-lg border border-ink-100 shadow-sm">
+                <div className="flex items-center gap-2.5 text-ink-700">
+                  <Phone className="w-4 h-4 text-ink-400 shrink-0" /> 
+                  <span className="font-mono">{selected.phone}</span>
                 </div>
-                <div className="flex items-center gap-2 text-ink-700">
-                  <Mail className="w-4 h-4 text-ink-400" /> {selected.email}
+                <div className="flex items-center gap-2.5 text-ink-700">
+                  <Mail className="w-4 h-4 text-ink-400 shrink-0" /> 
+                  <span className="truncate">{selected.email}</span>
                 </div>
-                <div className="flex items-center gap-2 text-ink-700">
-                  <Users className="w-4 h-4 text-ink-400" /> {selected.nationality}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-ink-100">
-                <div className="card p-3 !shadow-none bg-ink-50 border-0">
-                  <div className="text-xs text-ink-500">Tổng booking</div>
-                  <div className="text-xl font-bold font-display text-ink-900">{selected.totalBookings}</div>
-                </div>
-                <div className="card p-3 !shadow-none bg-ink-50 border-0">
-                  <div className="text-xs text-ink-500">Tổng chi tiêu</div>
-                  <div className="text-xl font-bold font-display text-ink-900">{formatVND(selected.totalSpent)}</div>
+                <div className="flex items-center gap-2.5 text-ink-700">
+                  <Users className="w-4 h-4 text-ink-400 shrink-0" /> 
+                  <span>Quốc tịch: <span className="font-semibold text-ink-900">{selected.nationality}</span></span>
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="card p-3 !shadow-none bg-ink-50 border border-ink-100 rounded-lg text-center sm:text-left">
+                  <div className="text-[10px] text-ink-500 uppercase tracking-wider font-semibold">Tổng booking</div>
+                  <div className="text-xl font-bold font-display text-ink-900 mt-0.5">{selected.totalBookings}</div>
+                </div>
+                <div className="card p-3 !shadow-none bg-ink-50 border border-ink-100 rounded-lg text-center sm:text-left">
+                  <div className="text-[10px] text-ink-500 uppercase tracking-wider font-semibold">Tổng chi tiêu</div>
+                  <div className="text-xl font-bold font-display text-ink-900 mt-0.5 break-all">{formatVND(selected.totalSpent)}</div>
+                </div>
+              </div>
+
               {Array.isArray(selected.notes) && selected.notes.length > 0 && (
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wide text-ink-500 mb-2">Ghi chú</div>
+                <div className="p-3 bg-amber-50/50 border border-amber-100 rounded-lg">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-amber-800 mb-2">Ghi chú đặc biệt</div>
                   <div className="flex flex-wrap gap-1.5">
                     {selected.notes.map((n) => (
-                      <span key={n} className="text-xs px-2 py-1 rounded-md bg-amber-50 text-amber-700">
+                      <span key={n} className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
                         {n}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
+
               <div className="flex gap-2 pt-2 flex-wrap">
-                <button className="btn-primary flex-1 min-w-[140px]"><MessageSquare className="w-4 h-4" /> Nhắn tin</button>
-                <button className="btn-outline flex-1 min-w-[120px]">Lịch sử</button>
+                <button className="btn-primary flex-1 min-w-[140px] justify-center shadow-sm"><MessageSquare className="w-4 h-4" /> Nhắn tin</button>
+                <button className="btn-outline flex-1 min-w-[120px] justify-center shadow-sm">Lịch sử</button>
               </div>
             </div>
           ) : (
-            <div className="text-sm text-ink-400 text-center py-12">
+            <div className="text-sm text-ink-400 text-center py-16">
               <Users className="w-12 h-12 mx-auto mb-3 text-ink-200" />
-              Click vào một khách hàng để xem chi tiết
+              Chọn một khách hàng để xem thông tin chi tiết
             </div>
           )}
         </Card>

@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import PageHeader from "../components/PageHeader";
 import { Icons } from "../components/Icons";
+import Pagination from "../components/Pagination";
 
 const {
   FileText, Plus, Edit2, Trash2, Search, Filter, Download,
@@ -38,12 +39,29 @@ export default function Posts() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [active, setActive] = useState(null); // post detail
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6; // 6 posts per page for a beautiful 3-column layout (2 rows)
+
   const data = useMemo(() => buildData(), []);
 
-  const list = data.posts.filter((p) =>
-    (filter === "all" || p.status === filter) &&
-    (search === "" || p.title.toLowerCase().includes(search.toLowerCase()))
-  );
+  const list = useMemo(() => {
+    return data.posts.filter((p) =>
+      (filter === "all" || p.status === filter) &&
+      (search === "" || p.title.toLowerCase().includes(search.toLowerCase()))
+    );
+  }, [data.posts, filter, search]);
+
+  const totalPages = Math.ceil(list.length / pageSize);
+
+  const paginatedPosts = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return list.slice(start, start + pageSize);
+  }, [list, currentPage, pageSize]);
+
+  // Reset page when filter or search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, search]);
 
   return (
     <div className="max-w-[1320px] mx-auto pb-12 px-3 sm:px-4 lg:px-6">
@@ -112,39 +130,48 @@ export default function Posts() {
 
       {/* Posts */}
       {view === "grid" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {list.map((p) => (
-            <PostCard key={p.id} p={p} onOpen={() => setActive(p)} />
-          ))}
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {paginatedPosts.map((p) => (
+              <PostCard key={p.id} p={p} onOpen={() => setActive(p)} />
+            ))}
+          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={list.length}
+            itemsPerPage={pageSize}
+          />
         </div>
       ) : (
-        <div className="bg-white border border-ink-200 rounded-md overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-white border border-ink-200 rounded-xl p-4 overflow-hidden">
+          <div className="overflow-x-auto -mx-4 -mt-4">
             <table className="w-full text-[12px] min-w-[640px]">
               <thead>
                 <tr className="text-left text-ink-500 uppercase tracking-wider text-[10px] bg-ink-50">
-                  <th className="px-3 sm:px-5 py-3 font-semibold">Bài viết</th>
-                  <th className="px-3 sm:px-5 py-3 font-semibold hidden md:table-cell">Danh mục</th>
-                  <th className="px-3 sm:px-5 py-3 font-semibold hidden lg:table-cell">Tags</th>
-                  <th className="px-3 sm:px-5 py-3 font-semibold">Trạng thái</th>
-                  <th className="px-3 sm:px-5 py-3 font-semibold text-right">Lượt xem</th>
-                  <th className="px-3 sm:px-5 py-3 font-semibold"></th>
+                  <th className="px-5 py-3 font-semibold border-b border-ink-200">Bài viết</th>
+                  <th className="px-5 py-3 font-semibold hidden md:table-cell border-b border-ink-200">Danh mục</th>
+                  <th className="px-5 py-3 font-semibold hidden lg:table-cell border-b border-ink-200">Tags</th>
+                  <th className="px-5 py-3 font-semibold border-b border-ink-200">Trạng thái</th>
+                  <th className="px-5 py-3 font-semibold text-right border-b border-ink-200 border-r-0">Lượt xem</th>
+                  <th className="px-5 py-3 font-semibold border-b border-ink-200"></th>
                 </tr>
               </thead>
               <tbody>
-                {list.map((p, i) => (
-                  <tr key={p.id} className={`border-t border-ink-100 ${i % 2 ? "bg-ink-50/40" : ""} hover:bg-violet-50/30 transition`}>
-                    <td className="px-3 sm:px-5 py-3 min-w-0 max-w-[320px]">
+                {paginatedPosts.map((p, i) => (
+                  <tr key={p.id} className={`border-b border-ink-100 ${i % 2 ? "bg-ink-50/40" : ""} hover:bg-violet-50/30 transition`}>
+                    <td className="px-5 py-3 min-w-0 max-w-[320px]">
                       <div className="font-semibold text-ink-900 truncate flex items-center gap-2">
                         <ImageIcon className="w-3.5 h-3.5 text-ink-400 shrink-0" />
                         {p.title}
                       </div>
                       <div className="text-[10px] text-ink-500 mt-0.5 truncate">{p.author} · {p.date}</div>
                     </td>
-                    <td className="px-3 sm:px-5 py-3 hidden md:table-cell">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-violet-50 text-violet-700 border border-violet-200">{p.category}</span>
+                    <td className="px-5 py-3 hidden md:table-cell">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-violet-50 text-violet-700 border border-violet-200">{p.category}</span>
                     </td>
-                    <td className="px-3 sm:px-5 py-3 hidden lg:table-cell">
+                    <td className="px-5 py-3 hidden lg:table-cell">
                       <div className="flex items-center gap-1 flex-wrap">
                         {p.tags.slice(0, 2).map((t) => (
                           <span key={t} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-ink-100 text-ink-700">
@@ -154,9 +181,9 @@ export default function Posts() {
                         {p.tags.length > 2 && <span className="text-[10px] text-ink-500 font-bold">+{p.tags.length - 2}</span>}
                       </div>
                     </td>
-                    <td className="px-3 sm:px-5 py-3"><StatusPill s={p.status} /></td>
-                    <td className="px-3 sm:px-5 py-3 text-right tabular-nums font-bold text-ink-900 whitespace-nowrap">{p.views}</td>
-                    <td className="px-3 sm:px-5 py-3">
+                    <td className="px-5 py-3"><StatusPill s={p.status} /></td>
+                    <td className="px-5 py-3 text-right tabular-nums font-bold text-ink-900 whitespace-nowrap">{p.views}</td>
+                    <td className="px-5 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => setActive(p)} className="w-7 h-7 rounded-md hover:bg-violet-100 text-violet-700 flex items-center justify-center transition">
                           <Eye className="w-3.5 h-3.5" />
@@ -171,6 +198,13 @@ export default function Posts() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={list.length}
+            itemsPerPage={pageSize}
+          />
         </div>
       )}
 
@@ -185,15 +219,15 @@ function KPI({ k }) {
   const toneCls = up ? "text-emerald-700 bg-emerald-50 border-emerald-100" : "text-rose-700 bg-rose-50 border-rose-100";
   const Icn = up ? TrendingUp : TrendingDown;
   return (
-    <div className="bg-white border border-ink-200 rounded-md p-3 sm:p-3.5 hover:shadow-sm transition">
+    <div className="bg-white border border-ink-200 rounded-xl p-3.5 hover:shadow-md transition duration-300">
       <div className="flex items-center justify-between gap-1.5 mb-2">
-        <k.icon className="w-4 h-4 text-violet-700" />
-        <span className={`inline-flex items-center gap-0.5 text-[9px] font-bold px-1 py-0.5 rounded border ${toneCls}`}>
+        <k.icon className="w-4 h-4 text-violet-750" />
+        <span className={`inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded border ${toneCls}`}>
           <Icn className="w-2.5 h-2.5" />
           {up ? "+" : ""}{k.trend}%
         </span>
       </div>
-      <div className="text-[18px] sm:text-[20px] font-display font-bold text-ink-900 tabular-nums leading-none break-all">{k.value}</div>
+      <div className="text-2xl font-display font-extrabold text-ink-900 tabular-nums leading-none">{k.value}</div>
       <div className="text-[10px] text-ink-500 uppercase tracking-wider font-semibold mt-1.5 truncate">{k.label}</div>
     </div>
   );
@@ -201,13 +235,13 @@ function KPI({ k }) {
 
 function StatusPill({ s }) {
   const cfg = STATUS[s] || STATUS.draft;
-  return <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${cfg.cls}`}>{cfg.label}</span>;
+  return <span className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${cfg.cls}`}>{cfg.label}</span>;
 }
 
 function PostCard({ p, onOpen }) {
   return (
-    <div onClick={onOpen} className="bg-white border border-ink-200 rounded-md overflow-hidden cursor-pointer hover:shadow-md transition group">
-      <div className="aspect-[16/9] relative overflow-hidden bg-ink-100">
+    <div onClick={onOpen} className="bg-white border border-ink-200 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group flex flex-col h-full">
+      <div className="aspect-[16/9] relative overflow-hidden bg-ink-100 shrink-0">
         {p.cover ? (
           <img
             src={p.cover}
@@ -218,7 +252,7 @@ function PostCard({ p, onOpen }) {
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-ink-900/85 via-ink-900/30 to-transparent" />
         <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/95 text-violet-700">
+          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/95 text-violet-700 shadow-sm">
             {p.category}
           </span>
         </div>
@@ -227,37 +261,37 @@ function PostCard({ p, onOpen }) {
         </div>
         <div className="absolute bottom-2.5 left-2.5 right-2.5">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-ink-900/80 text-white">
+            <span className="text-[8px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-ink-900/80 text-white border border-white/10">
               {p.postType}
             </span>
-            {p.featured && <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500 text-white">⭐ NỔI BẬT</span>}
+            {p.featured && <span className="text-[8px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500 text-white shadow-sm">⭐ NỔI BẬT</span>}
           </div>
-          <div className="text-white font-display font-bold text-[15px] leading-tight line-clamp-2 drop-shadow">
+          <div className="text-white font-display font-bold text-[14px] leading-snug line-clamp-2 drop-shadow">
             {p.title}
           </div>
         </div>
       </div>
-      <div className="p-3 sm:p-4">
-        <div className="text-[11px] text-ink-500 flex items-center gap-1.5 flex-wrap">
-          <span>{p.author}</span>·<span>{p.date}</span>·<span className="tabular-nums">{p.readTime} đọc</span>
+      <div className="p-4 flex flex-col flex-1">
+        <div className="text-[10px] text-ink-500 flex items-center gap-1.5 flex-wrap">
+          <span className="font-semibold text-ink-700">{p.author}</span>·<span>{p.date}</span>·<span className="tabular-nums">{p.readTime} đọc</span>
         </div>
-        <p className="text-[12px] text-ink-700 mt-2 line-clamp-2 leading-relaxed">{p.excerpt}</p>
-        <div className="flex items-center gap-1 flex-wrap mt-2.5">
+        <p className="text-[12px] text-ink-700 mt-2 line-clamp-2 leading-relaxed flex-1">{p.excerpt}</p>
+        <div className="flex items-center gap-1 flex-wrap mt-3">
           {p.tags.slice(0, 3).map((t) => (
-            <span key={t} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-ink-100 text-ink-700">
+            <span key={t} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-ink-50 text-ink-700 border border-ink-150">
               <Hash className="w-2.5 h-2.5" />{t}
             </span>
           ))}
         </div>
-        <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-ink-100">
+        <div className="flex items-center justify-between gap-2 mt-4 pt-3.5 border-t border-ink-100 shrink-0">
           <div className="flex items-center gap-3 text-[11px] text-ink-500">
-            <span className="inline-flex items-center gap-1"><Eye className="w-3 h-3" />{p.views}</span>
-            <span className="inline-flex items-center gap-1"><Heart className="w-3 h-3" />{p.likes}</span>
-            <span className="inline-flex items-center gap-1"><Share2 className="w-3 h-3" />{p.shares}</span>
+            <span className="inline-flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{p.views || 0}</span>
+            <span className="inline-flex items-center gap-1"><Heart className="w-3.5 h-3.5" />{p.likes || 0}</span>
+            <span className="inline-flex items-center gap-1"><Share2 className="w-3.5 h-3.5" />{p.shares || 0}</span>
           </div>
           <div className="flex items-center gap-1 text-[10px] font-bold">
             <span className="text-ink-500 uppercase tracking-wider">SEO</span>
-            <span className={`tabular-nums ${p.seo >= 80 ? "text-emerald-700" : p.seo >= 60 ? "text-amber-700" : "text-rose-700"}`}>{p.seo}</span>
+            <span className={`tabular-nums text-xs ${p.seo >= 80 ? "text-emerald-700" : p.seo >= 60 ? "text-amber-700" : "text-rose-700"}`}>{p.seo}</span>
           </div>
         </div>
       </div>
@@ -271,19 +305,19 @@ function PostDrawer({ post, onClose }) {
       <div className="bg-white w-full max-w-xl h-full overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 z-10 bg-white border-b border-ink-200 px-5 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <FileText className="w-4 h-4 text-violet-700 shrink-0" />
+            <FileText className="w-4 h-4 text-violet-750 shrink-0" />
             <div className="min-w-0">
               <div className="font-semibold text-ink-900 truncate">{post.title}</div>
               <div className="text-[10px] text-ink-500">{post.author} · {post.date}</div>
             </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-md hover:bg-ink-100 text-ink-500 flex items-center justify-center transition shrink-0">
+          <button onClick={onClose} className="w-8 h-8 rounded-md hover:bg-ink-100 text-ink-500 flex items-center justify-center transition shrink-0 font-bold text-xl">
             ×
           </button>
         </div>
         <div className="p-5 space-y-5">
           {/* Cover */}
-          <div className="aspect-[16/9] rounded-md relative overflow-hidden bg-ink-100">
+          <div className="aspect-[16/9] rounded-xl relative overflow-hidden bg-ink-100 border border-ink-200 shadow-sm">
             {post.cover ? (
               <img
                 src={post.cover}
@@ -294,7 +328,7 @@ function PostDrawer({ post, onClose }) {
             ) : null}
             <div className="absolute inset-0 bg-gradient-to-t from-ink-900/70 via-transparent to-transparent" />
             <div className="absolute bottom-3 left-3">
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-white/95 text-violet-700">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-white/95 text-violet-700 shadow-sm">
                 {post.category}
               </span>
             </div>
@@ -316,11 +350,11 @@ function PostDrawer({ post, onClose }) {
               <SEOBlox k="Keyword density" v={`${post.kw}%`} tone="violet" />
               <SEOBlox k="Backlinks" v={post.backlinks} tone="emerald" />
             </div>
-            <div className="mt-3 p-3 rounded-md bg-ink-50 border border-ink-200">
-              <div className="text-[10px] uppercase font-bold text-ink-500 mb-1">Từ khóa chính</div>
+            <div className="mt-3 p-3 rounded-xl bg-ink-50 border border-ink-200">
+              <div className="text-[10px] uppercase font-bold text-ink-500 mb-1.5">Từ khóa chính</div>
               <div className="flex items-center gap-1 flex-wrap">
                 {post.mainKeywords.map((k) => (
-                  <span key={k} className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-violet-100 text-violet-700">{k}</span>
+                  <span key={k} className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-750 border border-violet-200">{k}</span>
                 ))}
               </div>
             </div>
@@ -330,11 +364,11 @@ function PostDrawer({ post, onClose }) {
           <Section title="Tags" icon={Hash}>
             <div className="flex items-center gap-1.5 flex-wrap">
               {post.tags.map((t) => (
-                <span key={t} className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-semibold bg-violet-50 text-violet-700 border border-violet-200">
+                <span key={t} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-violet-50 text-violet-700 border border-violet-200 shadow-sm">
                   <Hash className="w-3 h-3" />{t}
                 </span>
               ))}
-              <button className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-semibold border border-dashed border-ink-300 text-ink-500 hover:border-violet-400 hover:text-violet-700">
+              <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-dashed border-ink-300 text-ink-500 hover:border-violet-400 hover:text-violet-700 transition">
                 <Plus className="w-3 h-3" /> Thêm tag
               </button>
             </div>
@@ -342,7 +376,7 @@ function PostDrawer({ post, onClose }) {
 
           {/* Performance */}
           <Section title="Hiệu quả 14 ngày" icon={TrendingUp}>
-            <div className="h-40">
+            <div className="h-40 bg-ink-50/50 p-2.5 rounded-xl border border-ink-150">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={post.chart} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
                   <defs>
@@ -365,10 +399,10 @@ function PostDrawer({ post, onClose }) {
           <Section title="Đã đăng kênh" icon={Globe2}>
             <div className="grid grid-cols-3 gap-2">
               {post.channelStats.map((c) => (
-                <div key={c.id} className="border border-ink-200 rounded-md p-2">
+                <div key={c.id} className="border border-ink-200 rounded-xl p-2.5 bg-white">
                   <div className="text-[10px] font-bold text-ink-700 uppercase tracking-wider truncate">{c.name}</div>
-                  <div className="text-[13px] font-display font-bold text-ink-900 tabular-nums mt-0.5">{c.views}</div>
-                  <div className="text-[9px] text-emerald-700 font-semibold">↑ {c.trend}%</div>
+                  <div className="text-[13px] font-display font-extrabold text-ink-900 tabular-nums mt-0.5">{c.views}</div>
+                  <div className="text-[9px] text-emerald-700 font-bold mt-0.5">↑ {c.trend}%</div>
                 </div>
               ))}
             </div>
@@ -376,13 +410,13 @@ function PostDrawer({ post, onClose }) {
 
           {/* Actions */}
           <div className="flex items-center gap-2 pt-3 border-t border-ink-200">
-            <button className="flex-1 px-3 py-2 rounded-md bg-violet-700 text-white text-[12px] font-bold hover:bg-violet-800 transition flex items-center justify-center gap-1.5">
+            <button className="flex-1 px-3 py-2.5 rounded-lg bg-violet-700 text-white text-[12px] font-bold hover:bg-violet-850 transition flex items-center justify-center gap-1.5 shadow-sm">
               <Edit2 className="w-3.5 h-3.5" /> Chỉnh sửa
             </button>
-            <button className="flex-1 px-3 py-2 rounded-md border border-ink-200 text-ink-700 text-[12px] font-semibold hover:bg-ink-50 transition flex items-center justify-center gap-1.5">
+            <button className="flex-1 px-3 py-2.5 rounded-lg border border-ink-200 text-ink-700 text-[12px] font-semibold hover:bg-ink-50 transition flex items-center justify-center gap-1.5 shadow-sm">
               <Share2 className="w-3.5 h-3.5" /> Chia sẻ
             </button>
-            <button className="flex-1 px-3 py-2 rounded-md border border-rose-200 text-rose-700 text-[12px] font-semibold hover:bg-rose-50 transition flex items-center justify-center gap-1.5">
+            <button className="flex-1 px-3 py-2.5 rounded-lg border border-rose-250 text-rose-700 text-[12px] font-semibold hover:bg-rose-50 transition flex items-center justify-center gap-1.5 shadow-sm">
               <Trash2 className="w-3.5 h-3.5" /> Xóa
             </button>
           </div>
@@ -396,8 +430,8 @@ function Section({ title, icon: Icon, children }) {
   return (
     <div>
       <div className="flex items-center gap-2 mb-2">
-        <Icon className="w-3.5 h-3.5 text-violet-700" />
-        <div className="text-[11px] uppercase tracking-wider font-bold text-violet-800">{title}</div>
+        <Icon className="w-3.5 h-3.5 text-violet-750" />
+        <div className="text-[10px] uppercase tracking-wider font-bold text-violet-800">{title}</div>
       </div>
       {children}
     </div>
@@ -406,18 +440,18 @@ function Section({ title, icon: Icon, children }) {
 
 function SmallStat({ label, value, icon: Icon, tone = "violet" }) {
   const toneCls = {
-    violet: "bg-violet-50 text-violet-700",
-    rose: "bg-rose-50 text-rose-700",
-    blue: "bg-blue-50 text-blue-700",
-    emerald: "bg-emerald-50 text-emerald-700",
+    violet: "bg-violet-50 text-violet-700 border border-violet-100",
+    rose: "bg-rose-50 text-rose-700 border border-rose-100",
+    blue: "bg-blue-50 text-blue-700 border border-blue-100",
+    emerald: "bg-emerald-50 text-emerald-700 border border-emerald-100",
   }[tone];
   return (
-    <div className="border border-ink-200 rounded-md p-2.5">
-      <div className={`w-7 h-7 rounded ${toneCls} flex items-center justify-center mb-1`}>
+    <div className="border border-ink-200 rounded-xl p-2.5 text-center">
+      <div className={`w-7 h-7 rounded-lg ${toneCls} flex items-center justify-center mx-auto mb-1.5`}>
         <Icon className="w-3.5 h-3.5" />
       </div>
       <div className="text-[14px] font-display font-bold text-ink-900 tabular-nums leading-none">{value}</div>
-      <div className="text-[9px] text-ink-500 uppercase tracking-wider font-semibold mt-1">{label}</div>
+      <div className="text-[9px] text-ink-500 uppercase tracking-wider font-semibold mt-1.5">{label}</div>
     </div>
   );
 }
@@ -431,9 +465,9 @@ function SEOBlox({ k, v, suffix, tone = "violet" }) {
     blue: "text-blue-700 bg-blue-50 border-blue-200",
   }[tone];
   return (
-    <div className={`p-2.5 rounded-md border ${toneCls}`}>
-      <div className="text-[9px] uppercase font-bold tracking-wider opacity-80">{k}</div>
-      <div className="text-[18px] font-display font-bold tabular-nums leading-none mt-0.5">
+    <div className={`p-2.5 rounded-lg border ${toneCls}`}>
+      <div className="text-[9px] uppercase font-bold tracking-wider opacity-85">{k}</div>
+      <div className="text-[18px] font-display font-bold tabular-nums leading-none mt-1">
         {v}<span className="text-[10px] opacity-70 font-normal ml-0.5">{suffix || ""}</span>
       </div>
     </div>
@@ -460,30 +494,18 @@ function buildData() {
   ];
 
   const covers = [
-    // Phú Quốc — biển, check-in, view hoàng hôn
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=450&fit=crop&q=80",   // 0 Phú Quốc beach sunset
-    // Resort gia đình — villa hồ bơi
-    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=450&fit=crop&q=80",   // 1 Family resort pool
-    // Đầu bếp — bếp nhà hàng
-    "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=450&fit=crop&q=80",   // 2 Chef cooking
-    // Acoustic — đêm nhạc hồ bơi
-    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=450&fit=crop&q=80",   // 3 Pool night event
-    // Khuyến mãi Deluxe — phòng sang trọng
-    "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&h=450&fit=crop&q=80",   // 4 Deluxe room
-    // Review Đà Lạt — khung cảnh thành phố sương mù
-    "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&h=450&fit=crop&q=80",   // 5 Dalat misty
-    // Workshop bánh — lớp học làm bánh
-    "https://images.unsplash.com/photo-1556217477-d325251ece38?w=800&h=450&fit=crop&q=80",   // 6 Baking class
-    // Mẹo đặt phòng — booking/laptop
-    "https://images.unsplash.com/photo-1455587734955-081b22074882?w=800&h=450&fit=crop&q=80",   // 7 Booking laptop
-    // Đà Lạt mùa thu — hoa dã quỳ
-    "https://images.unsplash.com/photo-1571406761758-9a0eed4d5f24?w=800&h=450&fit=crop&q=80",   // 8 Dalat autumn
-    // Yoga biển — yoga buổi sáng
-    "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&h=450&fit=crop&q=80",   // 9 Beach yoga
-    // Hành trình 4N3Đ — lịch trình/bản đồ
-    "https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?w=800&h=450&fit=crop&q=80",   // 10 Phu Quoc island
-    // Housekeeping — phòng sang đang dọn
-    "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&h=450&fit=crop&q=80",   // 11 Housekeeping room
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1556217477-d325251ece38?w=800&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1455587734955-081b22074882?w=800&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1571406761758-9a0eed4d5f24?w=800&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?w=800&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&h=450&fit=crop&q=80",
   ];
 
   const basePost = (i) => ({
@@ -506,7 +528,7 @@ function buildData() {
       "Khám phá những góc sống ảo đẹp nhất tại đảo ngọc cùng Le Palmier Phú Quốc trong mùa hè này.",
       "Hướng dẫn chi tiết từ A-Z cho kỳ nghỉ gia đình hoàn hảo, từ chọn phòng đến hoạt động.",
       "Câu chuyện về những đôi tay vàng làm nên ẩm thực đẳng cấp tại hệ thống Le Palmier.",
-      "Đêm nhạc acoustic lãng mạn bên hồ bơi vô cực với ban nhạc The Fingers.",
+      "Đem nhạc acoustic lãng mạn bên hồ bơi vô cực với ban nhạc The Fingers.",
       "Đặt phòng sớm để nhận ưu đãi hấp dẫn lên đến 30% phòng Deluxe tháng 8.",
       "Chia sẻ từ gia đình anh Tuấn sau 3 ngày tuyệt vời tại LP2 Đà Lạt.",
       "Trải nghiệm làm bánh croissants và macarons cùng đầu bếp người Pháp tại LP1.",

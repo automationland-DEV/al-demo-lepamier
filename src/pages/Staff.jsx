@@ -5,6 +5,7 @@ import { Icons } from "../components/Icons";
 import { staff, branches } from "../data/mockData";
 import { formatVND } from "../utils/format";
 import { useActiveBranch } from "../context/BranchContext";
+import Pagination from "../components/Pagination";
 
 const {
   UserCog, Search, Filter, Plus, MoreHorizontal, Phone, Mail, Star,
@@ -35,10 +36,17 @@ export default function Staff() {
   const [search, setSearch] = useState("");
   const [view, setView] = useState("grid");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 12;
 
   useEffect(() => {
     setBranchFilter(activeBranchId === "ALL" ? "all" : activeBranchId);
   }, [activeBranchId]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [branchFilter, roleFilter, statusFilter, search]);
 
   const filtered = useMemo(() => staff.filter((s) => {
     if (branchFilter !== "all" && s.branchId !== branchFilter) return false;
@@ -52,6 +60,13 @@ export default function Staff() {
     }
     return true;
   }), [staff, branchFilter, roleFilter, statusFilter, search]);
+
+  const totalPages = Math.ceil(filtered.length / pageSize);
+
+  const paginatedStaff = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage, pageSize]);
 
   const safeStaff = Array.isArray(staff) ? staff : [];
 
@@ -249,36 +264,39 @@ export default function Staff() {
       </Card>
 
       {/* ── ROLE CHIPS ─────────────────────────────────── */}
-      <div className="flex items-center gap-2 mt-5 overflow-x-auto pb-1">
+      <div className="flex items-center gap-4 mt-5 overflow-x-auto pb-1.5">
         <button
           onClick={() => setRoleFilter("all")}
-          className={`shrink-0 px-3 py-1.5 rounded-full text-[11.5px] font-semibold border transition ${
+          className={`shrink-0 px-6 py-2 rounded-full text-[11.5px] font-bold border transition-all duration-200 ${
             roleFilter === "all"
-              ? "bg-violet-700 text-white border-violet-700 shadow-sm"
-              : "bg-white text-ink-700 border-ink-200 hover:border-violet-300"
+              ? "bg-violet-700 text-white border-violet-700 shadow-md transform -translate-y-0.5"
+              : "bg-white text-ink-700 border-ink-200 hover:border-violet-300 hover:text-violet-700 hover:shadow-sm"
           }`}
         >
           Tất cả vai trò · {staff.length}
         </button>
-        {roleStats.map((r) => (
-          <button
-            key={r.key}
-            onClick={() => setRoleFilter(roleFilter === r.key ? "all" : r.key)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-[11.5px] font-semibold border transition ${
-              roleFilter === r.key
-                ? "bg-violet-700 text-white border-violet-700 shadow-sm"
-                : "bg-white text-ink-700 border-ink-200 hover:border-violet-300"
-            }`}
-          >
-            {r.label} · {r.count}
-          </button>
-        ))}
+        {roleStats.map((r) => {
+          const isActive = roleFilter === r.key;
+          return (
+            <button
+              key={r.key}
+              onClick={() => setRoleFilter(roleFilter === r.key ? "all" : r.key)}
+              className={`shrink-0 px-6 py-2 rounded-full text-[11.5px] font-bold border transition-all duration-200 ${
+                isActive
+                  ? "bg-violet-700 text-white border-violet-700 shadow-md transform -translate-y-0.5"
+                  : "bg-white text-ink-700 border-ink-200 hover:border-violet-300 hover:text-violet-700 hover:shadow-sm"
+              }`}
+            >
+              {r.label} · {r.count}
+            </button>
+          );
+        })}
       </div>
 
       {/* ── RESULT META ────────────────────────────────── */}
       <div className="flex items-center justify-between mt-6 mb-3">
         <div className="text-[12px] text-ink-500">
-          Hiển thị <strong className="text-ink-900 tabular-nums">{Math.min(filtered.length, view === "grid" ? 24 : 50)}</strong> / {filtered.length} nhân viên
+          Hiển thị <strong className="text-ink-900 tabular-nums">{Math.min(filtered.length, pageSize)}</strong> / {filtered.length} nhân viên
           {(roleFilter !== "all" || branchFilter !== "all" || search || statusFilter !== "all") && (
             <button
               onClick={() => { setRoleFilter("all"); setBranchFilter("all"); setSearch(""); setStatusFilter("all"); }}
@@ -296,72 +314,90 @@ export default function Staff() {
           <div className="text-ink-400 text-[13px]">Không tìm thấy nhân viên phù hợp với bộ lọc hiện tại.</div>
         </Card>
       ) : view === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.slice(0, 24).map((s) => {
-            const Icon = ROLE_ICON[s.role] || UserCog;
-            return (
-              <div
-                key={s.id}
-                className="bg-white border border-ink-200 rounded-md p-3 sm:p-4 hover:shadow-md hover:-translate-y-0.5 transition relative group"
-              >
-                <div className="absolute top-0 left-0 right-0 h-1 rounded-t-md" style={{ background: ROLE_MAP[s.role]?.color?.includes("violet") ? "#8b5cf6" : ROLE_MAP[s.role]?.color?.includes("blue") ? "#3b82f6" : ROLE_MAP[s.role]?.color?.includes("amber") ? "#f59e0b" : ROLE_MAP[s.role]?.color?.includes("rose") ? "#f43f5e" : "#64748b" }} />
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-md bg-violet-50 text-violet-700 flex items-center justify-center shrink-0">
-                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.2} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="font-semibold text-ink-900 text-[13.5px] truncate">{s.name}</div>
-                      <button className="text-ink-400 hover:text-violet-700 opacity-0 group-hover:opacity-100 transition">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {paginatedStaff.map((s) => {
+              const Icon = ROLE_ICON[s.role] || UserCog;
+              const roleAccentColor = 
+                s.role === "manager" ? "#8b5cf6" : 
+                s.role === "reception" ? "#3b82f6" : 
+                s.role === "housekeeping" ? "#06b6d4" : 
+                s.role === "fnb" ? "#f59e0b" : 
+                s.role === "security" ? "#f43f5e" : 
+                "#64748b";
+
+              return (
+                <div
+                  key={s.id}
+                  className="bg-white border border-ink-200 rounded-xl p-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative group overflow-hidden"
+                >
+                  <div className="absolute top-0 left-0 right-0 h-1 rounded-t-xl" style={{ backgroundColor: roleAccentColor }} />
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-violet-50 text-violet-700 flex items-center justify-center shrink-0 border border-violet-100 shadow-sm">
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.2} />
                     </div>
-                    <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded mt-1 ${ROLE_MAP[s.role]?.color}`}>
-                      {ROLE_MAP[s.role]?.label}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-semibold text-ink-900 text-[13.5px] truncate">{s.name}</div>
+                        <button className="text-ink-400 hover:text-violet-700 opacity-0 group-hover:opacity-100 transition p-1 rounded hover:bg-ink-100">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <span className={`inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1.5 ${ROLE_MAP[s.role]?.color}`}>
+                        {ROLE_MAP[s.role]?.label}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-3.5 space-y-1.5 text-[11.5px] text-ink-600 bg-ink-50/50 p-2.5 rounded-lg border border-ink-100/50">
+                    <div className="flex items-center gap-2 truncate">
+                      <Phone className="w-3.5 h-3.5 text-ink-400 shrink-0" />
+                      <span className="tabular-nums font-mono">{s.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2 truncate">
+                      <Mail className="w-3.5 h-3.5 text-ink-400 shrink-0" />
+                      <span className="truncate">{s.email}</span>
+                    </div>
+                  </div>
+                  <div className="mt-3.5 grid grid-cols-2 gap-2 text-[11px]">
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wider text-ink-500 font-semibold">Chi nhánh</div>
+                      <div className="font-bold text-ink-900 truncate mt-0.5">{s.branchName?.split(" ").slice(-1)[0] || "—"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wider text-ink-500 font-semibold">Ca làm việc</div>
+                      <div className="font-bold text-ink-900 truncate mt-0.5">{s.shift?.split(" ")[1] || s.shift?.split(" ")[0]}</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-ink-100 flex items-center justify-between">
+                    <span className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                      s.status === "active"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-250"
+                        : "bg-amber-50 text-amber-700 border border-amber-250"
+                    }`}>
+                      <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1.5 ${
+                        s.status === "active" ? "bg-emerald-500" : "bg-amber-500"
+                      }`} />
+                      {s.status === "active" ? "Đang làm" : "Nghỉ phép"}
                     </span>
+                    {s.rating && (
+                      <div className="text-[11.5px] font-extrabold text-amber-600 flex items-center gap-1 tabular-nums">
+                        <Star className="w-3.5 h-3.5 fill-amber-450 text-amber-450" />
+                        {s.rating}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="mt-3 space-y-1.5 text-[11.5px] text-ink-600">
-                  <div className="flex items-center gap-2 truncate">
-                    <Phone className="w-3.5 h-3.5 text-ink-400 shrink-0" />
-                    <span className="tabular-nums">{s.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2 truncate">
-                    <Mail className="w-3.5 h-3.5 text-ink-400 shrink-0" />
-                    <span className="truncate">{s.email}</span>
-                  </div>
-                </div>
-                <div className="mt-3 pt-3 border-t border-ink-100 grid grid-cols-2 gap-2 text-[11px]">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-ink-500 font-semibold">Chi nhánh</div>
-                    <div className="font-semibold text-ink-900 truncate mt-0.5">{s.branchName?.split(" ").slice(-1)[0] || "—"}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-wider text-ink-500 font-semibold">Ca</div>
-                    <div className="font-semibold text-ink-900 truncate mt-0.5">{s.shift?.split(" ")[0] || "—"}</div>
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                    s.status === "active"
-                      ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                      : "bg-amber-50 text-amber-700 border border-amber-100"
-                  }`}>
-                    <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 ${
-                      s.status === "active" ? "bg-emerald-500" : "bg-amber-500"
-                    }`} />
-                    {s.status === "active" ? "Đang làm" : "Nghỉ phép"}
-                  </span>
-                  {s.rating && (
-                    <div className="text-[11px] font-bold text-amber-600 flex items-center gap-1 tabular-nums">
-                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                      {s.rating}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={filtered.length}
+            itemsPerPage={pageSize}
+          />
         </div>
       ) : (
         <Card>
@@ -369,21 +405,21 @@ export default function Staff() {
             <table className="w-full text-[12.5px] min-w-[640px]">
               <thead>
                 <tr className="text-left text-ink-500 uppercase tracking-wider text-[10px] bg-ink-50">
-                  <th className="px-5 py-3 font-semibold">Nhân viên</th>
-                  <th className="px-5 py-3 font-semibold hidden sm:table-cell">Vai trò</th>
-                  <th className="px-5 py-3 font-semibold hidden md:table-cell">Chi nhánh</th>
-                  <th className="px-5 py-3 font-semibold hidden lg:table-cell">Liên hệ</th>
-                  <th className="px-5 py-3 font-semibold hidden md:table-cell">Ca làm</th>
-                  <th className="px-5 py-3 font-semibold text-right">Lương</th>
-                  <th className="px-5 py-3 font-semibold text-center">Trạng thái</th>
+                  <th className="px-5 py-3 font-semibold border-b border-ink-200">Nhân viên</th>
+                  <th className="px-5 py-3 font-semibold hidden sm:table-cell border-b border-ink-200">Vai trò</th>
+                  <th className="px-5 py-3 font-semibold hidden md:table-cell border-b border-ink-200">Chi nhánh</th>
+                  <th className="px-5 py-3 font-semibold hidden lg:table-cell border-b border-ink-200">Liên hệ</th>
+                  <th className="px-5 py-3 font-semibold hidden md:table-cell border-b border-ink-200">Ca làm</th>
+                  <th className="px-5 py-3 font-semibold text-right border-b border-ink-200">Lương</th>
+                  <th className="px-5 py-3 font-semibold text-center border-b border-ink-200">Trạng thái</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.slice(0, 50).map((s, i) => (
-                  <tr key={s.id} className={`border-t border-ink-100 hover:bg-violet-50/30 transition ${i % 2 ? "bg-ink-50/30" : ""}`}>
+                {paginatedStaff.map((s, i) => (
+                  <tr key={s.id} className={`border-b border-ink-100 hover:bg-brand-50/20 transition-all ${i % 2 ? "bg-ink-50/20" : ""}`}>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-md bg-violet-50 text-violet-700 flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-lg bg-violet-50 text-violet-700 flex items-center justify-center shrink-0 border border-violet-100 shadow-sm">
                           <UserCog className="w-4 h-4" strokeWidth={2.2} />
                         </div>
                         <div className="min-w-0">
@@ -393,7 +429,7 @@ export default function Staff() {
                       </div>
                     </td>
                     <td className="px-5 py-3 hidden sm:table-cell">
-                      <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${ROLE_MAP[s.role]?.color}`}>
+                      <span className={`inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${ROLE_MAP[s.role]?.color}`}>
                         {ROLE_MAP[s.role]?.label}
                       </span>
                     </td>
@@ -406,7 +442,7 @@ export default function Staff() {
                     <td className="px-5 py-3 hidden lg:table-cell">
                       <div className="text-[11px] flex items-center gap-1.5 text-ink-700">
                         <Phone className="w-3 h-3 text-ink-400" />
-                        <span className="tabular-nums">{s.phone}</span>
+                        <span className="tabular-nums font-mono">{s.phone}</span>
                       </div>
                       <div className="text-[11px] flex items-center gap-1.5 text-ink-500 truncate mt-0.5">
                         <Mail className="w-3 h-3 text-ink-400" />
@@ -414,12 +450,12 @@ export default function Staff() {
                       </div>
                     </td>
                     <td className="px-5 py-3 text-[11.5px] text-ink-700 hidden md:table-cell">{s.shift}</td>
-                    <td className="px-5 py-3 text-right font-bold tabular-nums text-ink-900">{formatVND(s.salary)}</td>
+                    <td className="px-5 py-3 text-right font-extrabold tabular-nums text-ink-900">{formatVND(s.salary)}</td>
                     <td className="px-5 py-3 text-center">
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                      <span className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
                         s.status === "active"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                          : "bg-amber-50 text-amber-700 border border-amber-100"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-250"
+                          : "bg-amber-50 text-amber-700 border border-amber-250"
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${s.status === "active" ? "bg-emerald-500" : "bg-amber-500"}`} />
                         {s.status === "active" ? "Đang làm" : "Nghỉ phép"}
@@ -430,6 +466,14 @@ export default function Staff() {
               </tbody>
             </table>
           </div>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={filtered.length}
+            itemsPerPage={pageSize}
+          />
         </Card>
       )}
     </div>
