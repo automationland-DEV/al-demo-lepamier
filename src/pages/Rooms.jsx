@@ -34,31 +34,40 @@ export default function Rooms() {
   }, [activeBranchId]);
 
   const branch = branches.find((b) => b.id === branchId);
+
   const branchRooms = useMemo(
     () => rooms.filter((r) => r.branchId === branchId),
     [branchId]
   );
 
-  const filtered = branchRooms.filter((r) => {
-    if (status !== "all" && r.status !== status) return false;
-    if (roomType !== "all" && r.typeKey !== roomType) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      if (!r.number.toLowerCase().includes(q) && !r.typeName.toLowerCase().includes(q)) return false;
-    }
-    return true;
-  });
+  const filtered = useMemo(() => {
+    return branchRooms.filter((r) => {
+      if (status !== "all" && r.status !== status) return false;
+      if (roomType !== "all" && r.type !== roomType) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (!r.number.toLowerCase().includes(q) && !r.typeName.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+  }, [branchRooms, status, roomType, search]);
 
-  const byFloor = filtered.reduce((acc, r) => {
-    if (!acc[r.floor]) acc[r.floor] = [];
-    acc[r.floor].push(r);
-    return acc;
-  }, {});
+  const filteredIds = useMemo(() => new Set(filtered.map((r) => r.id)), [filtered]);
 
-  const statusCounts = branchRooms.reduce((acc, r) => {
-    acc[r.status] = (acc[r.status] || 0) + 1;
-    return acc;
-  }, {});
+  const byFloor = useMemo(() => {
+    return branchRooms.reduce((acc, r) => {
+      if (!acc[r.floor]) acc[r.floor] = [];
+      acc[r.floor].push(r);
+      return acc;
+    }, {});
+  }, [branchRooms]);
+
+  const statusCounts = useMemo(() => {
+    return branchRooms.reduce((acc, r) => {
+      acc[r.status] = (acc[r.status] || 0) + 1;
+      return acc;
+    }, {});
+  }, [branchRooms]);
 
   const totalBranches = rooms.length;
   const occupiedCount = statusCounts.occupied || 0;
@@ -90,6 +99,40 @@ export default function Rooms() {
           </>
         }
       />
+
+      {/* ── 4. BRANCH INFO BAR ────────────────────────────── */}
+      <SectionHeader icon={BedDouble} label="Thông tin chi nhánh" sub={`Hiện đang chọn: ${branch.name}`} />
+      <Card>
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="w-14 h-14 rounded-md bg-gradient-to-br from-blue-700 to-blue-900 flex items-center justify-center text-white font-display font-bold text-[16px] shadow-sm shrink-0">
+            {branch.code}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="font-display font-bold text-ink-900 text-base truncate">{branch.name}</div>
+              <Badge tone="emerald"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> LIVE</Badge>
+            </div>
+            <div className="text-[12px] text-ink-500 flex items-center gap-3 mt-1.5 flex-wrap">
+              <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {branch.address}</span>
+              <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> QL: {branch.manager}</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 sm:gap-6 text-center shrink-0 border-l border-ink-100 pl-3 sm:pl-6 w-full sm:w-auto">
+            <div>
+              <div className="text-[10px] text-ink-500 uppercase tracking-wider font-semibold">Tổng phòng</div>
+              <div className="font-display font-bold text-[18px] sm:text-[22px] text-ink-900 tabular-nums leading-none mt-1">{branch.totalRooms}</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-ink-500 uppercase tracking-wider font-semibold">Đang ở</div>
+              <div className="font-display font-bold text-[18px] sm:text-[22px] text-brand-600 tabular-nums leading-none mt-1">{occupiedCount}</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-ink-500 uppercase tracking-wider font-semibold">Lấp đầy</div>
+              <div className="font-display font-bold text-[18px] sm:text-[22px] text-blue-600 tabular-nums leading-none mt-1">{branch.occupancy}%</div>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* ── 2. BRANCH + STATUS COUNTS ─────────────────────── */}
       <SectionHeader icon={Building2} label="Chi nhánh & Trạng thái" sub="Chọn chi nhánh và theo dõi nhanh" />
@@ -191,7 +234,7 @@ export default function Rooms() {
               >
                 <option value="all">Tất cả hạng phòng</option>
                 {roomTypeList.map((t) => (
-                  <option key={t.key} value={t.key}>{t.label}</option>
+                  <option key={t.key} value={t.key}>{t.name}</option>
                 ))}
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400 pointer-events-none" />
@@ -203,40 +246,6 @@ export default function Rooms() {
           </div>
         </Card>
       </div>
-
-      {/* ── 4. BRANCH INFO BAR ────────────────────────────── */}
-      <SectionHeader icon={BedDouble} label="Thông tin chi nhánh" sub={`Hiện đang chọn: ${branch.name}`} />
-      <Card>
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="w-14 h-14 rounded-md bg-gradient-to-br from-blue-700 to-blue-900 flex items-center justify-center text-white font-display font-bold text-[16px] shadow-sm shrink-0">
-            {branch.code}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="font-display font-bold text-ink-900 text-base truncate">{branch.name}</div>
-              <Badge tone="emerald"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> LIVE</Badge>
-            </div>
-            <div className="text-[12px] text-ink-500 flex items-center gap-3 mt-1.5 flex-wrap">
-              <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {branch.address}</span>
-              <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> QL: {branch.manager}</span>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-3 sm:gap-6 text-center shrink-0 border-l border-ink-100 pl-3 sm:pl-6 w-full sm:w-auto">
-            <div>
-              <div className="text-[10px] text-ink-500 uppercase tracking-wider font-semibold">Tổng phòng</div>
-              <div className="font-display font-bold text-[18px] sm:text-[22px] text-ink-900 tabular-nums leading-none mt-1">{branch.totalRooms}</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-ink-500 uppercase tracking-wider font-semibold">Đang ở</div>
-              <div className="font-display font-bold text-[18px] sm:text-[22px] text-brand-600 tabular-nums leading-none mt-1">{occupiedCount}</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-ink-500 uppercase tracking-wider font-semibold">Lấp đầy</div>
-              <div className="font-display font-bold text-[18px] sm:text-[22px] text-blue-600 tabular-nums leading-none mt-1">{branch.occupancy}%</div>
-            </div>
-          </div>
-        </div>
-      </Card>
 
       {/* ── 5. FLOORS GRID ────────────────────────────────── */}
       <SectionHeader
@@ -262,13 +271,14 @@ export default function Rooms() {
             <Card
               key={floor}
               title={`Tầng ${floor}`}
-              subtitle={`${list.length} phòng`}
+              subtitle={`${list.filter(r => filteredIds.has(r.id)).length} phòng khớp`}
               icon={BedDouble}
               accent="violet"
               right={<Badge tone="violet">{list.length} PN</Badge>}
             >
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
                 {list.map((r) => {
+                  const isMatch = filteredIds.has(r.id);
                   const detail = STATUS_DETAILS[r.status] || STATUS_DETAILS.available;
                   const Sicon =
                     r.status === "occupied" ? Users :
@@ -279,7 +289,12 @@ export default function Rooms() {
                   return (
                     <button
                       key={r.id}
-                      className={`group relative border-2 ${detail.border} ${detail.soft} rounded-md p-2 sm:p-3 text-left hover:shadow-card hover:-translate-y-0.5 transition`}
+                      disabled={!isMatch}
+                      className={`group relative border-2 ${detail.border} ${detail.soft} rounded-md p-2 sm:p-3 text-left transition-all duration-300 ${
+                        isMatch
+                          ? "hover:shadow-card hover:-translate-y-0.5 cursor-pointer"
+                          : "opacity-25 grayscale pointer-events-none scale-95 border-dashed border-ink-200 bg-ink-50/50"
+                      }`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="font-display font-bold text-ink-900 text-[15px] leading-none tabular-nums">
