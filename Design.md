@@ -54,13 +54,63 @@ Khai báo trong `src/index.css`, tự đổi theo light/dark và 6 accent ngư�
 
 ### 2.2 Bảng gradient — trái tim của hệ thống
 
-Mọi gradient đều là `linear-gradient(135deg, from, to)`. **Chỉ lấy từ các bảng dưới đây.**
+Mọi gradient đều là `linear-gradient(135deg, from, to)`.
 
-**Thương hiệu** — nút chính, tab đang chọn, ô icon section header, chip nhãn trang:
+> ⛔ **Không hardcode hex gradient trong trang nữa.** Lấy qua `usePalette()` từ
+> `src/theme/palette.js` — nếu không, công tắc Đơn sắc/Đa sắc trong Cài đặt sẽ
+> không tác động được tới trang của bạn.
 
-```js
-const BRAND = { from: "#6366f1", to: "#a855f7" };
+```jsx
+import { usePalette, TONE, scoreTone } from "../theme/palette";
+
+function MyPage() {
+  const { brand, series, seriesMap, isMulti } = usePalette();
+
+  const KPI  = useMemo(() => series(4), [series]);              // 4 bộ màu KPI
+  const ROLE = useMemo(() => seriesMap(ROLE_KEYS), [seriesMap]); // gán theo khóa
+
+  // brand.from / brand.to        → nút chính, chip nhãn trang, tab đang chọn
+  // KPI[i].from / .to            → ô icon KPI
+  // ROLE[key].from/.to/.soft/.ink → gradient · nền pill · chữ trên pill
+}
 ```
+
+Component con nằm ngoài hàm trang thì **tự gọi `usePalette()`** thay vì nhận
+qua prop — nó là hook nên dùng trong component là hợp lệ.
+
+### Ba loại màu — xử lý khác nhau
+
+| Loại | Ví dụ | Đổi theo Đơn sắc/Đa sắc? |
+|---|---|---|
+| **Phân loại** | Vai trò nhân viên · danh mục bài viết · chuỗi KPI · nhóm danh mục | ✅ Có |
+| **Ngữ nghĩa** | Thành công · cảnh báo · lỗi · điểm SEO | ❌ Không — đổi là mất nghĩa |
+| **Thương hiệu ngoài** | Facebook · YouTube · TikTok · Zalo | ❌ Không — là nhận diện của họ |
+
+Màu ngữ nghĩa lấy từ hằng `TONE` và hàm `scoreTone(v)` trong cùng module.
+
+### Hai chế độ
+
+**Đa sắc** (`accent = "multi"`) — mỗi nhóm một màu riêng, lấy theo thứ tự:
+
+| # | from | to |
+|---|---|---|
+| 1 | `#6366f1` | `#8b5cf6` indigo |
+| 2 | `#10b981` | `#14b8a6` emerald |
+| 3 | `#f59e0b` | `#f97316` amber |
+| 4 | `#0ea5e9` | `#3b82f6` sky |
+| 5 | `#f43f5e` | `#ec4899` rose |
+| 6 | `#d946ef` | `#a855f7` fuchsia |
+| 7 | `#84cc16` | `#10b981` lime |
+
+**Đơn sắc** (6 accent còn lại) — `monoSeries()` sinh dải cùng tông với accent,
+độ sáng đi từ 36% (bộ đầu) tới 62% (bộ cuối). Người dùng chọn accent Xanh lục
+thì cả 7 vai trò đều xanh lục, khác nhau ở độ đậm nhạt.
+
+Cần thêm một nhóm phân loại mới? Chỉ cần thêm khóa vào mảng truyền cho
+`seriesMap()` — **không thêm hex**.
+
+**Thương hiệu** — `brand.from` / `brand.to`. Ở chế độ Đa sắc là indigo→tím,
+ở chế độ đơn sắc là chính accent người dùng chọn.
 
 **KPI** — thứ tự cố định, ô thứ n dùng gradient thứ n:
 
@@ -190,6 +240,25 @@ Khai báo sẵn ở cuối `src/index.css`. **Dùng trực tiếp, không tự v
 | `.glowbtn` | Hover nhấc 1px + quầng sáng. Dùng cho nút gradient |
 | `.noscroll` | Ẩn thanh cuộn cho hàng chip cuộn ngang |
 | `.floaty` | Icon trôi lên xuống 3s |
+
+### 3.1 Nền trang — phẳng
+
+Nền trang là **một màu phẳng `var(--bg-app)`**. Không vệt sáng, không gradient wash, không hoa văn, không canvas.
+
+Container gốc của trang chỉ cần:
+
+```jsx
+<div className="max-w-[1360px] mx-auto pb-10">
+```
+
+Chiều sâu đến **hoàn toàn từ bề mặt thẻ**: thẻ trắng nổi trên nền xám sâu (§3.9 — chênh lệch `--bg-app` / `--surface`), viền 1px, `shadow-card`, và quầng gradient mờ **bên trong** từng thẻ (`KpiCard`, `StaffCard`). Không cần và không được thêm gì ở tầng nền.
+
+> **Hai thứ đã thử và đã gỡ bỏ, đừng làm lại:**
+>
+> 1. **Canvas 3D động** — khối cầu chiếu phối cảnh, phản ứng theo chuột và cuộn trang. Trên phần mềm quản trị mở 40 lần/ngày, chuyển động ở nền gây nhiễu chứ không tăng giá trị.
+> 2. **Vệt gradient tím tĩnh** ở đầu trang. Nó làm nền "bẩn" và cạnh tranh với chính các thẻ gradient là thứ đáng được nhìn.
+>
+> Chuyển động chỉ được xảy ra khi người dùng tương tác trực tiếp: hover thẻ (`.lift`), đổi tab, chấm trạng thái live.
 
 ---
 

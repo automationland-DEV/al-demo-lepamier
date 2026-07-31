@@ -6,6 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import { Icons } from "../components/Icons";
+import { usePalette, TONE, scoreTone } from "../theme/palette";
 
 const {
   Megaphone, Facebook, Instagram, Youtube, Twitter, Linkedin, Music2,
@@ -48,7 +49,7 @@ const TABS = [
   { id: "analytics",  label: "Phân tích", icon: TrendingUp },
 ];
 
-const BRAND = { from: "#6366f1", to: "#a855f7" };
+/* Mau thuong hieu lay tu usePalette() trong component (doi theo accent) */
 
 const chartTip = {
   background: "#0f1218", border: "none", borderRadius: 12,
@@ -59,16 +60,15 @@ const chartTip = {
 /* ════════════════════════════════════════════════════════════ */
 
 export default function Marketing() {
+  const { brand: BRAND, series } = usePalette();
+  const KPI = useMemo(() => series(6), [series]);
   const [tab, setTab] = useState("overview");
   const [shareOpen, setShareOpen] = useState(null);
   const [autoOpen, setAutoOpen] = useState(null);
   const data = useMemo(() => buildData(), []);
 
   return (
-    <div className="mkt relative max-w-[1360px] mx-auto pb-10">
-      <div aria-hidden className="pointer-events-none absolute -top-12 left-1/3 w-[620px] h-[320px] rounded-full blur-3xl opacity-[0.2]"
-           style={{ background: "radial-gradient(circle,#a855f7 0%,#6366f1 45%,transparent 72%)" }} />
-
+    <div className="max-w-[1360px] mx-auto pb-10">
       {/* ═══════ HEADER ═══════ */}
       <div className="relative flex flex-wrap items-end justify-between gap-4 pt-1 pb-6">
         <div className="min-w-0">
@@ -129,11 +129,11 @@ export default function Marketing() {
         })}
       </div>
 
-      {tab === "overview"   && <Overview data={data} onShare={setShareOpen} />}
-      {tab === "channels"   && <ChannelsTab data={data} onShare={setShareOpen} />}
-      {tab === "automation" && <AutomationTab data={data} onView={setAutoOpen} />}
-      {tab === "queue"      && <QueueTab data={data} onShare={setShareOpen} />}
-      {tab === "analytics"  && <AnalyticsTab data={data} />}
+      {tab === "overview"   && <Overview data={data} kpi={KPI} brand={BRAND} onShare={setShareOpen} />}
+      {tab === "channels"   && <ChannelsTab data={data} brand={BRAND} onShare={setShareOpen} />}
+      {tab === "automation" && <AutomationTab data={data} brand={BRAND} onView={setAutoOpen} />}
+      {tab === "queue"      && <QueueTab data={data} brand={BRAND} onShare={setShareOpen} />}
+      {tab === "analytics"  && <AnalyticsTab data={data} brand={BRAND} />}
 
       {shareOpen && <ShareModal post={shareOpen} onClose={() => setShareOpen(null)} />}
       {autoOpen && <AutomationModal flow={autoOpen} onClose={() => setAutoOpen(null)} />}
@@ -146,15 +146,16 @@ export default function Marketing() {
 }
 
 /* ════════════════ TAB: TỔNG QUAN ════════════════ */
-function Overview({ data, onShare }) {
+function Overview({ data, kpi, brand, onShare }) {
+  const BRAND = brand;
   return (
     <>
-      <Section title="KPI tuần này" sub="So với tuần trước" icon={Target} />
+      <Section brand={BRAND} title="KPI tuần này" sub="So với tuần trước" icon={Target} />
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {data.overviewKpi.map((k) => <KpiCard key={k.label} k={k} />)}
+        {data.overviewKpi.map((k, i) => <KpiCard key={k.label} k={{ ...k, ...kpi[i] }} />)}
       </div>
 
-      <Section title="Bài viết gần đây" sub="Trạng thái & đăng tải đa kênh" icon={FileText}
+      <Section brand={BRAND} title="Bài viết gần đây" sub="Trạng thái & đăng tải đa kênh" icon={FileText}
                right={<Pill>{data.recentPosts.length} bài</Pill>} />
       <Panel>
         <div className="overflow-x-auto">
@@ -203,25 +204,27 @@ function Overview({ data, onShare }) {
         </div>
       </Panel>
 
-      <Section title="Automation đang chạy" sub="Tự động đăng tải đa kênh" icon={Bot} />
+      <Section brand={BRAND} title="Automation đang chạy" sub="Tự động đăng tải đa kênh" icon={Bot} />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {data.automations.map((a) => <AutomationCard key={a.id} a={a} />)}
+        {data.automations.map((a) => <AutomationCard key={a.id} a={a} brand={BRAND} />)}
       </div>
     </>
   );
 }
 
 /* ════════════════ TAB: KÊNH ĐĂNG ════════════════ */
-function ChannelsTab({ data, onShare }) {
+function ChannelsTab({ data, brand, onShare }) {
+  const BRAND = brand;
   return (
     <>
-      <Section title="Kênh đăng" sub="Trạng thái kết nối & sức khỏe" icon={Share2} />
+      <Section brand={BRAND} title="Kênh đăng" sub="Trạng thái kết nối & sức khỏe" icon={Share2} />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {data.channels.map((c) => {
           const m = CHANNELS[c.id];
           const Icon = m.icon;
           const health = c.health;
-          const hue = health > 85 ? ["#10b981", "#14b8a6"] : health > 65 ? ["#f59e0b", "#f97316"] : ["#f43f5e", "#ec4899"];
+          const ht = scoreTone(health);
+          const hue = [ht.from, ht.to];
           return (
             <div key={c.id} className="lift relative rounded-[var(--r)] border p-5 overflow-hidden"
                  style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", "--glow": `${m.from}50` }}>
@@ -275,7 +278,7 @@ function ChannelsTab({ data, onShare }) {
         })}
       </div>
 
-      <Section title="Lịch đăng tuần này" sub="Hàng chờ & slot trống" icon={CalendarDays} />
+      <Section brand={BRAND} title="Lịch đăng tuần này" sub="Hàng chờ & slot trống" icon={CalendarDays} />
       <Panel>
         <div className="grid grid-cols-7 border-b" style={{ borderColor: "var(--border)" }}>
           {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((d) => (
@@ -317,10 +320,11 @@ function ChannelsTab({ data, onShare }) {
 }
 
 /* ════════════════ TAB: AUTOMATION ════════════════ */
-function AutomationTab({ data, onView }) {
+function AutomationTab({ data, brand, onView }) {
+  const BRAND = brand;
   return (
     <>
-      <Section title="Workflow Automation" sub="Kịch bản tự động đa kênh" icon={Workflow}
+      <Section brand={BRAND} title="Workflow Automation" sub="Kịch bản tự động đa kênh" icon={Workflow}
                right={
                  <button className="glowbtn inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-white text-[12px] font-bold"
                          style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
@@ -328,13 +332,13 @@ function AutomationTab({ data, onView }) {
                  </button>
                } />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {data.automations.map((a) => <AutomationCard key={a.id} a={a} expanded onView={onView} />)}
+        {data.automations.map((a) => <AutomationCard key={a.id} a={a} brand={BRAND} expanded onView={onView} />)}
       </div>
 
-      <Section title="Triggers có sẵn" sub="Sự kiện kích hoạt automation" icon={Webhook} />
+      <Section brand={BRAND} title="Triggers có sẵn" sub="Sự kiện kích hoạt automation" icon={Webhook} />
       <BlockGrid items={data.triggers} />
 
-      <Section title="Hành động tự động hóa" sub="Action block — kéo vào workflow" icon={Zap} />
+      <Section brand={BRAND} title="Hành động tự động hóa" sub="Action block — kéo vào workflow" icon={Zap} />
       <BlockGrid items={data.actions} />
     </>
   );
@@ -359,10 +363,11 @@ function BlockGrid({ items }) {
 }
 
 /* ════════════════ TAB: HÀNG CHỜ ════════════════ */
-function QueueTab({ data, onShare }) {
+function QueueTab({ data, brand, onShare }) {
+  const BRAND = brand;
   return (
     <>
-      <Section title="Hàng chờ đăng tải" sub={`${data.queue.length} bài đang chờ`} icon={Clock} />
+      <Section brand={BRAND} title="Hàng chờ đăng tải" sub={`${data.queue.length} bài đang chờ`} icon={Clock} />
       <Panel>
         <div className="divide-y" style={{ borderColor: "var(--border-soft)" }}>
           {data.queue.map((q) => {
@@ -396,7 +401,7 @@ function QueueTab({ data, onShare }) {
         </div>
       </Panel>
 
-      <Section title="Đã đăng gần đây" sub="Auto-publish · 24h qua" icon={CheckCircle2} />
+      <Section brand={BRAND} title="Đã đăng gần đây" sub="Auto-publish · 24h qua" icon={CheckCircle2} />
       <Panel>
         <div className="divide-y" style={{ borderColor: "var(--border-soft)" }}>
           {data.history.map((h) => {
@@ -432,10 +437,11 @@ function QueueTab({ data, onShare }) {
 }
 
 /* ════════════════ TAB: PHÂN TÍCH ════════════════ */
-function AnalyticsTab({ data }) {
+function AnalyticsTab({ data, brand }) {
+  const BRAND = brand;
   return (
     <>
-      <Section title="Hiệu quả 30 ngày" sub="Reach · engagement · conversion" icon={TrendingUp} />
+      <Section brand={BRAND} title="Hiệu quả 30 ngày" sub="Reach · engagement · conversion" icon={TrendingUp} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Panel title="Reach & Engagement theo ngày" sub="Tổng đa kênh" pad>
           <div className="h-64">
@@ -523,7 +529,9 @@ function AnalyticsTab({ data }) {
 
 /* ════════════════ THÀNH PHẦN CHUNG ════════════════ */
 
-function Section({ title, sub, icon: Icon, right }) {
+function Section({ title, sub, icon: Icon, right, brand }) {
+  const { brand: fallback } = usePalette();
+  const BRAND = brand || fallback;
   return (
     <div className="flex items-end justify-between gap-4 mt-9 mb-4">
       <div className="flex items-center gap-3 min-w-0">
@@ -589,9 +597,10 @@ function KpiCard({ k }) {
   );
 }
 
-function AutomationCard({ a, expanded, onView }) {
+function AutomationCard({ a, expanded, onView, brand }) {
+  const BRAND = brand;
   const on = a.status === "active";
-  const g = on ? [BRAND.from, BRAND.to] : ["#94a3b8", "#64748b"];
+  const g = on ? [BRAND.from, BRAND.to] : [TONE.neutral.from, TONE.neutral.to];
   return (
     <div className="lift rounded-[var(--r)] border p-5"
          style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", "--glow": on ? "rgba(139,92,246,.4)" : "rgba(100,116,139,.3)" }}>
@@ -743,6 +752,7 @@ function IconBtn({ children, onClick, title, tone }) {
 
 /* ════════════════ MODAL: CHIA SẺ ════════════════ */
 function ShareModal({ post, onClose }) {
+  const { brand: BRAND } = usePalette();
   const [channels, setChannels] = useState(["facebook", "zalo"]);
   const [tone, setTone] = useState("default");
   const [copied, setCopied] = useState(false);
@@ -899,6 +909,7 @@ function ShareModal({ post, onClose }) {
 
 /* ════════════════ MODAL: AUTOMATION ════════════════ */
 function AutomationModal({ flow, onClose }) {
+  const { brand: BRAND } = usePalette();
   return (
     <Modal onClose={onClose} icon={Workflow} title={`Workflow: ${flow.name}`} sub={flow.trigger} wide>
       <div className="p-5">
@@ -950,6 +961,7 @@ function AutomationModal({ flow, onClose }) {
 
 /* ════════════════ MODAL SHELL ════════════════ */
 function Modal({ children, onClose, icon: Icon, title, sub, wide }) {
+  const { brand: BRAND } = usePalette();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5"
          style={{ backgroundColor: "rgba(15,18,24,.55)", backdropFilter: "blur(6px)" }}
