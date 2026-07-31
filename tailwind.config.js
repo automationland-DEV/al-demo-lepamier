@@ -36,7 +36,7 @@ export default {
         display: ['"Plus Jakarta Sans"', "Inter", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        card: "0 1px 2px rgba(15, 18, 24, 0.04), 0 4px 12px rgba(15, 18, 24, 0.04)",
+        card: "0 1px 2px rgba(15, 18, 24, 0.06), 0 2px 6px rgba(15, 18, 24, 0.04)",
         pop: "0 10px 30px rgba(7, 40, 73, 0.12)",
       },
       backgroundImage: {
