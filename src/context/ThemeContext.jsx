@@ -7,6 +7,14 @@ export const ACCENTS = [
   { id: "orange", label: "Cam",         light: "#f97316", dark: "#fb923c" },
   { id: "red",    label: "Đỏ",          light: "#ef4444", dark: "#f87171" },
   { id: "amber",  label: "Vàng",        light: "#f59e0b", dark: "#fbbf24" },
+  /* Đa sắc — mỗi nhóm phân loại một màu riêng thay vì cùng một tông.
+   * Xem src/theme/palette.js để biết màu nào đổi và màu nào giữ nguyên. */
+  {
+    id: "multi", label: "Đa sắc", multi: true,
+    light: "#6366f1", dark: "#818cf8",
+    swatch: "linear-gradient(135deg,#6366f1 0%,#a855f7 34%,#ec4899 67%,#f59e0b 100%)",
+    desc: "Mỗi nhóm một màu riêng",
+  },
 ];
 
 export const DENSITIES = [
