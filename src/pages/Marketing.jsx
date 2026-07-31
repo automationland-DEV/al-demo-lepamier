@@ -15,9 +15,13 @@ const {
   TrendingUp, TrendingDown, Plus, Download, Star, Users, Clock, DollarSign,
   Eye, Send, CheckCircle2, XCircle, Hourglass, Sparkles, Copy, Building2,
   Globe2, Zap, ChevronRight, ChevronDown, X, Repeat, Edit2, Bell, Bookmark,
-
-
+  Search,
 } = Icons;
+
+/** Bỏ dấu tiếng Việt để tìm kiếm trong hàng chờ không phụ thuộc dấu */
+const deaccent = (s = "") =>
+  s.toString().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
 
 /* ════════ Bảng màu kênh — dùng màu thương hiệu thật ════════ */
 const CHANNELS = {
@@ -65,7 +69,74 @@ export default function Marketing() {
   const [tab, setTab] = useState("overview");
   const [shareOpen, setShareOpen] = useState(null);
   const [autoOpen, setAutoOpen] = useState(null);
-  const data = useMemo(() => buildData(), []);
+
+  /* Dữ liệu vào state để bật/tắt automation và thêm workflow/bài viết ghi được */
+  const [data, setData] = useState(() => buildData());
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [flowFormOpen, setFlowFormOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [channelOpen, setChannelOpen] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const notify = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2600);
+  };
+
+  const toggleAutomation = (a) => {
+    const next = a.status === "active" ? "paused" : "active";
+    setData((d) => ({
+      ...d,
+      automations: d.automations.map((x) => (x.id === a.id ? { ...x, status: next } : x)),
+    }));
+    setAutoOpen((o) => (o && o.id === a.id ? { ...o, status: next } : o));
+    notify(`${a.name} → ${next === "active" ? "Đã kích hoạt" : "Đã tạm dừng"}`);
+  };
+
+  const addWorkflow = (payload) => {
+    const flow = {
+      id: `a${Date.now()}`,
+      name: payload.name,
+      trigger: payload.trigger,
+      status: payload.status,
+      runCount: 0, successRate: 100, postedCount: 0,
+      steps: [
+        { kind: "Trigger", label: payload.trigger, desc: "Vừa tạo từ Marketing Hub", icon: Webhook },
+        ...payload.actions.map((act) => ({ kind: "Action", label: act, desc: "Bước tự động", icon: Zap })),
+      ],
+    };
+    setData((d) => ({ ...d, automations: [flow, ...d.automations] }));
+    setFlowFormOpen(false);
+    notify(`Đã tạo workflow “${payload.name}”`);
+  };
+
+  const addPost = (payload) => {
+    /* Đăng ngay thì lấy mốc thời gian hiện tại của hệ thống demo (28/07/2026),
+       không dùng giá trị mặc định của ô chọn lịch. */
+    const now = new Date();
+    const hhmm = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const stamp = payload.schedule === "now"
+      ? `28/07 · ${hhmm}`
+      : `${payload.date.slice(8, 10)}/${payload.date.slice(5, 7)} · ${payload.time}`;
+
+    const post = {
+      id: `p${Date.now()}`,
+      title: payload.title,
+      excerpt: payload.excerpt,
+      category: payload.category,
+      author: "Marketing Team",
+      date: stamp,
+      tags: payload.tags,
+      channels: payload.channels,
+      status: payload.schedule === "now" ? "publishing" : "scheduled",
+      engagement: "—",
+    };
+    setData((d) => ({ ...d, recentPosts: [post, ...d.recentPosts] }));
+    setComposeOpen(false);
+    notify(payload.schedule === "now"
+      ? `Đang đăng “${payload.title}” lên ${payload.channels.length} kênh`
+      : `Đã lên lịch “${payload.title}” · ${payload.date} ${payload.time}`);
+  };
 
   return (
     <div className="max-w-[1360px] mx-auto pb-10">
@@ -101,9 +172,10 @@ export default function Marketing() {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          <GhostBtn icon={Download}>Xuất báo cáo</GhostBtn>
-          <GhostBtn icon={Workflow}>Tạo Automation</GhostBtn>
-          <button className="glowbtn inline-flex items-center gap-2 h-11 px-5 rounded-full text-[13px] font-bold text-white"
+          <GhostBtn icon={Download} onClick={() => setExportOpen(true)}>Xuất báo cáo</GhostBtn>
+          <GhostBtn icon={Workflow} onClick={() => setFlowFormOpen(true)}>Tạo Automation</GhostBtn>
+          <button onClick={() => setComposeOpen(true)}
+                  className="glowbtn inline-flex items-center gap-2 h-11 px-5 rounded-full text-[13px] font-bold text-white active:scale-95"
                   style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})`,
                            boxShadow: "0 8px 20px -8px rgba(139,92,246,.65)" }}>
             <Plus className="w-4 h-4" /> Bài viết mới
@@ -130,13 +202,29 @@ export default function Marketing() {
       </div>
 
       {tab === "overview"   && <Overview data={data} kpi={KPI} brand={BRAND} onShare={setShareOpen} />}
-      {tab === "channels"   && <ChannelsTab data={data} brand={BRAND} onShare={setShareOpen} />}
-      {tab === "automation" && <AutomationTab data={data} brand={BRAND} onView={setAutoOpen} />}
+      {tab === "channels"   && <ChannelsTab data={data} brand={BRAND} onShare={setShareOpen} onDetail={setChannelOpen} />}
+      {tab === "automation" && <AutomationTab data={data} brand={BRAND} onView={setAutoOpen}
+                                              onToggle={toggleAutomation} onNew={() => setFlowFormOpen(true)} />}
       {tab === "queue"      && <QueueTab data={data} brand={BRAND} onShare={setShareOpen} />}
       {tab === "analytics"  && <AnalyticsTab data={data} brand={BRAND} />}
 
       {shareOpen && <ShareModal post={shareOpen} onClose={() => setShareOpen(null)} />}
-      {autoOpen && <AutomationModal flow={autoOpen} onClose={() => setAutoOpen(null)} />}
+      {autoOpen && (
+        <AutomationModal flow={autoOpen} onClose={() => setAutoOpen(null)}
+                         onToggle={() => toggleAutomation(autoOpen)} />
+      )}
+      {composeOpen && <ComposeModal brand={BRAND} onClose={() => setComposeOpen(false)} onSubmit={addPost} />}
+      {flowFormOpen && <WorkflowModal brand={BRAND} onClose={() => setFlowFormOpen(false)} onSubmit={addWorkflow} />}
+      {exportOpen && <ExportModal data={data} onClose={() => setExportOpen(false)} onPick={(f) => { setExportOpen(false); notify(`Đang chuẩn bị ${f}`); }} />}
+      {channelOpen && <ChannelModal ch={channelOpen} onClose={() => setChannelOpen(null)} />}
+
+      {toast && (
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] h-11 px-5 rounded-full border shadow-pop text-[12.5px] font-bold flex items-center gap-2 animate-slideUp max-w-[92vw]"
+             style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", color: "var(--fg)" }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: TONE.success.dot }} />
+          {toast}
+        </div>
+      )}
 
       <div className="mt-12 flex items-center justify-center gap-1.5 text-[11px]" style={{ color: "var(--fg-subtle)" }}>
         <Megaphone className="w-3 h-3" /> Marketing Hub · Đồng bộ đa kênh · Cập nhật real-time · 28/07/2026
@@ -213,7 +301,7 @@ function Overview({ data, kpi, brand, onShare }) {
 }
 
 /* ════════════════ TAB: KÊNH ĐĂNG ════════════════ */
-function ChannelsTab({ data, brand, onShare }) {
+function ChannelsTab({ data, brand, onShare, onDetail }) {
   const BRAND = brand;
   return (
     <>
@@ -261,7 +349,8 @@ function ChannelsTab({ data, brand, onShare }) {
               </div>
 
               <div className="relative flex items-center gap-2 mt-4">
-                <button className="flex-1 h-9 rounded-full border text-[12px] font-bold transition hover:border-violet-300"
+                <button onClick={() => onDetail?.({ ...c, meta: m, health })}
+                        className="flex-1 h-9 rounded-full border text-[12px] font-bold transition hover:border-violet-300 active:scale-95"
                         style={{ borderColor: "var(--border)", color: "var(--fg-muted)" }}>
                   Xem chi tiết
                 </button>
@@ -320,19 +409,24 @@ function ChannelsTab({ data, brand, onShare }) {
 }
 
 /* ════════════════ TAB: AUTOMATION ════════════════ */
-function AutomationTab({ data, brand, onView }) {
+function AutomationTab({ data, brand, onView, onToggle, onNew }) {
   const BRAND = brand;
+  const active = data.automations.filter((a) => a.status === "active").length;
   return (
     <>
-      <Section brand={BRAND} title="Workflow Automation" sub="Kịch bản tự động đa kênh" icon={Workflow}
+      <Section brand={BRAND} title="Workflow Automation"
+               sub={`${active}/${data.automations.length} đang chạy`} icon={Workflow}
                right={
-                 <button className="glowbtn inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-white text-[12px] font-bold"
+                 <button onClick={onNew}
+                         className="glowbtn inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-white text-[12px] font-bold active:scale-95"
                          style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
                    <Plus className="w-3.5 h-3.5" /> Workflow mới
                  </button>
                } />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {data.automations.map((a) => <AutomationCard key={a.id} a={a} brand={BRAND} expanded onView={onView} />)}
+        {data.automations.map((a) => (
+          <AutomationCard key={a.id} a={a} brand={BRAND} expanded onView={onView} onToggle={onToggle} />
+        ))}
       </div>
 
       <Section brand={BRAND} title="Triggers có sẵn" sub="Sự kiện kích hoạt automation" icon={Webhook} />
@@ -365,12 +459,101 @@ function BlockGrid({ items }) {
 /* ════════════════ TAB: HÀNG CHỜ ════════════════ */
 function QueueTab({ data, brand, onShare }) {
   const BRAND = brand;
+  const [q, setQ] = useState("");
+  const [status, setStatus] = useState("all");
+  const [chan, setChan] = useState("all");
+
+  const chanOptions = useMemo(
+    () => [...new Set(data.queue.map((x) => x.channel))],
+    [data.queue]
+  );
+
+  const queue = useMemo(() => {
+    const needle = deaccent(q.trim());
+    return data.queue.filter((x) => {
+      if (status !== "all" && x.status !== status) return false;
+      if (chan !== "all" && x.channel !== chan) return false;
+      if (needle && !deaccent(`${x.title} ${x.category} ${x.author} ${CHANNELS[x.channel]?.name || ""}`).includes(needle)) return false;
+      return true;
+    });
+  }, [data.queue, q, status, chan]);
+
+  const hasFilter = q.trim() !== "" || status !== "all" || chan !== "all";
+  const reset = () => { setQ(""); setStatus("all"); setChan("all"); };
+
   return (
     <>
-      <Section brand={BRAND} title="Hàng chờ đăng tải" sub={`${data.queue.length} bài đang chờ`} icon={Clock} />
+      <Section brand={BRAND} title="Hàng chờ đăng tải"
+               sub={hasFilter ? `${queue.length}/${data.queue.length} bài` : `${data.queue.length} bài đang chờ`}
+               icon={Clock} />
+
+      {/* Bộ lọc hàng chờ */}
+      <div className="rounded-[var(--r)] border p-2.5 mb-4 flex items-center gap-2.5 flex-wrap"
+           style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)" }}>
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--fg-subtle)" }} />
+          <input value={q} onChange={(e) => setQ(e.target.value)}
+                 aria-label="Tìm bài trong hàng chờ"
+                 placeholder="Tìm theo tiêu đề, danh mục, người đăng…"
+                 className="w-full h-11 pl-11 pr-10 rounded-full text-[13px] border-0 outline-none"
+                 style={{ backgroundColor: "var(--surface-2)", color: "var(--fg)" }} />
+          {q && (
+            <button onClick={() => setQ("")} aria-label="Xoá"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-subtle)" }}>
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <QueueChip on={status === "all"} onClick={() => setStatus("all")} brand={BRAND}>Tất cả</QueueChip>
+          {Object.entries(STATUS)
+            .filter(([k]) => data.queue.some((x) => x.status === k))
+            .map(([k, s]) => (
+              <QueueChip key={k} on={status === k} onClick={() => setStatus(status === k ? "all" : k)} brand={BRAND}>
+                {s.label}
+              </QueueChip>
+            ))}
+        </div>
+
+        <div className="relative shrink-0">
+          <select value={chan} onChange={(e) => setChan(e.target.value)}
+                  aria-label="Lọc theo kênh"
+                  className="h-11 pl-4 pr-9 rounded-full text-[13px] font-semibold border-0 outline-none appearance-none cursor-pointer"
+                  style={{ backgroundColor: "var(--surface-2)", color: "var(--fg)" }}>
+            <option value="all">Tất cả kênh</option>
+            {chanOptions.map((c) => <option key={c} value={c}>{CHANNELS[c]?.name || c}</option>)}
+          </select>
+          <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                       style={{ color: "var(--fg-subtle)" }} />
+        </div>
+
+        {hasFilter && (
+          <button onClick={reset}
+                  className="h-11 px-4 rounded-full text-[12.5px] font-bold border transition active:scale-95 shrink-0"
+                  style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", color: "var(--fg)" }}>
+            Xoá lọc
+          </button>
+        )}
+      </div>
+
       <Panel>
+        {queue.length === 0 ? (
+          <div className="py-14 text-center">
+            <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-white mb-3"
+                 style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
+              <Search className="w-6 h-6" />
+            </div>
+            <div className="text-[14px] font-bold" style={{ color: "var(--fg)" }}>Không có bài nào khớp</div>
+            <div className="text-[12px] mt-1" style={{ color: "var(--fg-muted)" }}>Thử đổi từ khoá hoặc bỏ bớt bộ lọc.</div>
+            <button onClick={reset} className="mt-4 h-10 px-5 rounded-full text-[12.5px] font-bold text-white"
+                    style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
+              Xoá bộ lọc
+            </button>
+          </div>
+        ) : (
         <div className="divide-y" style={{ borderColor: "var(--border-soft)" }}>
-          {data.queue.map((q) => {
+          {queue.map((q) => {
             const ch = CHANNELS[q.channel];
             const Icon = ch?.icon;
             return (
@@ -399,6 +582,7 @@ function QueueTab({ data, brand, onShare }) {
             );
           })}
         </div>
+        )}
       </Panel>
 
       <Section brand={BRAND} title="Đã đăng gần đây" sub="Auto-publish · 24h qua" icon={CheckCircle2} />
@@ -597,7 +781,7 @@ function KpiCard({ k }) {
   );
 }
 
-function AutomationCard({ a, expanded, onView, brand }) {
+function AutomationCard({ a, expanded, onView, onToggle, brand }) {
   const BRAND = brand;
   const on = a.status === "active";
   const g = on ? [BRAND.from, BRAND.to] : [TONE.neutral.from, TONE.neutral.to];
@@ -655,7 +839,8 @@ function AutomationCard({ a, expanded, onView, brand }) {
                   style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
             Xem chi tiết
           </button>
-          <button className="flex-1 h-9 rounded-full border text-[12px] font-bold transition hover:border-violet-300"
+          <button onClick={() => onToggle?.(a)}
+                  className="flex-1 h-9 rounded-full border text-[12px] font-bold transition hover:border-violet-300 active:scale-95"
                   style={{ borderColor: "var(--border)", color: "var(--fg-muted)" }}>
             {on ? "Tạm dừng" : "Kích hoạt"}
           </button>
@@ -731,9 +916,10 @@ function Pill({ children }) {
   );
 }
 
-function GhostBtn({ icon: Icon, children }) {
+function GhostBtn({ icon: Icon, children, onClick }) {
   return (
-    <button className="inline-flex items-center gap-2 h-11 px-4 rounded-full text-[13px] font-bold border transition hover:border-violet-300"
+    <button onClick={onClick}
+            className="inline-flex items-center gap-2 h-11 px-4 rounded-full text-[13px] font-bold border transition hover:border-violet-300 active:scale-95"
             style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", color: "var(--fg)" }}>
       <Icon className="w-4 h-4" /> <span className="hidden sm:inline">{children}</span>
     </button>
@@ -1007,6 +1193,340 @@ function ModalFooter({ left, onClose, action }) {
         {action}
       </div>
     </div>
+  );
+}
+
+/* ════════════════ BỔ SUNG: soạn bài, workflow, xuất, kênh ════════════════ */
+
+function QueueChip({ on, onClick, brand, children }) {
+  return (
+    <button onClick={onClick} aria-pressed={on}
+            className="inline-flex items-center h-9 px-3.5 rounded-full text-[12px] font-bold border transition active:scale-95"
+            style={on
+              ? { background: `linear-gradient(135deg,${brand.from},${brand.to})`, color: "#fff", borderColor: "transparent" }
+              : { backgroundColor: "var(--surface)", color: "var(--fg-muted)", borderColor: "var(--border)" }}>
+      {children}
+    </button>
+  );
+}
+
+function FieldRow({ label, error, children }) {
+  return (
+    <div className="min-w-0">
+      <Label>{label}</Label>
+      {children}
+      {error && (
+        <div className="mt-1.5 text-[11.5px] font-bold inline-flex items-center gap-1" style={{ color: TONE.danger.ink }}>
+          <XCircle className="w-3 h-3 shrink-0" /> {error}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const roundField = {
+  className: "w-full h-11 px-4 rounded-full text-[13px] border-0 outline-none",
+};
+const fieldStyle = { backgroundColor: "var(--surface-2)", color: "var(--fg)" };
+
+/* ── Soạn bài viết mới ── */
+const CATEGORIES = ["Trải nghiệm", "Khuyến mãi", "Cẩm nang", "Câu chuyện", "Sự kiện", "Đánh giá"];
+
+function ComposeModal({ brand, onClose, onSubmit }) {
+  const [title, setTitle] = useState("");
+  const [excerpt, setExcerpt] = useState("");
+  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [channels, setChannels] = useState(["facebook"]);
+  const [tags, setTags] = useState("");
+  const [schedule, setSchedule] = useState("now");
+  const [date, setDate] = useState("2026-07-29");
+  const [time, setTime] = useState("09:00");
+  const [touched, setTouched] = useState(false);
+
+  const errors = {};
+  if (!title.trim()) errors.title = "Bắt buộc nhập tiêu đề";
+  else if (title.trim().length < 8) errors.title = "Tiêu đề nên từ 8 ký tự để hiển thị tốt trên mạng xã hội";
+  if (!excerpt.trim()) errors.excerpt = "Bắt buộc nhập mô tả ngắn";
+  if (!channels.length) errors.channels = "Chọn ít nhất 1 kênh đăng";
+  if (schedule === "later" && !date) errors.date = "Chọn ngày đăng";
+
+  const err = (k) => (touched ? errors[k] : undefined);
+
+  const submit = () => {
+    setTouched(true);
+    if (Object.keys(errors).length) return;
+    onSubmit({
+      title: title.trim(), excerpt: excerpt.trim(), category, channels,
+      tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+      schedule, date, time,
+    });
+  };
+
+  const toggleChan = (id) =>
+    setChannels((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
+
+  return (
+    <Modal onClose={onClose} icon={FileText} title="Bài viết mới" sub="Soạn và phân phối đa kênh" wide>
+      <div className="p-5 space-y-4">
+        <FieldRow label="Tiêu đề" error={err("title")}>
+          <input {...roundField} style={fieldStyle} value={title} onChange={(e) => setTitle(e.target.value)}
+                 placeholder="Ví dụ: Ưu đãi mùa hè tại Le Palmier Hồ Tràm" />
+          <div className="mt-1.5 text-[10.5px]" style={{ color: "var(--fg-subtle)" }}>{title.length} ký tự</div>
+        </FieldRow>
+
+        <FieldRow label="Mô tả ngắn" error={err("excerpt")}>
+          <textarea rows={3} value={excerpt} onChange={(e) => setExcerpt(e.target.value)}
+                    className="w-full px-4 py-3 rounded-2xl text-[13px] border-0 outline-none resize-y"
+                    style={fieldStyle} placeholder="Đoạn mô tả hiển thị khi chia sẻ lên mạng xã hội…" />
+        </FieldRow>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FieldRow label="Danh mục">
+            <div className="relative">
+              <select value={category} onChange={(e) => setCategory(e.target.value)}
+                      className="w-full h-11 pl-4 pr-9 rounded-full text-[13px] font-semibold border-0 outline-none appearance-none cursor-pointer"
+                      style={fieldStyle}>
+                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+              </select>
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                           style={{ color: "var(--fg-subtle)" }} />
+            </div>
+          </FieldRow>
+          <FieldRow label="Thẻ (cách nhau bởi dấu phẩy)">
+            <input {...roundField} style={fieldStyle} value={tags} onChange={(e) => setTags(e.target.value)}
+                   placeholder="summer, promo, ho-tram" />
+          </FieldRow>
+        </div>
+
+        <FieldRow label={`Kênh đăng · đã chọn ${channels.length}`} error={err("channels")}>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(CHANNELS).map(([id, c]) => {
+              const on = channels.includes(id);
+              const Icon = c.icon;
+              return (
+                <button key={id} onClick={() => toggleChan(id)} aria-pressed={on}
+                        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[12px] font-bold border transition active:scale-95"
+                        style={on
+                          ? { background: `linear-gradient(135deg,${c.from},${c.to})`, color: "#fff", borderColor: "transparent" }
+                          : { backgroundColor: "var(--surface)", color: "var(--fg-muted)", borderColor: "var(--border)" }}>
+                  <Icon className="w-3.5 h-3.5" /> {c.name}
+                </button>
+              );
+            })}
+          </div>
+        </FieldRow>
+
+        <FieldRow label="Thời điểm đăng" error={err("date")}>
+          <div className="flex items-center gap-2 flex-wrap">
+            <QueueChip on={schedule === "now"} onClick={() => setSchedule("now")} brand={brand}>Đăng ngay</QueueChip>
+            <QueueChip on={schedule === "later"} onClick={() => setSchedule("later")} brand={brand}>Lên lịch</QueueChip>
+            {schedule === "later" && (
+              <>
+                <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                       className="h-11 px-4 rounded-full text-[13px] border-0 outline-none" style={fieldStyle} />
+                <input type="time" value={time} onChange={(e) => setTime(e.target.value)}
+                       className="h-11 px-4 rounded-full text-[13px] border-0 outline-none" style={fieldStyle} />
+              </>
+            )}
+          </div>
+        </FieldRow>
+      </div>
+
+      <ModalFooter
+        left={touched && Object.keys(errors).length > 0
+          ? `Còn ${Object.keys(errors).length} trường chưa hợp lệ`
+          : `${channels.length} kênh · ${schedule === "now" ? "đăng ngay" : `${date} ${time}`}`}
+        onClose={onClose}
+        action={
+          <button onClick={submit}
+                  className="h-10 px-5 rounded-full text-[13px] font-bold text-white inline-flex items-center gap-2"
+                  style={{ background: `linear-gradient(135deg,${brand.from},${brand.to})` }}>
+            <Send className="w-4 h-4" /> {schedule === "now" ? "Đăng ngay" : "Lên lịch"}
+          </button>
+        }
+      />
+    </Modal>
+  );
+}
+
+/* ── Tạo workflow ── */
+const TRIGGER_OPTIONS = [
+  "Khi xuất bản bài viết mới", "Mỗi thứ 2 · 09:00", "Sau khi khách trả phòng +24h",
+  "Khi có booking mới", "Khi đăng video TikTok", "Khi nhận đánh giá mới",
+];
+const ACTION_OPTIONS = [
+  "Đăng Facebook", "Đăng Instagram", "Đăng Zalo OA", "Gửi Newsletter",
+  "Thông báo Slack", "Gắn tag CRM", "Ping Google Index",
+];
+
+function WorkflowModal({ brand, onClose, onSubmit }) {
+  const [name, setName] = useState("");
+  const [trigger, setTrigger] = useState(TRIGGER_OPTIONS[0]);
+  const [actions, setActions] = useState([]);
+  const [status, setStatus] = useState("active");
+  const [touched, setTouched] = useState(false);
+
+  const errors = {};
+  if (!name.trim()) errors.name = "Bắt buộc đặt tên workflow";
+  else if (name.trim().length < 3) errors.name = "Tên quá ngắn";
+  if (!actions.length) errors.actions = "Chọn ít nhất 1 hành động";
+
+  const err = (k) => (touched ? errors[k] : undefined);
+
+  const submit = () => {
+    setTouched(true);
+    if (Object.keys(errors).length) return;
+    onSubmit({ name: name.trim(), trigger, actions, status });
+  };
+
+  const toggleAct = (a) =>
+    setActions((s) => (s.includes(a) ? s.filter((x) => x !== a) : [...s, a]));
+
+  return (
+    <Modal onClose={onClose} icon={Workflow} title="Workflow mới" sub="Kịch bản tự động đa kênh" wide>
+      <div className="p-5 space-y-4">
+        <FieldRow label="Tên workflow" error={err("name")}>
+          <input {...roundField} style={fieldStyle} value={name} onChange={(e) => setName(e.target.value)}
+                 placeholder="Ví dụ: Auto-post khuyến mãi cuối tuần" />
+        </FieldRow>
+
+        <FieldRow label="Trigger — sự kiện kích hoạt">
+          <div className="relative">
+            <select value={trigger} onChange={(e) => setTrigger(e.target.value)}
+                    className="w-full h-11 pl-4 pr-9 rounded-full text-[13px] font-semibold border-0 outline-none appearance-none cursor-pointer"
+                    style={fieldStyle}>
+              {TRIGGER_OPTIONS.map((t) => <option key={t}>{t}</option>)}
+            </select>
+            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                         style={{ color: "var(--fg-subtle)" }} />
+          </div>
+        </FieldRow>
+
+        <FieldRow label={`Hành động · đã chọn ${actions.length}`} error={err("actions")}>
+          <div className="flex flex-wrap gap-2">
+            {ACTION_OPTIONS.map((a) => (
+              <QueueChip key={a} on={actions.includes(a)} onClick={() => toggleAct(a)} brand={brand}>{a}</QueueChip>
+            ))}
+          </div>
+        </FieldRow>
+
+        <FieldRow label="Trạng thái sau khi tạo">
+          <div className="flex items-center gap-2">
+            <QueueChip on={status === "active"} onClick={() => setStatus("active")} brand={brand}>Chạy ngay</QueueChip>
+            <QueueChip on={status === "paused"} onClick={() => setStatus("paused")} brand={brand}>Tạm dừng</QueueChip>
+          </div>
+        </FieldRow>
+
+        {actions.length > 0 && (
+          <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--surface-2)" }}>
+            <Label>Xem trước luồng</Label>
+            <div className="flex items-center gap-2 flex-wrap text-[12px] font-bold" style={{ color: "var(--fg)" }}>
+              <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-white"
+                    style={{ background: `linear-gradient(135deg,${brand.from},${brand.to})` }}>
+                <Webhook className="w-3.5 h-3.5" /> {trigger}
+              </span>
+              {actions.map((a) => (
+                <span key={a} className="inline-flex items-center gap-1.5">
+                  <ChevronRight className="w-3.5 h-3.5" style={{ color: "var(--fg-subtle)" }} />
+                  <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full"
+                        style={{ backgroundColor: "var(--surface)", color: "var(--fg-muted)" }}>
+                    <Zap className="w-3.5 h-3.5" /> {a}
+                  </span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <ModalFooter
+        left={touched && Object.keys(errors).length > 0
+          ? `Còn ${Object.keys(errors).length} trường chưa hợp lệ`
+          : `1 trigger · ${actions.length} hành động`}
+        onClose={onClose}
+        action={
+          <button onClick={submit}
+                  className="h-10 px-5 rounded-full text-[13px] font-bold text-white inline-flex items-center gap-2"
+                  style={{ background: `linear-gradient(135deg,${brand.from},${brand.to})` }}>
+            <CheckCircle2 className="w-4 h-4" /> Tạo workflow
+          </button>
+        }
+      />
+    </Modal>
+  );
+}
+
+/* ── Xuất báo cáo ── */
+function ExportModal({ data, onClose, onPick }) {
+  const opts = [
+    { fmt: "Báo cáo tổng hợp (PDF)", desc: `KPI 30 ngày · ${data.channels.length} kênh · biểu đồ` },
+    { fmt: "Dữ liệu bài viết (CSV)", desc: `${data.recentPosts.length} bài gần đây + hàng chờ` },
+    { fmt: "Hiệu suất kênh (Excel)", desc: "Reach, engagement, health từng kênh" },
+    { fmt: "Nhật ký Automation (CSV)", desc: `${data.automations.length} workflow · lượt chạy & tỉ lệ thành công` },
+  ];
+  return (
+    <Modal onClose={onClose} icon={Download} title="Xuất báo cáo" sub="Chọn định dạng cần tải">
+      <div className="p-5 space-y-2">
+        {opts.map((o) => (
+          <button key={o.fmt} onClick={() => onPick(o.fmt)}
+                  className="w-full text-left flex items-center gap-3 p-3.5 rounded-2xl border transition hover:bg-ink-50 active:scale-[.99]"
+                  style={{ borderColor: "var(--border)" }}>
+            <div className="min-w-0 flex-1">
+              <div className="text-[13px] font-bold" style={{ color: "var(--fg)" }}>{o.fmt}</div>
+              <div className="text-[11.5px] mt-0.5" style={{ color: "var(--fg-muted)" }}>{o.desc}</div>
+            </div>
+            <Download className="w-4 h-4 shrink-0" style={{ color: "var(--fg-subtle)" }} />
+          </button>
+        ))}
+      </div>
+    </Modal>
+  );
+}
+
+/* ── Chi tiết kênh ── */
+function ChannelModal({ ch, onClose }) {
+  const meta = CHANNELS[ch.id];
+  const Icon = meta?.icon;
+  const tone = scoreTone(ch.health);
+  return (
+    <Modal onClose={onClose} icon={Icon || Share2} title={meta?.name || ch.id} sub={ch.name}>
+      <div className="p-5 space-y-4">
+        <div className="flex items-center gap-4 p-4 rounded-2xl text-white"
+             style={{ background: `linear-gradient(135deg,${meta.from},${meta.to})` }}>
+          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+            {Icon && <Icon className="w-6 h-6" />}
+          </div>
+          <div className="min-w-0">
+            <div className="text-[15px] font-extrabold truncate">{ch.name}</div>
+            <div className="text-[12px] opacity-85">{meta?.name} · Đang kết nối</div>
+          </div>
+          <div className="ml-auto text-right shrink-0">
+            <div className="text-[10px] uppercase font-extrabold opacity-80">Followers</div>
+            <div className="text-[18px] font-extrabold tabular-nums">{ch.followers}</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2.5">
+          <MiniStat label="Bài đã đăng" value={ch.posts} />
+          <MiniStat label="Tương tác" value={ch.engagement} />
+          <MiniStat label="Sức khỏe" value={`${ch.health}%`} />
+        </div>
+
+        <div className="rounded-2xl p-4" style={{ backgroundColor: tone.bg }}>
+          <div className="text-[11px] font-extrabold uppercase tracking-wider mb-1" style={{ color: tone.ink }}>
+            Đánh giá kênh
+          </div>
+          <div className="text-[12.5px] font-semibold" style={{ color: tone.ink }}>
+            {ch.health >= 85
+              ? "Kênh hoạt động tốt, tần suất và tương tác đều ổn định."
+              : ch.health >= 70
+                ? "Kênh ổn nhưng tương tác đang giảm — nên tăng tần suất đăng."
+                : "Kênh cần chú ý: tương tác thấp so với lượng theo dõi."}
+          </div>
+        </div>
+      </div>
+      <ModalFooter left={`Kênh ${meta?.name}`} onClose={onClose} action={null} />
+    </Modal>
   );
 }
 

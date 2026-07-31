@@ -62,7 +62,11 @@
   --border-soft: #1f2531;
   --fg: #e8ebf2;
   --fg-muted: #a0a8b8;
-  --fg-subtle: #6b7385;
+  /* #6b7385 cũ chỉ đạt 3.05:1 trên --surface-3 và 3.74:1 trên --surface —
+     dưới ngưỡng AA 4.5:1 cho chữ nhỏ, mà text-ink-400/500 lại dùng khắp nơi
+     cho dòng phụ 10-11px. Giá trị mới giữ nguyên tông xanh-xám, đạt >= 4.6:1
+     trên cả ba bề mặt tối. */
+  --fg-subtle: #8791a8;
   /* Ở dark mode các accent là sắc pastel SÁNG (vd green #34d399), nên chữ đè lên
      nền accent phải là màu tối — dùng #ffffff cho tương phản ~1.7:1, không đọc được.
      Giá trị này đạt >= 4.5:1 với cả --accent lẫn --accent-hover của 6 accent. */
@@ -377,6 +381,102 @@ body {
 /* Chữ/icon đặt trên nền accent. Dùng thay cho text-white ở những chỗ nền
    là bg-brand-* (tức var(--accent)) — accent ở dark mode là sắc sáng. */
 .text-on-accent { color: var(--on-accent) !important; }
+
+/* =========================================================
+   NỀN PASTEL CỨNG Ở DARK MODE
+   -------------------------------------------------------
+   Toàn hệ thống có ~150 chỗ dùng bg-amber-50, bg-rose-50,
+   bg-emerald-50… làm "bề mặt mềm" cho chip, thẻ cảnh báo,
+   hàng bảng. Các lớp này là hex cố định của Tailwind nên ở
+   dark mode chúng vẫn sáng trắng, trong khi chữ bên trong
+   dùng token (--fg) đã chuyển sang sáng → tương phản ~1.1:1,
+   không đọc được.
+
+   Chỉ ánh xạ TRONG dark mode: light mode giữ nguyên 100% nên
+   không trang nào đổi diện mạo hiện tại. Nhóm theo NGỮ NGHĨA
+   để tự đi theo bộ token tone, kể cả khi đổi accent:
+     amber/orange/yellow → warning     rose/red/pink   → danger
+     emerald/green/teal/lime → success blue/sky/cyan/indigo → info
+     violet/purple/fuchsia → highlight
+   ========================================================= */
+/* Viết phẳng (không lồng) vì dự án chưa bật plugin nesting của PostCSS. */
+
+/* — nền — */
+[data-theme="dark"] .bg-amber-50,   [data-theme="dark"] .bg-amber-100,
+[data-theme="dark"] .bg-orange-50,  [data-theme="dark"] .bg-orange-100,
+[data-theme="dark"] .bg-yellow-50,  [data-theme="dark"] .bg-yellow-100   { background-color: var(--warning-soft) !important; }
+
+[data-theme="dark"] .bg-rose-50,    [data-theme="dark"] .bg-rose-100,
+[data-theme="dark"] .bg-red-50,     [data-theme="dark"] .bg-red-100,
+[data-theme="dark"] .bg-pink-50,    [data-theme="dark"] .bg-pink-100     { background-color: var(--danger-soft) !important; }
+
+[data-theme="dark"] .bg-emerald-50, [data-theme="dark"] .bg-emerald-100,
+[data-theme="dark"] .bg-green-50,   [data-theme="dark"] .bg-green-100,
+[data-theme="dark"] .bg-teal-50,    [data-theme="dark"] .bg-teal-100,
+[data-theme="dark"] .bg-lime-50,    [data-theme="dark"] .bg-lime-100     { background-color: var(--success-soft) !important; }
+
+[data-theme="dark"] .bg-blue-50,    [data-theme="dark"] .bg-blue-100,
+[data-theme="dark"] .bg-sky-50,     [data-theme="dark"] .bg-sky-100,
+[data-theme="dark"] .bg-cyan-50,    [data-theme="dark"] .bg-cyan-100,
+[data-theme="dark"] .bg-indigo-50,  [data-theme="dark"] .bg-indigo-100   { background-color: var(--info-soft) !important; }
+
+[data-theme="dark"] .bg-violet-50,  [data-theme="dark"] .bg-violet-100,
+[data-theme="dark"] .bg-purple-50,  [data-theme="dark"] .bg-purple-100,
+[data-theme="dark"] .bg-fuchsia-50, [data-theme="dark"] .bg-fuchsia-100  { background-color: var(--highlight-soft) !important; }
+
+/* — hover cùng nhóm — */
+[data-theme="dark"] .hover\:bg-amber-50:hover,
+[data-theme="dark"] .hover\:bg-amber-100:hover    { background-color: var(--warning-soft) !important; }
+[data-theme="dark"] .hover\:bg-rose-50:hover,
+[data-theme="dark"] .hover\:bg-rose-100:hover     { background-color: var(--danger-soft) !important; }
+[data-theme="dark"] .hover\:bg-emerald-50:hover,
+[data-theme="dark"] .hover\:bg-emerald-100:hover  { background-color: var(--success-soft) !important; }
+[data-theme="dark"] .hover\:bg-blue-50:hover,
+[data-theme="dark"] .hover\:bg-blue-100:hover     { background-color: var(--info-soft) !important; }
+[data-theme="dark"] .hover\:bg-violet-50:hover,
+[data-theme="dark"] .hover\:bg-violet-100:hover   { background-color: var(--highlight-soft) !important; }
+
+/* — chữ đậm màu đi kèm nền pastel: phải sáng lên cùng — */
+[data-theme="dark"] .text-amber-600,  [data-theme="dark"] .text-amber-700,
+[data-theme="dark"] .text-amber-800,  [data-theme="dark"] .text-amber-900,
+[data-theme="dark"] .text-orange-600, [data-theme="dark"] .text-orange-700,
+[data-theme="dark"] .text-orange-800, [data-theme="dark"] .text-yellow-700,
+[data-theme="dark"] .text-yellow-800                { color: var(--warning-fg) !important; }
+
+[data-theme="dark"] .text-rose-600,   [data-theme="dark"] .text-rose-700,
+[data-theme="dark"] .text-rose-800,   [data-theme="dark"] .text-rose-900,
+[data-theme="dark"] .text-red-600,    [data-theme="dark"] .text-red-700,
+[data-theme="dark"] .text-red-800,    [data-theme="dark"] .text-pink-600,
+[data-theme="dark"] .text-pink-700                  { color: var(--danger-fg) !important; }
+
+[data-theme="dark"] .text-emerald-600,[data-theme="dark"] .text-emerald-700,
+[data-theme="dark"] .text-emerald-800,[data-theme="dark"] .text-emerald-900,
+[data-theme="dark"] .text-green-600,  [data-theme="dark"] .text-green-700,
+[data-theme="dark"] .text-green-800,  [data-theme="dark"] .text-teal-700,
+[data-theme="dark"] .text-lime-700                  { color: var(--success-fg) !important; }
+
+[data-theme="dark"] .text-blue-600,   [data-theme="dark"] .text-blue-700,
+[data-theme="dark"] .text-blue-800,   [data-theme="dark"] .text-sky-600,
+[data-theme="dark"] .text-sky-700,    [data-theme="dark"] .text-cyan-700,
+[data-theme="dark"] .text-cyan-800,   [data-theme="dark"] .text-indigo-600,
+[data-theme="dark"] .text-indigo-700                { color: var(--info-fg) !important; }
+
+[data-theme="dark"] .text-violet-600, [data-theme="dark"] .text-violet-700,
+[data-theme="dark"] .text-violet-800, [data-theme="dark"] .text-purple-600,
+[data-theme="dark"] .text-purple-700, [data-theme="dark"] .text-fuchsia-600,
+[data-theme="dark"] .text-fuchsia-700               { color: var(--highlight-fg) !important; }
+
+/* — viền pastel — */
+[data-theme="dark"] .border-amber-200,  [data-theme="dark"] .border-amber-300,
+[data-theme="dark"] .border-orange-200                  { border-color: var(--warning-border) !important; }
+[data-theme="dark"] .border-rose-200,   [data-theme="dark"] .border-rose-300,
+[data-theme="dark"] .border-red-200                     { border-color: var(--danger-border) !important; }
+[data-theme="dark"] .border-emerald-200,[data-theme="dark"] .border-emerald-300,
+[data-theme="dark"] .border-green-200                   { border-color: var(--success-border) !important; }
+[data-theme="dark"] .border-blue-200,   [data-theme="dark"] .border-blue-300,
+[data-theme="dark"] .border-sky-200,    [data-theme="dark"] .border-cyan-200   { border-color: var(--info-border) !important; }
+[data-theme="dark"] .border-violet-200, [data-theme="dark"] .border-violet-300,
+[data-theme="dark"] .border-purple-200, [data-theme="dark"] .border-fuchsia-200{ border-color: var(--highlight-border) !important; }
 
 /* Thanh cuộn ngang ẩn — dùng cho mục lục dính trên mobile */
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
