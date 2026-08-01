@@ -72,7 +72,7 @@ function Message({ role, text, time, suggestions, onSuggest }) {
             <div className="w-5 h-5 rounded-full bg-brand-600 text-on-accent flex items-center justify-center">
               <Sparkles className="w-3 h-3" />
             </div>
-            <span className="text-[10px] font-semibold text-ink-500">Hotel Assistant</span>
+            <span className="text-[10px] font-semibold text-ink-500"> Le Palmier AI Assistant</span>
           </div>
         )}
         <div
@@ -133,7 +133,7 @@ export default function Chatbot() {
     {
       id: 1,
       role: "bot",
-      text: "Xin chào! Tôi là **Hotel Assistant** 👋\nTôi có thể giúp gì cho bạn hôm nay?",
+      text: "Xin chào! Tôi là **Le Palmier AI Assistant** 👋\nTôi có thể giúp gì cho bạn hôm nay?",
       time: fmtTime(new Date()),
       suggestions: SUGGESTED,
     },
@@ -254,7 +254,7 @@ export default function Chatbot() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-display font-bold text-[13px] sm:text-[14px] leading-tight truncate">
-                Hotel Assistant
+                Le Palmỉe AI Assistant
               </div>
               <div className="text-[10px] text-white/80 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />

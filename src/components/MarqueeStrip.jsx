@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+import { Icons } from "./Icons";
+
+const { Megaphone, MegaphoneOff } = Icons;
 
 /**
  * MarqueeStrip — dải chữ chạy ngang, kiểu broadcast ticker.
@@ -116,7 +118,7 @@ export default function MarqueeStrip({
       <div className="absolute inset-y-0 left-0 w-8 sm:w-12 bg-gradient-to-r from-black/35 to-transparent z-10 pointer-events-none" />
       <div className="absolute inset-y-0 right-0 w-8 sm:w-12 bg-gradient-to-l from-black/35 to-transparent z-10 pointer-events-none" />
 
-      {/* Nút loa cố định bên trái — bật/tắt dòng tin.
+      {/* Nút loa phát thanh cố định bên trái — bật/tắt dòng tin.
           Tắt loa = dừng chạy chữ, thay cho nhãn "LIVE" tĩnh trước đây. */}
       <button
         type="button"
@@ -127,11 +129,11 @@ export default function MarqueeStrip({
         className="absolute left-0 top-0 bottom-0 z-20 flex items-center gap-1.5 px-2.5 sm:px-3 bg-black/35 hover:bg-black/50 backdrop-blur-md border-r border-white/15 shadow-[inset_-1px_0_0_rgba(255,255,255,0.05)] transition active:scale-95"
       >
         {paused ? (
-          <VolumeX className="w-4 h-4 text-white/70" strokeWidth={2.2} />
+          <MegaphoneOff className="w-4 h-4 text-white/70" strokeWidth={2.2} />
         ) : (
           <span className="relative inline-flex items-center justify-center">
             <span className={`absolute -inset-1.5 rounded-full ${t.dot} opacity-25 animate-ping`} style={{ animationDuration: "1.8s" }} />
-            <Volume2 className="relative w-4 h-4 text-white drop-shadow-sm" strokeWidth={2.2} />
+            <Megaphone className="relative w-4 h-4 text-white drop-shadow-sm" strokeWidth={2.2} />
           </span>
         )}
         <span className={`hidden sm:inline text-[10px] font-bold uppercase tracking-[0.2em] drop-shadow-sm ${paused ? "text-white/60" : "text-white"}`}>
