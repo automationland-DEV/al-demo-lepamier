@@ -157,7 +157,7 @@ export default function Dashboard() {
       {/* ── 1. HERO ───────────────────────────────────────── */}
       <PageHero
         eyebrow="Dashboard · Tổng quan"
-        title="Chủ đầu tư"
+        title="Dash Board"
         subtitle="Theo dõi toàn bộ hoạt động khách sạn thời gian thực — số liệu, cảnh báo, cơ hội."
         live
         meta={[

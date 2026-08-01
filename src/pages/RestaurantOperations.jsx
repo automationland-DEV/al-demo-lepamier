@@ -179,7 +179,7 @@ export default function RestaurantOperations() {
               </span>
             </div>
             <h1 className="font-display font-bold text-[20px] sm:text-[28px] leading-tight mt-1 truncate">
-              Quản lý vận hành nhà hàng
+              Nhà Hàng
             </h1>
             <p className="text-[13px] text-white/80 mt-1 max-w-2xl">
               Bếp · phục vụ · đặt bàn · doanh thu — theo dõi real-time toàn hệ thống 4 nhà hàng.
@@ -406,15 +406,16 @@ export default function RestaurantOperations() {
           </span>
         }
       />
-      {/* items-start: bảng bếp chỉ có ~7 dòng còn cột "Ca làm việc" cao gấp đôi;
-          để mặc định stretch thì thẻ bếp bị kéo cao và chừa một khoảng trống lớn. */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 items-start">
-        <Card title="Trạng thái đơn trong bếp"
+      {/* Bảng bếp ~447px còn "Ca làm việc" ~852px. Trước đây dùng items-start nên
+          hai cột lệch hẳn 405px. Nay cố định chiều cao hàng và bật fill: cả hai
+          cao bằng nhau, cột ca làm việc cuộn bên trong. */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:h-[520px]">
+        <Card fill title="Trạng thái đơn trong bếp"
               subtitle={hasQuery ? `${kitchen.length}/${data.kitchen.length} đơn · nhấn để chuyển bước` : "KDS · nhấn vào đơn để chuyển bước"}
-              icon={ChefHat} accent="amber" className="lg:col-span-2 overflow-hidden min-w-0">
+              icon={ChefHat} accent="amber" className="lg:col-span-2 min-w-0">
           <KitchenBoard rows={kitchen} onAdvance={advanceKitchen} onReset={resetAll} hasQuery={hasQuery} />
         </Card>
-        <Card title="Ca làm việc" subtitle="Phân công hôm nay" icon={Users} accent="violet">
+        <Card fill title="Ca làm việc" subtitle="Phân công hôm nay" icon={Users} accent="violet">
           <ShiftBoard rows={data.shifts} />
         </Card>
       </div>
@@ -585,11 +586,12 @@ export default function RestaurantOperations() {
 
       {/* ═══ TOP BÀN + NGUYÊN LIỆU ═══ */}
       <SectionHeader icon={Star} label="Top bàn & Nguyên liệu" sub="Bàn đắt khách · tồn kho bếp" />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
-        <Card title="Bàn có doanh thu cao" subtitle="Top 5 trong ngày" icon={Utensils} accent="amber">
+      {/* Top bàn ~439px, tồn kho ~877px — lệch 438px. Cùng cách xử lý như trên. */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:h-[520px]">
+        <Card fill title="Bàn có doanh thu cao" subtitle="Top 5 trong ngày" icon={Utensils} accent="amber">
           <TopTables items={data.topTables} />
         </Card>
-        <Card title="Nguyên liệu sắp hết" subtitle="Cảnh báo bếp — nhấn để đặt bổ sung" icon={AlertCircle} accent="rose">
+        <Card fill title="Nguyên liệu sắp hết" subtitle="Cảnh báo bếp — nhấn để đặt bổ sung" icon={AlertCircle} accent="rose">
           <Inventory items={inventory} onReorder={reorder} />
         </Card>
       </div>
@@ -606,11 +608,12 @@ export default function RestaurantOperations() {
       </div>
 
       {/* ═══ HOA HỒNG + SỰ CỐ ═══ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 items-start">
-        <Card title="Tip / hoa hồng" subtitle="Theo ca · nhân viên" icon={DollarSign} accent="emerald" className="lg:col-span-2">
+      {/* Tip ~401px, sự cố ~539px — lệch 138px. */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:h-[480px]">
+        <Card fill title="Tip / hoa hồng" subtitle="Theo ca · nhân viên" icon={DollarSign} accent="emerald" className="lg:col-span-2">
           <TipsBoard rows={data.tips} />
         </Card>
-        <Card title="Sự cố & xử lý" subtitle="Trong ngày" icon={AlertCircle} accent="rose">
+        <Card fill title="Sự cố & xử lý" subtitle="Trong ngày" icon={AlertCircle} accent="rose">
           <IssuesList items={data.issues} onResolve={resolveIssue} />
         </Card>
       </div>
@@ -952,7 +955,11 @@ function Badge({ tone = "amber", children }) {
   );
 }
 
-function Card({ children, className = "", title, subtitle, right, icon: Icon, accent = "amber" }) {
+/* fill: thẻ lấp đầy chiều cao ô lưới và cho phần thân tự cuộn.
+   Dùng khi hai thẻ cùng hàng lệch chiều cao nhiều — đặt chiều cao cố định
+   cho hàng lưới (lg:h-[...]) rồi bật fill để cả hai cao bằng nhau, thẻ nào
+   dài hơn thì cuộn bên trong thay vì kéo cả section cao lên. */
+function Card({ children, className = "", title, subtitle, right, icon: Icon, accent = "amber", fill = false }) {
   const accentMap = {
     blue: "text-blue-700",
     emerald: "text-emerald-700",
@@ -962,9 +969,9 @@ function Card({ children, className = "", title, subtitle, right, icon: Icon, ac
     ink: "text-ink-700",
   };
   return (
-    <div className={`bg-white border border-ink-200 rounded-md ${className}`}>
+    <div className={`bg-white border border-ink-200 rounded-md ${fill ? "flex flex-col min-h-0" : ""} ${className}`}>
       {(title || right) && (
-        <div className="flex items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-ink-100">
+        <div className="flex items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-ink-100 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             {Icon && <Icon className={`w-4 h-4 shrink-0 ${accentMap[accent] || accentMap.amber}`} />}
             <div className="min-w-0">
@@ -975,7 +982,7 @@ function Card({ children, className = "", title, subtitle, right, icon: Icon, ac
           {right && <div className="shrink-0 flex items-center gap-1.5">{right}</div>}
         </div>
       )}
-      <div className="p-4 sm:p-5">{children}</div>
+      <div className={`p-4 sm:p-5 ${fill ? "flex-1 min-h-0 overflow-y-auto" : ""}`}>{children}</div>
     </div>
   );
 }
@@ -2055,83 +2062,32 @@ function Truck({ ...props }) {
 /* ═══════════ DATA ═══════════ */
 
 function buildData({ shift, branch }) {
+  /* Sơ đồ bàn — mỗi ký tự là một bàn, đánh số 01 → 35 theo thứ tự.
+     o = đang phục vụ · v = trống · r = đã đặt · x = bảo trì
+     Mỗi nhóm 5 ký tự = đúng một hàng của lưới grid-cols-5 nên soi bằng mắt
+     là ra ngay sơ đồ thật. Tổng bàn và số bàn đang dùng được TÍNH từ chuỗi
+     này (xem makeRestaurant) thay vì gõ tay, nên không bao giờ lệch nhau. */
   const restaurants = [
-    {
-      id: "lp1", code: "LP1", name: "Le Palmier Sài Gòn",
-      location: "Quận 1 · 24 bàn",
-      total: 24, occupied: 19, avgWait: 8, revToday: 84_500_000,
-      tables: makeTables(24, [
-        { id: "01", status: "occupied" }, { id: "02", status: "occupied" },
-        { id: "03", status: "reserved" }, { id: "04", status: "occupied" },
-        { id: "05", status: "occupied" }, { id: "06", status: "vacant" },
-        { id: "07", status: "occupied" }, { id: "08", status: "occupied" },
-        { id: "09", status: "ooo" },     { id: "10", status: "occupied" },
-        { id: "11", status: "occupied" }, { id: "12", status: "occupied" },
-        { id: "13", status: "reserved" }, { id: "14", status: "occupied" },
-        { id: "15", status: "vacant" },   { id: "16", status: "occupied" },
-        { id: "17", status: "occupied" }, { id: "18", status: "occupied" },
-        { id: "19", status: "occupied" }, { id: "20", status: "reserved" },
-        { id: "21", status: "occupied" }, { id: "22", status: "occupied" },
-        { id: "23", status: "occupied" }, { id: "24", status: "vacant" },
-      ]),
-    },
-    {
-      id: "lp2", code: "LP2", name: "Le Palmier Đà Lạt",
-      location: "Phường 4 · 18 bàn",
-      total: 18, occupied: 12, avgWait: 5, revToday: 56_200_000,
-      tables: makeTables(18, [
-        { id: "01", status: "occupied" }, { id: "02", status: "occupied" },
-        { id: "03", status: "occupied" }, { id: "04", status: "reserved" },
-        { id: "05", status: "occupied" }, { id: "06", status: "occupied" },
-        { id: "07", status: "vacant" },   { id: "08", status: "occupied" },
-        { id: "09", status: "occupied" }, { id: "10", status: "occupied" },
-        { id: "11", status: "ooo" },     { id: "12", status: "vacant" },
-        { id: "13", status: "occupied" }, { id: "14", status: "occupied" },
-        { id: "15", status: "reserved" }, { id: "16", status: "occupied" },
-        { id: "17", status: "occupied" }, { id: "18", status: "reserved" },
-      ]),
-    },
-    {
-      id: "lp3", code: "LP3", name: "Le Palmier Phú Quốc",
-      location: "Bãi Trường · 32 bàn",
-      total: 32, occupied: 27, avgWait: 12, revToday: 128_400_000,
-      tables: makeTables(32, [
-        { id: "01", status: "occupied" }, { id: "02", status: "occupied" },
-        { id: "03", status: "occupied" }, { id: "04", status: "occupied" },
-        { id: "05", status: "reserved" }, { id: "06", status: "occupied" },
-        { id: "07", status: "occupied" }, { id: "08", status: "occupied" },
-        { id: "09", status: "occupied" }, { id: "10", status: "ooo" },
-        { id: "11", status: "occupied" }, { id: "12", status: "occupied" },
-        { id: "13", status: "occupied" }, { id: "14", status: "occupied" },
-        { id: "15", status: "reserved" }, { id: "16", status: "vacant" },
-        { id: "17", status: "occupied" }, { id: "18", status: "occupied" },
-        { id: "19", status: "occupied" }, { id: "20", status: "occupied" },
-        { id: "21", status: "reserved" }, { id: "22", status: "occupied" },
-        { id: "23", status: "occupied" }, { id: "24", status: "occupied" },
-        { id: "25", status: "occupied" }, { id: "26", status: "occupied" },
-        { id: "27", status: "reserved" }, { id: "28", status: "occupied" },
-        { id: "29", status: "occupied" }, { id: "30", status: "occupied" },
-        { id: "31", status: "ooo" },     { id: "32", status: "occupied" },
-      ]),
-    },
-    {
-      id: "lp4", code: "LP4", name: "Le Palmier Nha Trang",
-      location: "Trần Phú · 22 bàn",
-      total: 22, occupied: 14, avgWait: 6, revToday: 62_800_000,
-      tables: makeTables(22, [
-        { id: "01", status: "occupied" }, { id: "02", status: "occupied" },
-        { id: "03", status: "reserved" }, { id: "04", status: "vacant" },
-        { id: "05", status: "occupied" }, { id: "06", status: "occupied" },
-        { id: "07", status: "ooo" },     { id: "08", status: "occupied" },
-        { id: "09", status: "occupied" }, { id: "10", status: "occupied" },
-        { id: "11", status: "reserved" }, { id: "12", status: "occupied" },
-        { id: "13", status: "vacant" },   { id: "14", status: "occupied" },
-        { id: "15", status: "occupied" }, { id: "16", status: "occupied" },
-        { id: "17", status: "occupied" }, { id: "18", status: "reserved" },
-        { id: "19", status: "occupied" }, { id: "20", status: "vacant" },
-        { id: "21", status: "occupied" }, { id: "22", status: "occupied" },
-      ]),
-    },
+    makeRestaurant({
+      id: "lp1", code: "LP1", name: "Le Palmier Sài Gòn", area: "Quận 1",
+      avgWait: 10, revToday: 118_400_000,
+      map: "ooroo ovooo oooxo ovoor oooov ooovo ooooo",
+    }),
+    makeRestaurant({
+      id: "lp2", code: "LP2", name: "Le Palmier Đà Lạt", area: "Phường 4",
+      avgWait: 7, revToday: 96_800_000,
+      map: "ooroo voovo oroov ooxvo voroo ovoor oovoo",
+    }),
+    makeRestaurant({
+      id: "lp3", code: "LP3", name: "Le Palmier Phú Quốc", area: "Bãi Trường",
+      avgWait: 14, revToday: 142_600_000,
+      map: "oooor ooooo oxooo ooovo ooroo oooov ooooo",
+    }),
+    makeRestaurant({
+      id: "lp4", code: "LP4", name: "Le Palmier Nha Trang", area: "Trần Phú",
+      avgWait: 8, revToday: 88_200_000,
+      map: "oorvo oovvo xovoo oroov ovoro oovoo voroo",
+    }),
   ];
 
   const heroMeta = [
@@ -2534,9 +2490,13 @@ function buildData({ shift, branch }) {
     ordersToday: 486,
     guestsToday: 1_624,
     avgBill: 2_140_000,
-    tablesOccupied: 72,
-    tablesTotal: 96,
-    tableOcc: 75,
+    /* Tính từ restaurants — trước đây gõ cứng 72/96 nên đổi số bàn là sai ngay. */
+    tablesOccupied: restaurants.reduce((s, r) => s + r.occupied, 0),
+    tablesTotal: restaurants.reduce((s, r) => s + r.total, 0),
+    tableOcc: Math.round(
+      (restaurants.reduce((s, r) => s + r.occupied, 0) /
+        restaurants.reduce((s, r) => s + r.total, 0)) * 100
+    ),
     avgWait: 8,
     kitchen,
     shifts,
@@ -2557,11 +2517,28 @@ function buildData({ shift, branch }) {
   };
 }
 
-function makeTables(total, presets) {
-  return Array.from({ length: total }, (_, i) => {
-    const p = presets[i] || { id: String(i + 1).padStart(2, "0"), status: "vacant" };
-    return { id: p.id, label: "", status: p.status };
-  });
+/* Mỗi nhà hàng 35 bàn. Đổi số này thì chỉ cần sửa độ dài chuỗi sơ đồ tương ứng. */
+const TABLES_PER_RESTAURANT = 35;
+const FLOOR_CODE = { o: "occupied", v: "vacant", r: "reserved", x: "ooo" };
+
+/* Dựng nhà hàng từ chuỗi sơ đồ: total và occupied luôn khớp với lưới bàn
+   vì cùng suy ra từ một nguồn, không gõ tay hai nơi rồi lệch. */
+function makeRestaurant({ id, code, name, area, avgWait, revToday, map }) {
+  const cells = map.replace(/\s+/g, "");
+  if (cells.length !== TABLES_PER_RESTAURANT) {
+    console.warn(`[${code}] sơ đồ bàn có ${cells.length} ký tự, cần ${TABLES_PER_RESTAURANT}`);
+  }
+  const tables = [...cells].map((ch, i) => ({
+    id: String(i + 1).padStart(2, "0"),
+    label: "",
+    status: FLOOR_CODE[ch] || "vacant",
+  }));
+  return {
+    id, code, name, avgWait, revToday, tables,
+    total: tables.length,
+    occupied: tables.filter((t) => t.status === "occupied").length,
+    location: `${area} · ${tables.length} bàn`,
+  };
 }
 
 function makeMembers(total, on) {

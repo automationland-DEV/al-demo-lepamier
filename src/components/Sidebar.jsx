@@ -6,7 +6,7 @@ import { X, Menu } from "lucide-react";
 const {
   LayoutDashboard, Building2, BedDouble, CalendarCheck, Users, UserCog,
   BarChart3, MessageSquare, Settings, ConciergeBell, ChevronRight,
-  Utensils, Megaphone, Newspaper, FolderTree,
+  Utensils, Megaphone, Newspaper, FolderTree, GraduationCap,
 } = Icons;
 
 const navGroups = [
@@ -43,7 +43,7 @@ const navGroups = [
     title: "Dịch vụ & Báo cáo",
     items: [
       { to: "/services", label: "Dịch vụ", icon: ConciergeBell, badge: null },
-      { to: "/restaurant-ops", label: "Vận hành nhà hàng", icon: Utensils, badge: "HOT" },
+      { to: "/restaurant-ops", label: "Nhà Hàng", icon: Utensils, badge: "HOT" },
       { to: "/reports", label: "Báo cáo", icon: BarChart3, badge: null },
       { to: "/messages", label: "Tin nhắn", icon: MessageSquare, badge: "8" },
     ],
@@ -51,6 +51,7 @@ const navGroups = [
   {
     title: "Hệ thống",
     items: [
+      { to: "/help", label: "Hướng dẫn sử dụng", icon: GraduationCap, badge: null },
       { to: "/settings", label: "Cài đặt", icon: Settings, badge: null },
     ],
   },
