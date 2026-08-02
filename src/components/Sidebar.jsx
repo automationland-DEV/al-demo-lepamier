@@ -1,45 +1,104 @@
-import { useMemo } from "react";
-import { NavLink } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import { Icons } from "./Icons";
 import BranchSelector from "./BranchSelector";
 import { branches, rooms, staff, guests, bookings } from "../data/mockData";
+import { invoices, receivables, reviews, menuItems, ingredients, promotions } from "../data/adminData";
 
 const {
   LayoutDashboard, Building2, BedDouble, CalendarCheck, Users, UserCog,
   BarChart3, MessageSquare, Settings, ConciergeBell, Utensils, Megaphone,
-  Newspaper, FolderTree, GraduationCap, Globe, PanelLeft, X,
+  Newspaper, FolderTree, GraduationCap, Globe, PanelLeft, X, ChevronDown,
+  LayoutList, Tags, BookOpen, Boxes, Crown, Star, CalendarClock,
+  ReceiptText, Landmark, ArrowLeftRight, TicketPercent, ShieldCheck, ScrollText,
 } = Icons;
 
+const LS_KEY = "condohub.nav.groups";
+
 /**
- * Số badge trước đây hardcode và đã lệch thực tế (ghi 316 nhân viên / 1.2K
- * phòng, thực tế 124 / 713). Nay đọc thẳng từ mockData nên không trôi được
- * nữa. Nhãn theo từ điển thuật ngữ Design.md §13.
+ * Điều hướng chia theo NHÓM NGHIỆP VỤ, không theo "loại màn hình".
+ * Người vận hành nghĩ theo bộ phận họ phụ trách (lễ tân → Khách sạn,
+ * bếp → Nhà hàng, kế toán → Tài chính) nên menu bám đúng cách nghĩ đó.
+ *
+ * Số badge đọc thẳng từ dữ liệu — trước đây hardcode và đã lệch thực tế.
+ * Nhãn theo từ điển thuật ngữ Design.md §13.
  */
 function useNav() {
   return useMemo(() => {
     const n = (v) => v.toLocaleString("vi-VN");
+    const unpaid = invoices.filter((i) => i.status !== "paid").length;
+    const overdue = receivables.filter((r) => r.worstOverdue > 0).length;
+    const unreplied = reviews.filter((r) => !r.replied).length;
+    const lowStock = ingredients.filter((i) => i.level !== "ok").length;
+
     return [
       {
+        id: "overview",
         title: "Tổng quan",
+        icon: LayoutDashboard,
         items: [{ to: "/", label: "Dashboard", icon: LayoutDashboard }],
       },
       {
-        title: "Vận hành",
+        id: "hotel",
+        title: "Khách sạn",
+        icon: BedDouble,
         items: [
           { to: "/branches", label: "Chi nhánh", icon: Building2, badge: n(branches.length) },
           { to: "/rooms", label: "Phòng", icon: BedDouble, badge: n(rooms.length) },
+          { to: "/room-types", label: "Hạng phòng", icon: LayoutList },
+          { to: "/rates", label: "Bảng giá", icon: Tags },
           { to: "/bookings", label: "Đặt phòng", icon: CalendarCheck, badge: n(bookings.length) },
-          { to: "/guests", label: "Khách hàng", icon: Users, badge: n(guests.length) },
+          { to: "/services", label: "Dịch vụ & Tiện ích", icon: ConciergeBell },
         ],
       },
       {
-        title: "Nhân sự",
-        items: [{ to: "/staff", label: "Nhân viên", icon: UserCog, badge: n(staff.length) }],
+        id: "fnb",
+        title: "Nhà hàng",
+        icon: Utensils,
+        items: [
+          { to: "/restaurant-ops", label: "Vận hành nhà hàng", icon: Utensils },
+          { to: "/menu", label: "Thực đơn", icon: BookOpen, badge: n(menuItems.length) },
+          { to: "/inventory", label: "Kho & Nguyên liệu", icon: Boxes, badge: lowStock ? n(lowStock) : null },
+        ],
       },
       {
-        title: "Marketing",
+        id: "crm",
+        title: "Khách hàng",
+        icon: Users,
         items: [
-          { to: "/marketing", label: "Marketing", icon: Megaphone },
+          { to: "/guests", label: "Hồ sơ khách", icon: Users, badge: n(guests.length) },
+          { to: "/loyalty", label: "Khách thân thiết", icon: Crown },
+          { to: "/reviews", label: "Đánh giá", icon: Star, badge: unreplied ? n(unreplied) : null },
+          { to: "/messages", label: "Tin nhắn", icon: MessageSquare, badge: "8" },
+        ],
+      },
+      {
+        id: "hr",
+        title: "Nhân sự",
+        icon: UserCog,
+        items: [
+          { to: "/staff", label: "Nhân viên", icon: UserCog, badge: n(staff.length) },
+          { to: "/payroll", label: "Bảng công & Lương", icon: CalendarClock },
+        ],
+      },
+      {
+        id: "finance",
+        title: "Tài chính",
+        icon: Landmark,
+        items: [
+          { to: "/invoices", label: "Hóa đơn", icon: ReceiptText, badge: unpaid ? n(unpaid) : null },
+          { to: "/receivables", label: "Công nợ", icon: Landmark, badge: overdue ? n(overdue) : null },
+          { to: "/cashflow", label: "Thu chi", icon: ArrowLeftRight },
+          { to: "/reports", label: "Báo cáo", icon: BarChart3 },
+        ],
+      },
+      {
+        id: "marketing",
+        title: "Marketing",
+        icon: Megaphone,
+        items: [
+          { to: "/marketing", label: "Chiến dịch", icon: Megaphone },
+          { to: "/promotions", label: "Khuyến mãi", icon: TicketPercent, badge: n(promotions.filter((p) => p.active).length) },
           /* Trang này có 2 tab (/website và /website/users); điều hướng giữa
              hai tab nằm trong trang nên sidebar chỉ giữ một mục. */
           { to: "/website", label: "Website", icon: Globe },
@@ -48,17 +107,12 @@ function useNav() {
         ],
       },
       {
-        title: "Dịch vụ & Báo cáo",
-        items: [
-          { to: "/services", label: "Dịch vụ", icon: ConciergeBell },
-          { to: "/restaurant-ops", label: "Nhà hàng", icon: Utensils },
-          { to: "/reports", label: "Báo cáo", icon: BarChart3 },
-          { to: "/messages", label: "Tin nhắn", icon: MessageSquare, badge: "8" },
-        ],
-      },
-      {
+        id: "system",
         title: "Hệ thống",
+        icon: Settings,
         items: [
+          { to: "/roles", label: "Phân quyền", icon: ShieldCheck },
+          { to: "/audit-log", label: "Nhật ký hệ thống", icon: ScrollText },
           { to: "/help", label: "Hướng dẫn sử dụng", icon: GraduationCap },
           { to: "/settings", label: "Cài đặt", icon: Settings },
         ],
@@ -69,7 +123,7 @@ function useNav() {
 
 /** Mục điều hướng. Mục đang mở KHÔNG tô nền đầy màu như v3 — nó được đánh
  *  dấu bằng vạch đồng thau bên trái, chi tiết nhận diện ② (Design.md §3). */
-function NavItem({ item, collapsed, onNavigate }) {
+function NavItem({ item, collapsed, indent = false, onNavigate }) {
   return (
     <li>
       <NavLink
@@ -78,8 +132,8 @@ function NavItem({ item, collapsed, onNavigate }) {
         onClick={onNavigate}
         title={collapsed ? item.label : undefined}
         className={({ isActive }) =>
-          `relative group flex items-center gap-2.5 min-h-[38px] py-2 text-[13px] transition-colors ${
-            collapsed ? "justify-center px-2" : "pl-3.5 pr-2.5"
+          `relative group flex items-center gap-2.5 min-h-[36px] py-1.5 text-[13px] transition-colors ${
+            collapsed ? "justify-center px-2" : `${indent ? "pl-6" : "pl-3.5"} pr-2.5`
           } ${isActive ? "font-medium" : ""}`
         }
         style={({ isActive }) => ({
@@ -122,11 +176,74 @@ function NavItem({ item, collapsed, onNavigate }) {
   );
 }
 
+/** Đầu nhóm gập được. Nhóm chứa route đang mở luôn được bung ra. */
+function GroupHead({ group, open, hasActive, onToggle }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className="w-full flex items-center gap-2 px-3.5 py-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold transition-colors"
+      style={{ color: hasActive ? "var(--fg-muted)" : "var(--fg-subtle)", borderRadius: "var(--r-sm)" }}
+    >
+      <span className="flex-1 text-left truncate">{group.title}</span>
+      <ChevronDown
+        className="w-3.5 h-3.5 shrink-0 transition-transform"
+        style={{ transform: open ? "none" : "rotate(-90deg)", transitionDuration: ".18s" }}
+      />
+    </button>
+  );
+}
+
 export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, onToggleCollapse }) {
   // Desktop: thu gọn thành cột icon · Mobile: luôn mở rộng khi là drawer
   const isMobile = mobileOpen;
   const effectiveCollapsed = isMobile ? false : collapsed;
   const navGroups = useNav();
+  const { pathname } = useLocation();
+
+  /* Nhóm nào đang mở — nhớ qua localStorage để không phải bung lại mỗi lần
+     tải trang. Lần đầu mở tất cả để người dùng thấy toàn bộ hệ thống. */
+  const [openIds, setOpenIds] = useState(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {
+      /* localStorage bị chặn — dùng mặc định */
+    }
+    return navGroupIds();
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(openIds));
+    } catch {
+      /* bỏ qua */
+    }
+  }, [openIds]);
+
+  /** Nhóm chứa route đang xem — dùng để tự bung và làm đậm tiêu đề nhóm */
+  const activeGroupId = useMemo(() => {
+    const hit = navGroups.find((g) =>
+      g.items.some((it) => (it.to === "/" ? pathname === "/" : pathname.startsWith(it.to)))
+    );
+    return hit?.id || null;
+  }, [navGroups, pathname]);
+
+  // Điều hướng bằng breadcrumb / liên kết trong trang có thể nhảy sang nhóm
+  // đang gập — bung nó ra để người dùng luôn thấy mình đang đứng ở đâu.
+  useEffect(() => {
+    if (activeGroupId) setOpenIds((prev) => (prev.includes(activeGroupId) ? prev : [...prev, activeGroupId]));
+  }, [activeGroupId]);
+
+  const toggle = useCallback(
+    (id) => setOpenIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])),
+    []
+  );
+
+  const closeOnNavigate = useCallback(() => {
+    if (isMobile) onCloseMobile?.();
+  }, [isMobile, onCloseMobile]);
 
   return (
     <>
@@ -221,38 +338,70 @@ export default function Sidebar({ collapsed, mobileOpen = false, onCloseMobile, 
         <BranchSelector collapsed={effectiveCollapsed} />
 
         <nav className="flex-1 overflow-y-auto px-2.5 py-4 noscroll">
-          {navGroups.map((group, gi) => (
-            <div key={group.title} className={gi > 0 ? "mt-6" : ""}>
-              {!effectiveCollapsed ? (
-                <div
-                  className="px-3.5 mb-2 text-[10px] uppercase tracking-[0.16em] font-semibold"
-                  style={{ color: "var(--fg-subtle)" }}
-                >
-                  {group.title}
+          {navGroups.map((group, gi) => {
+            /* Khi thu gọn thì không có chỗ cho tiêu đề nhóm — đổ phẳng toàn
+               bộ mục, ngăn cách bằng kẻ tóc, và bỏ qua trạng thái gập. */
+            if (effectiveCollapsed) {
+              return (
+                <div key={group.id} className={gi > 0 ? "mt-3" : ""}>
+                  {gi > 0 && (
+                    <div
+                      aria-hidden
+                      className="mx-3 mb-3 h-px"
+                      style={{ backgroundColor: "var(--border-soft)" }}
+                    />
+                  )}
+                  <ul className="space-y-0.5">
+                    {group.items.map((item) => (
+                      <NavItem key={item.to} item={item} collapsed onNavigate={closeOnNavigate} />
+                    ))}
+                  </ul>
                 </div>
-              ) : (
-                gi > 0 && (
-                  <div
-                    aria-hidden
-                    className="mx-3 mb-3 h-px"
-                    style={{ backgroundColor: "var(--border-soft)" }}
-                  />
-                )
-              )}
-              <ul className="space-y-0.5">
-                {group.items.map((item) => (
-                  <NavItem
-                    key={item.to}
-                    item={item}
-                    collapsed={effectiveCollapsed}
-                    onNavigate={() => isMobile && onCloseMobile?.()}
-                  />
-                ))}
-              </ul>
-            </div>
-          ))}
+              );
+            }
+
+            // Nhóm chỉ có một mục (Tổng quan) không cần đầu nhóm gập
+            if (group.items.length === 1) {
+              return (
+                <ul key={group.id} className={gi > 0 ? "mt-4" : ""}>
+                  <NavItem item={group.items[0]} collapsed={false} onNavigate={closeOnNavigate} />
+                </ul>
+              );
+            }
+
+            const open = openIds.includes(group.id);
+            return (
+              <div key={group.id} className={gi > 0 ? "mt-3" : ""}>
+                <GroupHead
+                  group={group}
+                  open={open}
+                  hasActive={activeGroupId === group.id}
+                  onToggle={() => toggle(group.id)}
+                />
+                {open && (
+                  <ul className="space-y-0.5 mt-1">
+                    {group.items.map((item) => (
+                      <NavItem
+                        key={item.to}
+                        item={item}
+                        collapsed={false}
+                        indent
+                        onNavigate={closeOnNavigate}
+                      />
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </nav>
       </aside>
     </>
   );
+}
+
+/* Danh sách id nhóm — khai báo tách rời vì useState initializer chạy trước
+   khi useNav() có kết quả, không thể tham chiếu navGroups ở đó. */
+function navGroupIds() {
+  return ["overview", "hotel", "fnb", "crm", "hr", "finance", "marketing", "system"];
 }

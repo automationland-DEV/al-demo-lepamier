@@ -45,15 +45,20 @@ React 19 · Vite 8 · React Router 7 · Tailwind 3 · Recharts · lucide-react. 
 
 ```
 src/
-  App.jsx            BrowserRouter + 3 provider lồng nhau + 25 route
+  App.jsx            BrowserRouter + 3 provider lồng nhau + 38 route
   context/           Theme (sáng/tối, 4 bộ sưu tập màu) · Auth (localStorage) · Branch (lọc chi nhánh toàn cục)
   theme/palette.js   usePalette() — màu nhà, kim loại, bảng đất, màu ngữ nghĩa
-  data/mockData.js   nguồn dữ liệu duy nhất — branches, rooms, staff, guests, bookings
+  data/mockData.js   dữ liệu lõi — branches, rooms, staff, guests, bookings (seed = 42)
+  data/adminData.js  dữ liệu nghiệp vụ bổ sung — 13 domain, seed riêng
   components/ui/     ★ thư viện component v4 — import từ đây
   components/        Sidebar, Topbar, Chatbot, Pagination, Icons, Semantic…
-  pages/             25 trang
+  pages/             38 trang
   utils/format.js    formatVND, formatVNDFull, formatDate
 ```
+
+**Hai file dữ liệu, đừng trộn.** `mockData.js` giữ `seed = 42` và mọi lời gọi `rand()` nối tiếp nhau — chèn thêm vào giữa là đổi toàn bộ dữ liệu phía sau. Nghiệp vụ mới (hạng phòng, bảng giá, thực đơn, kho, loyalty, đánh giá, lương, hóa đơn, công nợ, thu chi, khuyến mãi, phân quyền, nhật ký) nằm ở `adminData.js` với bộ sinh số riêng, và tham chiếu ngược sang `mockData.js` để số liệu khớp nhau (ví dụ `invoices` dựng từ `bookings` thật).
+
+**Sidebar chia 8 nhóm nghiệp vụ** (Tổng quan · Khách sạn · Nhà hàng · Khách hàng · Nhân sự · Tài chính · Marketing · Hệ thống), gập được và nhớ trạng thái ở `condohub.nav.groups`. Thêm trang mới thì thêm vào đúng nhóm trong `useNav()` của `src/components/Sidebar.jsx`.
 
 **Ba context là xương sống:**
 
@@ -61,7 +66,7 @@ src/
 - `AuthContext` — auth giả, lưu key `condohub.auth` vào localStorage. `RequireAuth` trong `App.jsx` chặn route.
 - `BranchContext` — `activeBranchId` (`"ALL"` hoặc id chi nhánh). Các trang danh sách phải `useEffect` đồng bộ theo nó, **không tự tạo bộ chọn chi nhánh thứ hai**.
 
-Dữ liệu thật sinh ra: **4 chi nhánh · 713 phòng · 124 nhân viên · 240 khách · 320 booking**. (README ghi 12 chi nhánh / 1.800 phòng là số cũ, sai.)
+Dữ liệu thật sinh ra: **4 chi nhánh · 713 phòng · 124 nhân viên · 240 khách · 425 booking** (320 booking gốc + 105 khách vãng lai sinh thêm để mọi phòng "đang ở" đều truy ra được booking). Mỗi booking có `roomId` / `roomNumber` cụ thể, và trạng thái phòng đồng bộ ngược từ booking — không còn hai tập số liệu rời nhau như trước. (README ghi 12 chi nhánh / 1.800 phòng là số cũ, sai.)
 
 ## Quy ước
 
