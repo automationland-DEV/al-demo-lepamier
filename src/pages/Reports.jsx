@@ -54,7 +54,7 @@ export default function Reports() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/70 font-semibold flex-wrap">
                 <BarChart3 className="w-3.5 h-3.5" />
-                BI · Business Intelligence · Le Palmier Group
+                BI · Business Intelligence · Condo HUB Group
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-100 border border-emerald-400/30">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
                   Live · đồng bộ 30s

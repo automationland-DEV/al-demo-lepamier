@@ -1,185 +1,222 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* =========================================================
-   THEME TOKENS (light + dark + 6 accent colors)
+   CONDO HUB — DESIGN SYSTEM v4 "PALMIER RIVIERA"
+   Đặc tả đầy đủ: Design.md
+   -------------------------------------------------------
+   Ba vật liệu: giấy (nền ngà), mực (chữ than), kim loại
+   (đồng thau dùng dè). Không gradient, không bóng màu.
+
+   Bốn bộ sưu tập, chọn trong Cài đặt → Giao diện:
+     olive     Ô-liu & Đồng thau   (mặc định)
+     bordeaux  Bordeaux & Xương
+     marine    Hải quân & Cát
+     noir      Noir & Champagne
+
+   Attribute trên <html>: data-theme · data-collection · data-density
    ========================================================= */
+
 :root {
   color-scheme: light;
 
-  /* Layout / typography */
   --font-scale: 1;
-  --density-scale: 1;
 
-  /* Light surface palette (default = navy accent)
-   * Nền trang phải đủ sâu để thẻ trắng nổi lên — xem Design.md §3.9 */
-  --bg-app: #e9ecf2;
-  --surface: #ffffff;
-  --surface-2: #f4f6f9;
-  --surface-3: #e6e9f0;
-  --border: #d2d8e3;
-  --border-soft: #eceef2;
-  --fg: #1f2531;
-  --fg-muted: #67738b;
-  --fg-subtle: #8792a8;
-  --on-accent: #ffffff;
+  /* Hình học */
+  --r: 6px;      /* thẻ, panel, bảng, modal */
+  --r-sm: 4px;   /* nút, input, tag, tab */
+  --ease: cubic-bezier(.2, .6, .2, 1);
 
-  /* Accent (navy default) */
-  --accent: #1d4ed8;
-  --accent-strong: #1e3a8a;
-  --accent-soft: #dbeafe;
-  --accent-fg: #1e3a8a;
-  --accent-hover: #1d4ed8;
+  /* Bóng — gần như không tồn tại, viền mới là công cụ chính */
+  --shadow-card:  0 1px 2px rgba(25, 28, 22, .04);
+  --shadow-pop:   0 16px 48px -24px rgba(25, 28, 22, .28);
+  --shadow-modal: 0 32px 80px -32px rgba(25, 28, 22, .42);
 
-  /* Tone "neutral" — khớp với TONE.neutral trong components/Semantic.jsx.
-     Nhiều nơi dựng biến động `var(--${tone}-soft)` từ tên tone; thiếu bộ này
-     thì mọi phần tử tone="neutral" render mất nền/viền/chữ.
-     Trỏ tới token bề mặt nên tự đúng ở cả light lẫn dark, không cần khai lại. */
-  --neutral: var(--fg-subtle);
-  --neutral-soft: var(--surface-3);
-  --neutral-fg: var(--fg-muted);
-  --neutral-border: var(--border);
+  /* Bề mặt mặc định = bộ olive, chế độ sáng.
+     Khai lại ở đây để trang render đúng ngay cả trước khi
+     ThemeProvider kịp ghi attribute lên <html>. */
+  --bg-app: #eeeae1;
+  --surface: #fbfaf7;
+  --surface-2: #f4f1ea;
+  --surface-3: #e9e4d9;
+  --border: #ded8cb;
+  --border-soft: #ebe6dc;
+  --fg: #191c16;
+  --fg-muted: #4e534a;
+  --fg-subtle: #6e7368;
+
+  --accent: #2f4a3c;
+  --accent-strong: #23372c;
+  --accent-soft: #e4eae3;
+  --accent-fg: #2a4437;
+  --accent-hover: #3a5b4a;
+  --on-accent: #fbfaf7;
+
+  --metal: #a8834b;
+  --metal-soft: #f2e9da;
+  --metal-fg: #7a5d2e;
+
+  /* Tone "neutral" — trỏ tới token bề mặt nên tự đúng ở cả hai chế độ.
+     Nhiều nơi dựng biến động `var(--${tone}-soft)` từ tên tone; thiếu bộ
+     này thì mọi phần tử tone="neutral" render mất nền/viền/chữ. */
+  --neutral: #6e7368;
+  --neutral-soft: #ece8df;
+  --neutral-fg: #4e534a;
+  --neutral-border: #ded8cb;
 }
-
-[data-theme="light"][data-accent="navy"]   { --accent: #2563eb; --accent-strong: #1e3a8a; --accent-soft: #dbeafe; --accent-fg: #1e3a8a; --accent-hover: #1d4ed8; }
-[data-theme="light"][data-accent="green"]  { --accent: #10b981; --accent-strong: #047857; --accent-soft: #d1fae5; --accent-fg: #065f46; --accent-hover: #059669; }
-[data-theme="light"][data-accent="purple"] { --accent: #8b5cf6; --accent-strong: #6d28d9; --accent-soft: #ede9fe; --accent-fg: #5b21b6; --accent-hover: #7c3aed; }
-[data-theme="light"][data-accent="orange"] { --accent: #f97316; --accent-strong: #c2410c; --accent-soft: #ffedd5; --accent-fg: #9a3412; --accent-hover: #ea580c; }
-[data-theme="light"][data-accent="red"]    { --accent: #ef4444; --accent-strong: #b91c1c; --accent-soft: #fee2e2; --accent-fg: #991b1b; --accent-hover: #dc2626; }
-[data-theme="light"][data-accent="amber"]  { --accent: #f59e0b; --accent-strong: #b45309; --accent-soft: #fef3c7; --accent-fg: #92400e; --accent-hover: #d97706; }
-[data-theme="light"][data-accent="multi"]  { --accent: #6366f1; --accent-strong: #4338ca; --accent-soft: #eef0fe; --accent-fg: #4338ca; --accent-hover: #4f46e5; }
-
-[data-theme="dark"] {
-  color-scheme: dark;
-  --bg-app: #0b0e14;
-  --surface: #141821;
-  --surface-2: #1a1f2b;
-  --surface-3: #232938;
-  --border: #2a313e;
-  --border-soft: #1f2531;
-  --fg: #e8ebf2;
-  --fg-muted: #a0a8b8;
-  /* #6b7385 cũ chỉ đạt 3.05:1 trên --surface-3 và 3.74:1 trên --surface —
-     dưới ngưỡng AA 4.5:1 cho chữ nhỏ, mà text-ink-400/500 lại dùng khắp nơi
-     cho dòng phụ 10-11px. Giá trị mới giữ nguyên tông xanh-xám, đạt >= 4.6:1
-     trên cả ba bề mặt tối. */
-  --fg-subtle: #8791a8;
-  /* Ở dark mode các accent là sắc pastel SÁNG (vd green #34d399), nên chữ đè lên
-     nền accent phải là màu tối — dùng #ffffff cho tương phản ~1.7:1, không đọc được.
-     Giá trị này đạt >= 4.5:1 với cả --accent lẫn --accent-hover của 6 accent. */
-  --on-accent: #0b0e14;
-}
-
-[data-theme="dark"][data-accent="navy"]   { --accent: #60a5fa; --accent-strong: #93c5fd; --accent-soft: #1e3a8a; --accent-fg: #93c5fd; --accent-hover: #3b82f6; }
-[data-theme="dark"][data-accent="green"]  { --accent: #34d399; --accent-strong: #6ee7b7; --accent-soft: #064e3b; --accent-fg: #6ee7b7; --accent-hover: #10b981; }
-[data-theme="dark"][data-accent="purple"] { --accent: #a78bfa; --accent-strong: #c4b5fd; --accent-soft: #4c1d95; --accent-fg: #c4b5fd; --accent-hover: #8b5cf6; }
-[data-theme="dark"][data-accent="orange"] { --accent: #fb923c; --accent-strong: #fdba74; --accent-soft: #7c2d12; --accent-fg: #fdba74; --accent-hover: #f97316; }
-[data-theme="dark"][data-accent="red"]    { --accent: #f87171; --accent-strong: #fca5a5; --accent-soft: #7f1d1d; --accent-fg: #fca5a5; --accent-hover: #ef4444; }
-[data-theme="dark"][data-accent="amber"]  { --accent: #fbbf24; --accent-strong: #fcd34d; --accent-soft: #78350f; --accent-fg: #fcd34d; --accent-hover: #f59e0b; }
-[data-theme="dark"][data-accent="multi"]  { --accent: #818cf8; --accent-strong: #a5b4fc; --accent-soft: #312e81; --accent-fg: #a5b4fc; --accent-hover: #6366f1; }
 
 /* =========================================================
-   SEMANTIC STATE TOKENS — đổi theo theme/accent
+   1. BỀ MẶT — mỗi bộ sưu tập một loại giấy riêng
    ========================================================= */
 
-/* Light — default (navy) */
-[data-theme="light"][data-accent="navy"] {
-  --success: #10b981; --success-soft: #d1fae5; --success-fg: #065f46; --success-border: #a7f3d0;
-  --warning: #f59e0b; --warning-soft: #fef3c7; --warning-fg: #92400e; --warning-border: #fde68a;
-  --danger:  #ef4444; --danger-soft:  #fee2e2; --danger-fg:  #991b1b; --danger-border:  #fecaca;
-  --info:    #0ea5e9; --info-soft:    #e0f2fe; --info-fg:    #075985; --info-border:    #bae6fd;
-  --highlight: #8b5cf6; --highlight-soft: #ede9fe; --highlight-fg: #5b21b6; --highlight-border: #ddd6fe;
+/* — olive · giấy ngà ấm ngả xanh — */
+[data-collection="olive"] {
+  --bg-app: #eeeae1;  --surface: #fbfaf7;  --surface-2: #f4f1ea;
+  --surface-3: #e9e4d9;  --border: #ded8cb;  --border-soft: #ebe6dc;
 }
-[data-theme="light"][data-accent="green"] {
-  --success: #059669; --success-soft: #d1fae5; --success-fg: #064e3b; --success-border: #a7f3d0;
-  --warning: #d97706; --warning-soft: #fef3c7; --warning-fg: #78350f; --warning-border: #fde68a;
-  --danger:  #dc2626; --danger-soft:  #fee2e2; --danger-fg:  #7f1d1d; --danger-border:  #fecaca;
-  --info:    #0891b2; --info-soft:    #cffafe; --info-fg:    #155e75; --info-border:    #a5f3fc;
-  --highlight: #7c3aed; --highlight-soft: #ede9fe; --highlight-fg: #4c1d95; --highlight-border: #ddd6fe;
-}
-[data-theme="light"][data-accent="purple"] {
-  --success: #10b981; --success-soft: #d1fae5; --success-fg: #065f46; --success-border: #a7f3d0;
-  --warning: #f59e0b; --warning-soft: #fef3c7; --warning-fg: #92400e; --warning-border: #fde68a;
-  --danger:  #f43f5e; --danger-soft:  #ffe4e6; --danger-fg:  #9f1239; --danger-border:  #fecdd3;
-  --info:    #6366f1; --info-soft:    #e0e7ff; --info-fg:    #3730a3; --info-border:    #c7d2fe;
-  --highlight: #06b6d4; --highlight-soft: #cffafe; --highlight-fg: #155e75; --highlight-border: #a5f3fc;
-}
-[data-theme="light"][data-accent="orange"] {
-  --success: #16a34a; --success-soft: #dcfce7; --success-fg: #14532d; --success-border: #bbf7d0;
-  --warning: #b45309; --warning-soft: #fef3c7; --warning-fg: #78350f; --warning-border: #fde68a;
-  --danger:  #b91c1c; --danger-soft:  #fee2e2; --danger-fg:  #7f1d1d; --danger-border:  #fecaca;
-  --info:    #0284c7; --info-soft:    #e0f2fe; --info-fg:    #075985; --info-border:    #bae6fd;
-  --highlight: #7c3aed; --highlight-soft: #ede9fe; --highlight-fg: #4c1d95; --highlight-border: #ddd6fe;
-}
-[data-theme="light"][data-accent="red"] {
-  --success: #10b981; --success-soft: #d1fae5; --success-fg: #065f46; --success-border: #a7f3d0;
-  --warning: #d97706; --warning-soft: #fef3c7; --warning-fg: #78350f; --warning-border: #fde68a;
-  --danger:  #dc2626; --danger-soft:  #fee2e2; --danger-fg:  #7f1d1d; --danger-border:  #fecaca;
-  --info:    #0ea5e9; --info-soft:    #e0f2fe; --info-fg:    #075985; --info-border:    #bae6fd;
-  --highlight: #8b5cf6; --highlight-soft: #ede9fe; --highlight-fg: #5b21b6; --highlight-border: #ddd6fe;
-}
-[data-theme="light"][data-accent="amber"] {
-  --success: #10b981; --success-soft: #d1fae5; --success-fg: #065f46; --success-border: #a7f3d0;
-  --warning: #d97706; --warning-soft: #fef3c7; --warning-fg: #78350f; --warning-border: #fde68a;
-  --danger:  #ef4444; --danger-soft:  #fee2e2; --danger-fg:  #991b1b; --danger-border:  #fecaca;
-  --info:    #0c91e9; --info-soft:    #e0f2fe; --info-fg:    #075985; --info-border:    #bae6fd;
-  --highlight: #8b5cf6; --highlight-soft: #ede9fe; --highlight-fg: #5b21b6; --highlight-border: #ddd6fe;
+[data-theme="dark"][data-collection="olive"] {
+  --bg-app: #131410;  --surface: #1b1d18;  --surface-2: #22241e;
+  --surface-3: #2c2f27;  --border: #33362d;  --border-soft: #262922;
 }
 
-[data-theme="light"][data-accent="multi"] {
-  --success: #10b981; --success-soft: #d1fae5; --success-fg: #065f46; --success-border: #a7f3d0;
-  --warning: #f59e0b; --warning-soft: #fef3c7; --warning-fg: #92400e; --warning-border: #fde68a;
-  --danger:  #ef4444; --danger-soft:  #fee2e2; --danger-fg:  #991b1b; --danger-border:  #fecaca;
-  --info:    #0ea5e9; --info-soft:    #e0f2fe; --info-fg:    #075985; --info-border:    #bae6fd;
-  --highlight: #8b5cf6; --highlight-soft: #ede9fe; --highlight-fg: #5b21b6; --highlight-border: #ddd6fe;
+/* — bordeaux · giấy xương ngả hồng — */
+[data-collection="bordeaux"] {
+  --bg-app: #efeae6;  --surface: #fcfaf8;  --surface-2: #f5f0ec;
+  --surface-3: #eae3de;  --border: #dfd6d0;  --border-soft: #ece5e1;
+}
+[data-theme="dark"][data-collection="bordeaux"] {
+  --bg-app: #14110f;  --surface: #1d1917;  --surface-2: #241f1d;
+  --surface-3: #2e2825;  --border: #362e2b;  --border-soft: #282220;
 }
 
-/* Dark — default (navy) */
-[data-theme="dark"][data-accent="navy"] {
-  --success: #34d399; --success-soft: #064e3b; --success-fg: #6ee7b7; --success-border: #047857;
-  --warning: #fbbf24; --warning-soft: #78350f; --warning-fg: #fcd34d; --warning-border: #b45309;
-  --danger:  #f87171; --danger-soft:  #7f1d1d; --danger-fg:  #fca5a5; --danger-border:  #b91c1c;
-  --info:    #38bdf8; --info-soft:    #0c4a6e; --info-fg:    #7dd3fc; --info-border:    #0369a1;
-  --highlight: #a78bfa; --highlight-soft: #4c1d95; --highlight-fg: #c4b5fd; --highlight-border: #6d28d9;
+/* — marine · giấy cát trung tính — */
+[data-collection="marine"] {
+  --bg-app: #edebe4;  --surface: #fbfaf7;  --surface-2: #f3f1ea;
+  --surface-3: #e7e4db;  --border: #dbd7cc;  --border-soft: #e9e6dd;
 }
-[data-theme="dark"][data-accent="green"] {
-  --success: #6ee7b7; --success-soft: #064e3b; --success-fg: #a7f3d0; --success-border: #047857;
-  --warning: #fbbf24; --warning-soft: #78350f; --warning-fg: #fcd34d; --warning-border: #b45309;
-  --danger:  #f87171; --danger-soft:  #7f1d1d; --danger-fg:  #fca5a5; --danger-border:  #b91c1c;
-  --info:    #22d3ee; --info-soft:    #155e75; --info-fg:    #67e8f9; --info-border:    #0e7490;
-  --highlight: #a78bfa; --highlight-soft: #4c1d95; --highlight-fg: #c4b5fd; --highlight-border: #6d28d9;
+[data-theme="dark"][data-collection="marine"] {
+  --bg-app: #101216;  --surface: #181b21;  --surface-2: #1f2229;
+  --surface-3: #282c34;  --border: #2f343d;  --border-soft: #23262d;
 }
-[data-theme="dark"][data-accent="purple"] {
-  --success: #34d399; --success-soft: #064e3b; --success-fg: #6ee7b7; --success-border: #047857;
-  --warning: #fbbf24; --warning-soft: #78350f; --warning-fg: #fcd34d; --warning-border: #b45309;
-  --danger:  #fb7185; --danger-soft:  #881337; --danger-fg:  #fda4af; --danger-border:  #be123c;
-  --info:    #818cf8; --info-soft:    #312e81; --info-fg:    #a5b4fc; --info-border:    #4338ca;
-  --highlight: #22d3ee; --highlight-soft: #155e75; --highlight-fg: #67e8f9; --highlight-border: #0e7490;
+
+/* — noir · giấy xương lạnh — */
+[data-collection="noir"] {
+  --bg-app: #eeece7;  --surface: #fcfbf9;  --surface-2: #f4f2ee;
+  --surface-3: #e8e5df;  --border: #dcd8d0;  --border-soft: #eae7e1;
 }
-[data-theme="dark"][data-accent="orange"] {
-  --success: #4ade80; --success-soft: #14532d; --success-fg: #86efac; --success-border: #166534;
-  --warning: #fcd34d; --warning-soft: #78350f; --warning-fg: #fde047; --warning-border: #a16207;
-  --danger:  #f87171; --danger-soft:  #7f1d1d; --danger-fg:  #fca5a5; --danger-border:  #b91c1c;
-  --info:    #38bdf8; --info-soft:    #0c4a6e; --info-fg:    #7dd3fc; --info-border:    #0369a1;
-  --highlight: #a78bfa; --highlight-soft: #4c1d95; --highlight-fg: #c4b5fd; --highlight-border: #6d28d9;
+[data-theme="dark"][data-collection="noir"] {
+  --bg-app: #121210;  --surface: #1a1a18;  --surface-2: #21211e;
+  --surface-3: #2a2a26;  --border: #32322d;  --border-soft: #252522;
 }
-[data-theme="dark"][data-accent="red"] {
-  --success: #34d399; --success-soft: #064e3b; --success-fg: #6ee7b7; --success-border: #047857;
-  --warning: #fbbf24; --warning-soft: #78350f; --warning-fg: #fcd34d; --warning-border: #b45309;
-  --danger:  #fca5a5; --danger-soft:  #7f1d1d; --danger-fg:  #fecaca; --danger-border:  #991b1b;
-  --info:    #38bdf8; --info-soft:    #0c4a6e; --info-fg:    #7dd3fc; --info-border:    #0369a1;
-  --highlight: #a78bfa; --highlight-soft: #4c1d95; --highlight-fg: #c4b5fd; --highlight-border: #6d28d9;
+
+/* =========================================================
+   2. MỰC — chung cho mọi bộ sưu tập
+   --fg-muted và --fg-subtle đều đạt >= 4.5:1 trên --surface ở
+   cả hai chế độ, nên dùng được cho chữ nhỏ (khác v3, nơi
+   --fg-subtle chỉ đạt 3.0:1).
+   ========================================================= */
+[data-theme="light"] {
+  color-scheme: light;
+  --fg: #191c16;  --fg-muted: #4e534a;  --fg-subtle: #6e7368;
+  /* Logo đặt trên nền --accent (chân trang). Chế độ sáng: accent tối nên logo
+     phải dập trắng. Chế độ tối: accent là sắc SÁNG nên logo phải dập đen —
+     ghi cứng `invert` như v3 là logo biến mất. */
+  --logo-on-accent: brightness(0) invert(1);
 }
-[data-theme="dark"][data-accent="amber"] {
-  --success: #34d399; --success-soft: #064e3b; --success-fg: #6ee7b7; --success-border: #047857;
-  --warning: #fcd34d; --warning-soft: #78350f; --warning-fg: #fde047; --warning-border: #a16207;
-  --danger:  #f87171; --danger-soft:  #7f1d1d; --danger-fg:  #fca5a5; --danger-border:  #b91c1c;
-  --info:    #38bdf8; --info-soft:    #0c4a6e; --info-fg:    #7dd3fc; --info-border:    #0369a1;
-  --highlight: #a78bfa; --highlight-soft: #4c1d95; --highlight-fg: #c4b5fd; --highlight-border: #6d28d9;
+[data-theme="dark"] {
+  color-scheme: dark;
+  --fg: #edeae1;  --fg-muted: #a8a99f;  --fg-subtle: #85877d;
+  --logo-on-accent: brightness(0);
+
+  /* Lưới an toàn: nếu data-collection chưa kịp ghi (hoặc localStorage
+     còn giá trị accent cũ của v3), chế độ tối vẫn có bề mặt tối thay vì
+     kế thừa giấy sáng từ :root. Các khối [data-theme][data-collection]
+     bên trên có specificity cao hơn nên vẫn thắng khi hợp lệ. */
+  --bg-app: #131410;  --surface: #1b1d18;  --surface-2: #22241e;
+  --surface-3: #2c2f27;  --border: #33362d;  --border-soft: #262922;
+  --accent: #8fb39b;  --accent-strong: #a9c7b4;  --accent-soft: #22322a;
+  --accent-fg: #a9c7b4;  --accent-hover: #7fa78c;  --on-accent: #131410;
+  --metal: #c9a469;  --metal-soft: #33281a;  --metal-fg: #d9bb8b;
 }
+
+/* =========================================================
+   3. MÀU NHÀ + KIM LOẠI
+   Kim loại dùng dè: tối đa 2-3 chỗ một màn hình. Nó là dập
+   nhũ trên bìa thực đơn, không phải màu nền.
+   ========================================================= */
+
+[data-collection="olive"] {
+  --accent: #2f4a3c;  --accent-strong: #23372c;  --accent-soft: #e4eae3;
+  --accent-fg: #2a4437;  --accent-hover: #3a5b4a;  --on-accent: #fbfaf7;
+  --metal: #a8834b;  --metal-soft: #f2e9da;  --metal-fg: #7a5d2e;
+}
+[data-theme="dark"][data-collection="olive"] {
+  --accent: #8fb39b;  --accent-strong: #a9c7b4;  --accent-soft: #22322a;
+  --accent-fg: #a9c7b4;  --accent-hover: #7fa78c;  --on-accent: #131410;
+  --metal: #c9a469;  --metal-soft: #33281a;  --metal-fg: #d9bb8b;
+}
+
+[data-collection="bordeaux"] {
+  --accent: #5b2434;  --accent-strong: #451a27;  --accent-soft: #f0e3e6;
+  --accent-fg: #5b2434;  --accent-hover: #74303f;  --on-accent: #fcfaf8;
+  --metal: #a8834b;  --metal-soft: #f2e9da;  --metal-fg: #7a5d2e;
+}
+[data-theme="dark"][data-collection="bordeaux"] {
+  --accent: #c89099;  --accent-strong: #d9a9b0;  --accent-soft: #35222a;
+  --accent-fg: #d9a9b0;  --accent-hover: #b87f89;  --on-accent: #14110f;
+  --metal: #c9a469;  --metal-soft: #33281a;  --metal-fg: #d9bb8b;
+}
+
+[data-collection="marine"] {
+  --accent: #1f3a5f;  --accent-strong: #152b47;  --accent-soft: #e2e8f0;
+  --accent-fg: #1f3a5f;  --accent-hover: #2a4c7a;  --on-accent: #fbfaf7;
+  --metal: #b08d57;  --metal-soft: #f4ebdc;  --metal-fg: #7f6234;
+}
+[data-theme="dark"][data-collection="marine"] {
+  --accent: #8faecc;  --accent-strong: #a9c4dc;  --accent-soft: #1e2a38;
+  --accent-fg: #a9c4dc;  --accent-hover: #7c9ec0;  --on-accent: #101216;
+  --metal: #cfac76;  --metal-soft: #332a1d;  --metal-fg: #e0c296;
+}
+
+[data-collection="noir"] {
+  --accent: #252420;  --accent-strong: #131210;  --accent-soft: #e8e5df;
+  --accent-fg: #2e2c27;  --accent-hover: #3a3833;  --on-accent: #fcfbf9;
+  --metal: #b99a5b;  --metal-soft: #f5eddd;  --metal-fg: #856a34;
+}
+[data-theme="dark"][data-collection="noir"] {
+  --accent: #cfc9bc;  --accent-strong: #e3ded3;  --accent-soft: #2a2925;
+  --accent-fg: #e3ded3;  --accent-hover: #bdb6a7;  --on-accent: #121210;
+  --metal: #d4b77e;  --metal-soft: #332e22;  --metal-fg: #e2cb9e;
+}
+
+/* =========================================================
+   4. MÀU NGỮ NGHĨA — sắc tố tự nhiên, KHÔNG đổi theo bộ sưu tập
+   Thông · hoàng thổ · đất nung · đá phiến. Đổi màu ở đây là
+   phá mất ý nghĩa, nên chúng cố ý độc lập với màu nhà.
+   ========================================================= */
+[data-theme="light"] {
+  --success: #2e6b4f; --success-soft: #e2ece5; --success-fg: #245540; --success-border: #c4d7cb;
+  --warning: #9a6b18; --warning-soft: #f5ebd8; --warning-fg: #7c5512; --warning-border: #e4d2ae;
+  --danger:  #9b3b36; --danger-soft:  #f4e4e1; --danger-fg:  #82302c; --danger-border:  #e3c4bf;
+  --info:    #35566e; --info-soft:    #e3eaef; --info-fg:    #2b4658; --info-border:    #c6d3dd;
+  --highlight: #6b4557; --highlight-soft: #eee4e9; --highlight-fg: #5a3849; --highlight-border: #dcc8d2;
+  --neutral: #6e7368; --neutral-soft: #ece8df; --neutral-fg: #4e534a; --neutral-border: #ded8cb;
+}
+[data-theme="dark"] {
+  --success: #7fb79a; --success-soft: #1c2e25; --success-fg: #9ccbb2; --success-border: #2e4a3b;
+  --warning: #d3a85c; --warning-soft: #33281a; --warning-fg: #e0be83; --warning-border: #4c3c22;
+  --danger:  #d08b84; --danger-soft:  #33211f; --danger-fg:  #e0a9a2; --danger-border:  #4c3330;
+  --info:    #8faec6; --info-soft:    #1d2831; --info-fg:    #adc4d6; --info-border:    #2f3f4c;
+  --highlight: #b98fa5; --highlight-soft: #2c2129; --highlight-fg: #cda9bb; --highlight-border: #45333c;
+  --neutral: #85877d; --neutral-soft: #2c2f27; --neutral-fg: #a8a99f; --neutral-border: #33362d;
+}
+
+/* =========================================================
+   5. NỀN TẢNG
+   ========================================================= */
 
 html,
 body,
@@ -193,42 +230,63 @@ body {
   color: var(--fg);
   -webkit-font-smoothing: antialiased;
   font-size: calc(14px * var(--font-scale));
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color .2s var(--ease), color .2s var(--ease);
+}
+
+/* Tiêu đề serif — LUÔN weight 400/500. Playfair ở 700+ trông rẻ tiền. */
+.font-display {
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Vòng focus dùng chung — màu nhà, offset để không dính vào viền */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
 }
 
 @layer components {
   .card {
-    @apply rounded-lg shadow-card border;
+    @apply border;
+    border-radius: var(--r);
     background-color: var(--surface);
     border-color: var(--border);
+    box-shadow: var(--shadow-card);
   }
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-[13px] font-semibold transition;
+    @apply inline-flex items-center gap-2 px-4 h-10 text-[13px] font-medium transition;
+    border-radius: var(--r-sm);
     background-color: var(--accent);
     color: var(--on-accent);
+    transition-timing-function: var(--ease);
   }
   .btn-primary:hover {
     background-color: var(--accent-hover);
   }
   .btn-ghost {
-    @apply inline-flex items-center gap-2 px-3 py-2 rounded-md text-[13px] font-medium transition;
+    @apply inline-flex items-center gap-2 px-3 h-10 text-[13px] font-medium transition;
+    border-radius: var(--r-sm);
     color: var(--fg-muted);
   }
   .btn-ghost:hover {
     background-color: var(--surface-3);
+    color: var(--fg);
   }
   .btn-outline {
-    @apply inline-flex items-center gap-2 px-3 py-2 rounded-md text-[13px] font-medium border transition;
+    @apply inline-flex items-center gap-2 px-4 h-10 text-[13px] font-medium border transition;
+    border-radius: var(--r-sm);
     background-color: var(--surface);
     border-color: var(--border);
     color: var(--fg);
   }
   .btn-outline:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--fg-subtle);
   }
   .input {
-    @apply w-full px-3 py-2 rounded-md border text-[13px] transition;
+    @apply w-full px-3 h-10 border text-[13px] transition;
+    border-radius: var(--r-sm);
     background-color: var(--surface);
     border-color: var(--border);
     color: var(--fg);
@@ -239,42 +297,150 @@ body {
     box-shadow: 0 0 0 1px var(--accent);
   }
   .badge {
-    @apply inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium;
+    @apply inline-flex items-center gap-1 px-2 h-6 text-[11px] font-medium;
+    border-radius: var(--r-sm);
   }
   .stat-card {
-    @apply card p-4 flex flex-col gap-0 relative;
+    @apply card p-6 flex flex-col gap-0 relative;
   }
   .table-th {
-    @apply px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider border-b;
-    color: var(--fg-muted);
+    @apply px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.12em] border-b;
+    color: var(--fg-subtle);
     background-color: var(--surface-2);
     border-color: var(--border);
   }
   .table-td {
-    @apply px-4 py-3 text-[13px] border-b;
+    @apply px-5 py-3.5 text-[13px] border-b;
     color: var(--fg);
     border-color: var(--border-soft);
   }
 }
 
-/* Density tweaks - applied via .density-* on <html> */
-.density-compact .p-6 { padding: calc(1.5rem * 0.8); }
-.density-compact .p-5 { padding: calc(1.25rem * 0.8); }
-.density-compact .p-4 { padding: calc(1rem * 0.8); }
-.density-compact .py-3 { padding-top: calc(0.75rem * 0.8); padding-bottom: calc(0.75rem * 0.8); }
-.density-compact .py-2 { padding-top: calc(0.5rem * 0.8); padding-bottom: calc(0.5rem * 0.8); }
-.density-compact .gap-6 { gap: calc(1.5rem * 0.8); }
-.density-compact .gap-5 { gap: calc(1.25rem * 0.8); }
-.density-compact .gap-4 { gap: calc(1rem * 0.8); }
+/* =========================================================
+   6. CLASS TIỆN ÍCH v4 — Design.md §3, §4
+   ========================================================= */
 
-.density-spacious .p-6 { padding: calc(1.5rem * 1.25); }
-.density-spacious .p-5 { padding: calc(1.25rem * 1.25); }
-.density-spacious .p-4 { padding: calc(1rem * 1.25); }
-.density-spacious .gap-6 { gap: calc(1.5rem * 1.25); }
-.density-spacious .gap-5 { gap: calc(1.25rem * 1.25); }
-.density-spacious .gap-4 { gap: calc(1rem * 1.25); }
+/* ① Đường kẻ tóc — dùng thay <hr> */
+.hairline {
+  height: 1px;
+  background-color: var(--border);
+}
 
-/* Scrollbar */
+/* ② Vạch đồng thau chỉ mục đang hoạt động.
+   Đặt trên phần tử position:relative. Ẩn bằng .mark-off. */
+.mark::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background-color: var(--metal);
+  transform: scaleX(1);
+  transform-origin: left;
+  transition: transform .22s var(--ease);
+}
+.mark-off::after { transform: scaleX(0); }
+
+/* Biến thể dọc — hàng bảng / mục sidebar đang chọn */
+.mark-y::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--metal);
+}
+
+/* ⑥ Dấu góc chữ L — gợi dấu xén trong in ấn.
+   Tối đa MỘT chỗ mỗi màn hình. */
+.corners { position: relative; }
+.corners::before,
+.corners::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--metal);
+  border-style: solid;
+  pointer-events: none;
+}
+.corners::before {
+  top: -1px; left: -1px;
+  border-width: 1px 0 0 1px;
+}
+.corners::after {
+  bottom: -1px; right: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+/* Hover thẻ — chỉ đổi viền, KHÔNG transform. Không còn nhấc 5px. */
+.card-hover {
+  transition: border-color .16s var(--ease), background-color .16s var(--ease);
+}
+.card-hover:hover {
+  border-color: var(--fg-subtle);
+}
+
+/* Hàng cuộn ngang không hiện thanh cuộn */
+.noscroll::-webkit-scrollbar { width: 0; height: 0; }
+.noscroll { scrollbar-width: none; }
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Số dạng bảng — mọi con số trong hệ thống */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Trạng thái đang tải */
+@keyframes sheen {
+  0%   { background-position: -180% 0; }
+  100% { background-position: 180% 0; }
+}
+.skeleton {
+  background-color: var(--surface-3);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--surface) 55%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 180% 100%;
+  animation: sheen 1.4s var(--ease) infinite;
+  border-radius: var(--r-sm);
+}
+
+/* Chấm trạng thái live — nhấp nháy nhẹ, không animate-ping */
+@keyframes pulseSoft {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .35; }
+}
+.pulse-soft { animation: pulseSoft 2s var(--ease) infinite; }
+
+/* =========================================================
+   7. MẬT ĐỘ
+   ThemeContext ghi attribute data-density. v3 viết selector
+   .density-compact nên tính năng này chưa bao giờ chạy —
+   nay khớp lại bằng attribute selector.
+   ========================================================= */
+[data-density="compact"] .p-6  { padding: calc(1.5rem * .8); }
+[data-density="compact"] .p-5  { padding: calc(1.25rem * .8); }
+[data-density="compact"] .p-4  { padding: calc(1rem * .8); }
+[data-density="compact"] .py-3\.5 { padding-top: calc(.875rem * .8); padding-bottom: calc(.875rem * .8); }
+[data-density="compact"] .py-3 { padding-top: calc(.75rem * .8); padding-bottom: calc(.75rem * .8); }
+[data-density="compact"] .py-2 { padding-top: calc(.5rem * .8); padding-bottom: calc(.5rem * .8); }
+[data-density="compact"] .gap-6 { gap: calc(1.5rem * .8); }
+[data-density="compact"] .gap-5 { gap: calc(1.25rem * .8); }
+[data-density="compact"] .gap-4 { gap: calc(1rem * .8); }
+
+[data-density="spacious"] .p-6 { padding: calc(1.5rem * 1.2); }
+[data-density="spacious"] .p-5 { padding: calc(1.25rem * 1.2); }
+[data-density="spacious"] .p-4 { padding: calc(1rem * 1.2); }
+[data-density="spacious"] .gap-6 { gap: calc(1.5rem * 1.2); }
+[data-density="spacious"] .gap-5 { gap: calc(1.25rem * 1.2); }
+[data-density="spacious"] .gap-4 { gap: calc(1rem * 1.2); }
+
+/* Thanh cuộn */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -291,288 +457,225 @@ body {
 }
 
 /* =========================================================
-   INK COLOR ALIASES — dùng text-ink-*, bg-ink-*, border-ink-*
-   nhưng render từ CSS var để phản ứng dark mode
-   ========================================================= */
-.text-ink-900 { color: var(--fg) !important; }
-.text-ink-800 { color: var(--fg) !important; }
-.text-ink-700 { color: var(--fg) !important; }
-.text-ink-600 { color: var(--fg-muted) !important; }
-.text-ink-500 { color: var(--fg-muted) !important; }
-.text-ink-400 { color: var(--fg-subtle) !important; }
-.text-ink-300 { color: var(--fg-subtle) !important; }
-
-.bg-ink-50  { background-color: var(--bg-app) !important; }
-.bg-ink-100 { background-color: var(--surface-3) !important; }
-.bg-ink-200 { background-color: var(--border) !important; }
-.bg-ink-50\/40 { background-color: color-mix(in oklab, var(--bg-app) 40%, transparent) !important; }
-.bg-ink-50\/60 { background-color: color-mix(in oklab, var(--bg-app) 60%, transparent) !important; }
-.bg-ink-50\/70 { background-color: color-mix(in oklab, var(--bg-app) 70%, transparent) !important; }
-.bg-ink-50\/80 { background-color: color-mix(in oklab, var(--bg-app) 80%, transparent) !important; }
-.bg-ink-100\/80 { background-color: color-mix(in oklab, var(--surface-3) 80%, transparent) !important; }
-
-.border-ink-100 { border-color: var(--border-soft) !important; }
-.border-ink-200 { border-color: var(--border) !important; }
-.border-ink-300 { border-color: var(--border) !important; }
-.border-ink-400 { border-color: var(--fg-subtle) !important; }
-
-.hover\:bg-ink-50:hover { background-color: var(--surface-3) !important; }
-.hover\:bg-ink-100:hover { background-color: var(--surface-3) !important; }
-.hover\:bg-ink-50\/30:hover { background-color: color-mix(in oklab, var(--bg-app) 30%, transparent) !important; }
-.hover\:bg-ink-50\/40:hover { background-color: color-mix(in oklab, var(--bg-app) 40%, transparent) !important; }
-.hover\:bg-ink-100\/30:hover { background-color: color-mix(in oklab, var(--surface-3) 30%, transparent) !important; }
-
-.divide-ink-100 > * + * { border-color: var(--border-soft) !important; }
-
-/* Brand (blue) — alias an toàn theo theme */
-.bg-brand-50  { background-color: var(--accent-soft) !important; }
-.bg-brand-100 { background-color: var(--accent-soft) !important; }
-.bg-brand-200 { background-color: var(--accent) !important; }
-.bg-brand-500 { background-color: var(--accent) !important; }
-.bg-brand-600 { background-color: var(--accent) !important; }
-.bg-brand-700 { background-color: var(--accent-strong) !important; }
-.bg-brand-800 { background-color: var(--accent-strong) !important; }
-.bg-brand-900 { background-color: var(--accent-strong) !important; }
-.bg-brand-gradient { background-image: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important; }
-
-.text-brand-600 { color: var(--accent) !important; }
-.text-brand-700 { color: var(--accent-strong) !important; }
-.text-brand-800 { color: var(--accent-strong) !important; }
-.text-brand-900 { color: var(--accent-strong) !important; }
-
-.border-brand-200 { border-color: color-mix(in oklab, var(--accent) 30%, var(--surface)) !important; }
-.border-brand-300 { border-color: var(--accent) !important; }
-
-.hover\:bg-brand-50:hover { background-color: var(--accent-soft) !important; }
-.hover\:text-brand-700:hover { color: var(--accent-strong) !important; }
-.hover\:border-brand-300:hover { border-color: var(--accent) !important; }
-.hover\:border-brand-400:hover,
-.hover\:border-brand-500:hover,
-.hover\:border-brand-600:hover { border-color: var(--accent) !important; }
-.focus\:border-brand-600:focus { border-color: var(--accent) !important; }
-.border-brand-100 { border-color: color-mix(in oklab, var(--accent) 25%, var(--surface)) !important; }
-
-/* =========================================================
-   BỀ MẶT TRẮNG CỨNG — bg-white được dùng khắp nơi cho card,
-   panel, dropdown, drawer. Không ánh xạ thì mọi bề mặt đó
-   vẫn trắng ở dark mode, chữ sáng đè lên -> không đọc được.
-   Lưu ý: bg-white/10, bg-white/20… là class KHÁC nên không
-   bị ảnh hưởng — hiệu ứng kính trên ảnh tối vẫn giữ nguyên.
-   ========================================================= */
-.bg-white { background-color: var(--surface) !important; }
-.hover\:bg-white:hover { background-color: var(--surface) !important; }
-.focus\:bg-white:focus { background-color: var(--surface) !important; }
-
-/* Sắc ink còn thiếu — chấm trạng thái, viền mờ, trạng thái disabled.
-   KHÔNG ánh xạ bg-ink-700/800/900: chúng luôn đi kèm text-white để tạo
-   chip tối, vốn đã đúng ở cả hai theme. */
-.bg-ink-300 { background-color: var(--border) !important; }
-.bg-ink-400 { background-color: var(--fg-subtle) !important; }
-.bg-ink-500 { background-color: var(--fg-muted) !important; }
-.disabled\:bg-ink-300:disabled { background-color: var(--border) !important; }
-
-/* Ring */
-.ring-white { --tw-ring-color: var(--surface) !important; }
-.ring-ink-100 { --tw-ring-color: var(--border-soft) !important; }
-.ring-ink-200 { --tw-ring-color: var(--border) !important; }
-.ring-brand-100,
-.ring-brand-200 { --tw-ring-color: color-mix(in oklab, var(--accent) 35%, transparent) !important; }
-
-/* Chữ/icon đặt trên nền accent. Dùng thay cho text-white ở những chỗ nền
-   là bg-brand-* (tức var(--accent)) — accent ở dark mode là sắc sáng. */
-.text-on-accent { color: var(--on-accent) !important; }
-
-/* =========================================================
-   NỀN PASTEL CỨNG Ở DARK MODE
-   -------------------------------------------------------
-   Toàn hệ thống có ~150 chỗ dùng bg-amber-50, bg-rose-50,
-   bg-emerald-50… làm "bề mặt mềm" cho chip, thẻ cảnh báo,
-   hàng bảng. Các lớp này là hex cố định của Tailwind nên ở
-   dark mode chúng vẫn sáng trắng, trong khi chữ bên trong
-   dùng token (--fg) đã chuyển sang sáng → tương phản ~1.1:1,
-   không đọc được.
-
-   Chỉ ánh xạ TRONG dark mode: light mode giữ nguyên 100% nên
-   không trang nào đổi diện mạo hiện tại. Nhóm theo NGỮ NGHĨA
-   để tự đi theo bộ token tone, kể cả khi đổi accent:
-     amber/orange/yellow → warning     rose/red/pink   → danger
-     emerald/green/teal/lime → success blue/sky/cyan/indigo → info
-     violet/purple/fuchsia → highlight
-   ========================================================= */
-/* Viết phẳng (không lồng) vì dự án chưa bật plugin nesting của PostCSS. */
-
-/* — nền — */
-[data-theme="dark"] .bg-amber-50,   [data-theme="dark"] .bg-amber-100,
-[data-theme="dark"] .bg-orange-50,  [data-theme="dark"] .bg-orange-100,
-[data-theme="dark"] .bg-yellow-50,  [data-theme="dark"] .bg-yellow-100   { background-color: var(--warning-soft) !important; }
-
-[data-theme="dark"] .bg-rose-50,    [data-theme="dark"] .bg-rose-100,
-[data-theme="dark"] .bg-red-50,     [data-theme="dark"] .bg-red-100,
-[data-theme="dark"] .bg-pink-50,    [data-theme="dark"] .bg-pink-100     { background-color: var(--danger-soft) !important; }
-
-[data-theme="dark"] .bg-emerald-50, [data-theme="dark"] .bg-emerald-100,
-[data-theme="dark"] .bg-green-50,   [data-theme="dark"] .bg-green-100,
-[data-theme="dark"] .bg-teal-50,    [data-theme="dark"] .bg-teal-100,
-[data-theme="dark"] .bg-lime-50,    [data-theme="dark"] .bg-lime-100     { background-color: var(--success-soft) !important; }
-
-[data-theme="dark"] .bg-blue-50,    [data-theme="dark"] .bg-blue-100,
-[data-theme="dark"] .bg-sky-50,     [data-theme="dark"] .bg-sky-100,
-[data-theme="dark"] .bg-cyan-50,    [data-theme="dark"] .bg-cyan-100,
-[data-theme="dark"] .bg-indigo-50,  [data-theme="dark"] .bg-indigo-100   { background-color: var(--info-soft) !important; }
-
-[data-theme="dark"] .bg-violet-50,  [data-theme="dark"] .bg-violet-100,
-[data-theme="dark"] .bg-purple-50,  [data-theme="dark"] .bg-purple-100,
-[data-theme="dark"] .bg-fuchsia-50, [data-theme="dark"] .bg-fuchsia-100  { background-color: var(--highlight-soft) !important; }
-
-/* — hover cùng nhóm — */
-[data-theme="dark"] .hover\:bg-amber-50:hover,
-[data-theme="dark"] .hover\:bg-amber-100:hover    { background-color: var(--warning-soft) !important; }
-[data-theme="dark"] .hover\:bg-rose-50:hover,
-[data-theme="dark"] .hover\:bg-rose-100:hover     { background-color: var(--danger-soft) !important; }
-[data-theme="dark"] .hover\:bg-emerald-50:hover,
-[data-theme="dark"] .hover\:bg-emerald-100:hover  { background-color: var(--success-soft) !important; }
-[data-theme="dark"] .hover\:bg-blue-50:hover,
-[data-theme="dark"] .hover\:bg-blue-100:hover     { background-color: var(--info-soft) !important; }
-[data-theme="dark"] .hover\:bg-violet-50:hover,
-[data-theme="dark"] .hover\:bg-violet-100:hover   { background-color: var(--highlight-soft) !important; }
-
-/* — chữ đậm màu đi kèm nền pastel: phải sáng lên cùng — */
-[data-theme="dark"] .text-amber-600,  [data-theme="dark"] .text-amber-700,
-[data-theme="dark"] .text-amber-800,  [data-theme="dark"] .text-amber-900,
-[data-theme="dark"] .text-orange-600, [data-theme="dark"] .text-orange-700,
-[data-theme="dark"] .text-orange-800, [data-theme="dark"] .text-yellow-700,
-[data-theme="dark"] .text-yellow-800                { color: var(--warning-fg) !important; }
-
-[data-theme="dark"] .text-rose-600,   [data-theme="dark"] .text-rose-700,
-[data-theme="dark"] .text-rose-800,   [data-theme="dark"] .text-rose-900,
-[data-theme="dark"] .text-red-600,    [data-theme="dark"] .text-red-700,
-[data-theme="dark"] .text-red-800,    [data-theme="dark"] .text-pink-600,
-[data-theme="dark"] .text-pink-700                  { color: var(--danger-fg) !important; }
-
-[data-theme="dark"] .text-emerald-600,[data-theme="dark"] .text-emerald-700,
-[data-theme="dark"] .text-emerald-800,[data-theme="dark"] .text-emerald-900,
-[data-theme="dark"] .text-green-600,  [data-theme="dark"] .text-green-700,
-[data-theme="dark"] .text-green-800,  [data-theme="dark"] .text-teal-700,
-[data-theme="dark"] .text-lime-700                  { color: var(--success-fg) !important; }
-
-[data-theme="dark"] .text-blue-600,   [data-theme="dark"] .text-blue-700,
-[data-theme="dark"] .text-blue-800,   [data-theme="dark"] .text-sky-600,
-[data-theme="dark"] .text-sky-700,    [data-theme="dark"] .text-cyan-700,
-[data-theme="dark"] .text-cyan-800,   [data-theme="dark"] .text-indigo-600,
-[data-theme="dark"] .text-indigo-700                { color: var(--info-fg) !important; }
-
-[data-theme="dark"] .text-violet-600, [data-theme="dark"] .text-violet-700,
-[data-theme="dark"] .text-violet-800, [data-theme="dark"] .text-purple-600,
-[data-theme="dark"] .text-purple-700, [data-theme="dark"] .text-fuchsia-600,
-[data-theme="dark"] .text-fuchsia-700               { color: var(--highlight-fg) !important; }
-
-/* — viền pastel — */
-[data-theme="dark"] .border-amber-200,  [data-theme="dark"] .border-amber-300,
-[data-theme="dark"] .border-orange-200                  { border-color: var(--warning-border) !important; }
-[data-theme="dark"] .border-rose-200,   [data-theme="dark"] .border-rose-300,
-[data-theme="dark"] .border-red-200                     { border-color: var(--danger-border) !important; }
-[data-theme="dark"] .border-emerald-200,[data-theme="dark"] .border-emerald-300,
-[data-theme="dark"] .border-green-200                   { border-color: var(--success-border) !important; }
-[data-theme="dark"] .border-blue-200,   [data-theme="dark"] .border-blue-300,
-[data-theme="dark"] .border-sky-200,    [data-theme="dark"] .border-cyan-200   { border-color: var(--info-border) !important; }
-[data-theme="dark"] .border-violet-200, [data-theme="dark"] .border-violet-300,
-[data-theme="dark"] .border-purple-200, [data-theme="dark"] .border-fuchsia-200{ border-color: var(--highlight-border) !important; }
-
-/* Thanh cuộn ngang ẩn — dùng cho mục lục dính trên mobile */
-.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
-.no-scrollbar::-webkit-scrollbar { display: none; }
-
-/* Marquee track — chừa chỗ cho nút loa cố định bên trái (hiện ở mọi khổ) */
-.marquee-track { padding-left: 46px; }
-@media (min-width: 640px) {
-  .marquee-track { padding-left: 88px; }
-}
-
-/* =========================================================
-   ANIMATION DÙNG CHUNG — trước đây mỗi trang tự khai báo
-   trong <style> nên animate-fadeIn ở Login không chạy
+   8. CHUYỂN ĐỘNG DÙNG CHUNG
    ========================================================= */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
 }
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(18px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: none; }
 }
 @keyframes floatSoft {
   0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-12px); }
+  50%      { transform: translateY(-8px); }
 }
 @keyframes shine {
   0%       { transform: translateX(-130%); }
   55%,100% { transform: translateX(240%); }
 }
 
-.animate-fadeIn  { animation: fadeIn .5s ease-out both; }
-.animate-slideUp { animation: slideUp .55s cubic-bezier(.22, 1, .36, 1) both; }
+.animate-fadeIn  { animation: fadeIn .28s var(--ease) both; }
+.animate-slideUp { animation: slideUp .32s var(--ease) both; }
 .animate-floatSoft { animation: floatSoft 7s ease-in-out infinite; }
 
-/* Tôn trọng thiết lập giảm chuyển động của hệ điều hành */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 0.001ms !important;
+    animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+    transition-duration: .001ms !important;
     scroll-behavior: auto !important;
   }
 }
 
 /* =========================================================
-   VIVID BENTO — tiện ích dùng chung cho mọi trang.
-   Đặc tả đầy đủ: Design.md
+   ═══════════ TƯƠNG THÍCH NGƯỢC ═══════════
+   Design.md §15. Mọi thứ dưới đây tồn tại để 20+ trang chưa
+   migrate không vỡ khi tầng token đổi. Xóa hết khi trang
+   cuối cùng chuyển sang src/components/ui/.
    ========================================================= */
-:root {
-  --r: 16px;   /* bo góc thẻ  */
-  --r-sm: 12px; /* bo góc ô nhỏ trong thẻ */
-}
 
-/* Thẻ nhấc lên khi hover, đổ bóng mang màu của chính nó.
- * Đặt --glow trên phần tử: style={{ "--glow": `${color}55` }} */
+/* --- v3: .lift nhấc 5px + bóng màu · .glowbtn quầng sáng ---
+   Đã giảm mạnh thay vì gỡ hẳn: trang cũ vẫn chạy nhưng không
+   còn nhấc và không còn bóng mang màu phần tử. KHÔNG dùng
+   trong code mới. */
 .lift {
-  transition: transform .28s cubic-bezier(.22, 1, .36, 1),
-              box-shadow .28s ease,
-              border-color .2s ease;
+  transition: border-color .16s var(--ease), box-shadow .16s var(--ease);
 }
 .lift:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 18px 34px -14px var(--glow, rgba(99, 102, 241, .45));
+  border-color: var(--fg-subtle);
+  box-shadow: var(--shadow-card);
 }
+.glowbtn { transition: background-color .16s var(--ease); }
+.glowbtn:hover { box-shadow: none; }
 
-/* Nút gradient — quầng sáng khi hover */
-.glowbtn { transition: transform .2s ease, box-shadow .25s ease; }
-.glowbtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 26px -8px var(--glow, rgba(99, 102, 241, .55));
-}
-
-/* Hàng cuộn ngang không hiện thanh cuộn */
-.noscroll::-webkit-scrollbar { width: 0; height: 0; }
-.noscroll { scrollbar-width: none; }
-
-/* Icon trôi nhẹ — dùng cho empty state */
+/* --- v3: .floaty cho icon empty state --- */
 @keyframes floaty {
   0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
+  50%      { transform: translateY(-4px); }
 }
-.floaty { animation: floaty 3s ease-in-out infinite; }
+.floaty { animation: floaty 4s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .lift, .glowbtn, .floaty { transition: none; animation: none; }
-  .lift:hover, .glowbtn:hover { transform: none; }
+  .lift, .glowbtn, .floaty, .skeleton, .pulse-soft { transition: none; animation: none; }
 }
 
-[data-theme="dark"][data-accent="multi"] {
-  --success: #34d399; --success-soft: #064e3b; --success-fg: #6ee7b7; --success-border: #047857;
-  --warning: #fbbf24; --warning-soft: #78350f; --warning-fg: #fcd34d; --warning-border: #b45309;
-  --danger:  #f87171; --danger-soft:  #7f1d1d; --danger-fg:  #fca5a5; --danger-border:  #b91c1c;
-  --info:    #38bdf8; --info-soft:    #0c4a6e; --info-fg:    #7dd3fc; --info-border:    #0369a1;
-  --highlight: #a78bfa; --highlight-soft: #4c1d95; --highlight-fg: #c4b5fd; --highlight-border: #6d28d9;
+/* --- Marquee track — chừa chỗ cho nút loa cố định bên trái --- */
+.marquee-track { padding-left: 46px; }
+@media (min-width: 640px) {
+  .marquee-track { padding-left: 88px; }
 }
+
+/* --- Alias sắc "ink" — render từ CSS var để phản ứng chế độ tối --- */
+.text-ink-900, .text-ink-800, .text-ink-700 { color: var(--fg) !important; }
+.text-ink-600, .text-ink-500 { color: var(--fg-muted) !important; }
+.text-ink-400, .text-ink-300 { color: var(--fg-subtle) !important; }
+
+.bg-ink-50  { background-color: var(--bg-app) !important; }
+.bg-ink-100 { background-color: var(--surface-3) !important; }
+.bg-ink-200 { background-color: var(--border) !important; }
+.bg-ink-300 { background-color: var(--border) !important; }
+.bg-ink-400 { background-color: var(--fg-subtle) !important; }
+.bg-ink-500 { background-color: var(--fg-muted) !important; }
+.bg-ink-50\/40 { background-color: color-mix(in oklab, var(--bg-app) 40%, transparent) !important; }
+.bg-ink-50\/60 { background-color: color-mix(in oklab, var(--bg-app) 60%, transparent) !important; }
+.bg-ink-50\/70 { background-color: color-mix(in oklab, var(--bg-app) 70%, transparent) !important; }
+.bg-ink-50\/80 { background-color: color-mix(in oklab, var(--bg-app) 80%, transparent) !important; }
+.bg-ink-100\/80 { background-color: color-mix(in oklab, var(--surface-3) 80%, transparent) !important; }
+.disabled\:bg-ink-300:disabled { background-color: var(--border) !important; }
+
+.border-ink-100 { border-color: var(--border-soft) !important; }
+.border-ink-200, .border-ink-300 { border-color: var(--border) !important; }
+.border-ink-400 { border-color: var(--fg-subtle) !important; }
+
+.hover\:bg-ink-50:hover, .hover\:bg-ink-100:hover { background-color: var(--surface-3) !important; }
+.hover\:bg-ink-50\/30:hover { background-color: color-mix(in oklab, var(--bg-app) 30%, transparent) !important; }
+.hover\:bg-ink-50\/40:hover { background-color: color-mix(in oklab, var(--bg-app) 40%, transparent) !important; }
+.hover\:bg-ink-100\/30:hover { background-color: color-mix(in oklab, var(--surface-3) 30%, transparent) !important; }
+
+.divide-ink-100 > * + * { border-color: var(--border-soft) !important; }
+
+/* --- Alias "brand" — v3 coi xanh dương là màu thương hiệu.
+   Nay trỏ vào màu nhà của bộ sưu tập đang chọn. --- */
+.bg-brand-50, .bg-brand-100 { background-color: var(--accent-soft) !important; }
+.bg-brand-200, .bg-brand-500, .bg-brand-600 { background-color: var(--accent) !important; }
+.bg-brand-700, .bg-brand-800, .bg-brand-900 { background-color: var(--accent-strong) !important; }
+/* Gradient thương hiệu cũ → màu phẳng. v4 không dùng gradient. */
+.bg-brand-gradient { background-image: none !important; background-color: var(--accent) !important; }
+
+.text-brand-600 { color: var(--accent) !important; }
+.text-brand-700, .text-brand-800, .text-brand-900 { color: var(--accent-strong) !important; }
+
+.border-brand-100 { border-color: color-mix(in oklab, var(--accent) 25%, var(--surface)) !important; }
+.border-brand-200 { border-color: color-mix(in oklab, var(--accent) 30%, var(--surface)) !important; }
+.border-brand-300 { border-color: var(--accent) !important; }
+
+.hover\:bg-brand-50:hover { background-color: var(--accent-soft) !important; }
+.hover\:text-brand-700:hover { color: var(--accent-strong) !important; }
+.hover\:border-brand-300:hover,
+.hover\:border-brand-400:hover,
+.hover\:border-brand-500:hover,
+.hover\:border-brand-600:hover { border-color: var(--accent) !important; }
+.focus\:border-brand-600:focus { border-color: var(--accent) !important; }
+
+/* --- Bề mặt trắng cứng ---
+   bg-white được dùng khắp nơi cho card, panel, dropdown, drawer.
+   Không ánh xạ thì mọi bề mặt đó vẫn trắng ở chế độ tối.
+   Lưu ý: bg-white/10, bg-white/20… là class KHÁC nên không bị
+   ảnh hưởng — hiệu ứng kính trên ảnh tối vẫn giữ nguyên. */
+.bg-white { background-color: var(--surface) !important; }
+.hover\:bg-white:hover { background-color: var(--surface) !important; }
+.focus\:bg-white:focus { background-color: var(--surface) !important; }
+
+/* --- Ring --- */
+.ring-white { --tw-ring-color: var(--surface) !important; }
+.ring-ink-100 { --tw-ring-color: var(--border-soft) !important; }
+.ring-ink-200 { --tw-ring-color: var(--border) !important; }
+.ring-brand-100,
+.ring-brand-200 { --tw-ring-color: color-mix(in oklab, var(--accent) 35%, transparent) !important; }
+
+/* Chữ/icon đặt trên nền accent */
+.text-on-accent { color: var(--on-accent) !important; }
+
+/* =========================================================
+   PASTEL TAILWIND CỨNG
+   -------------------------------------------------------
+   ~150 chỗ trong hệ thống dùng bg-amber-50, bg-rose-50,
+   bg-emerald-50… làm "bề mặt mềm" cho chip và thẻ cảnh báo.
+   Đó là hex cố định của Tailwind — chói trên giấy ngà ở chế
+   độ sáng và trắng lóa ở chế độ tối.
+
+   v4 ánh xạ ở CẢ HAI chế độ (v3 chỉ ánh xạ ở chế độ tối), vì
+   bảng màu mới là sắc tố tự nhiên: một chip #d1fae5 emerald
+   neon đặt cạnh #e2ece5 xanh thông sẽ lộ ngay.
+
+   Nhóm theo NGỮ NGHĨA để tự đi theo bộ token tone:
+     amber/orange/yellow    → warning
+     rose/red/pink          → danger
+     emerald/green/teal/lime→ success
+     blue/sky/cyan/indigo   → info
+     violet/purple/fuchsia  → highlight
+   ========================================================= */
+
+/* — nền — */
+.bg-amber-50,   .bg-amber-100,
+.bg-orange-50,  .bg-orange-100,
+.bg-yellow-50,  .bg-yellow-100   { background-color: var(--warning-soft) !important; }
+
+.bg-rose-50,    .bg-rose-100,
+.bg-red-50,     .bg-red-100,
+.bg-pink-50,    .bg-pink-100     { background-color: var(--danger-soft) !important; }
+
+.bg-emerald-50, .bg-emerald-100,
+.bg-green-50,   .bg-green-100,
+.bg-teal-50,    .bg-teal-100,
+.bg-lime-50,    .bg-lime-100     { background-color: var(--success-soft) !important; }
+
+.bg-blue-50,    .bg-blue-100,
+.bg-sky-50,     .bg-sky-100,
+.bg-cyan-50,    .bg-cyan-100,
+.bg-indigo-50,  .bg-indigo-100   { background-color: var(--info-soft) !important; }
+
+.bg-violet-50,  .bg-violet-100,
+.bg-purple-50,  .bg-purple-100,
+.bg-fuchsia-50, .bg-fuchsia-100  { background-color: var(--highlight-soft) !important; }
+
+/* — hover cùng nhóm — */
+.hover\:bg-amber-50:hover,   .hover\:bg-amber-100:hover   { background-color: var(--warning-soft) !important; }
+.hover\:bg-rose-50:hover,    .hover\:bg-rose-100:hover    { background-color: var(--danger-soft) !important; }
+.hover\:bg-emerald-50:hover, .hover\:bg-emerald-100:hover { background-color: var(--success-soft) !important; }
+.hover\:bg-blue-50:hover,    .hover\:bg-blue-100:hover    { background-color: var(--info-soft) !important; }
+.hover\:bg-violet-50:hover,  .hover\:bg-violet-100:hover  { background-color: var(--highlight-soft) !important; }
+
+/* — chữ đậm màu đi kèm nền pastel — */
+.text-amber-600,  .text-amber-700,  .text-amber-800,  .text-amber-900,
+.text-orange-600, .text-orange-700, .text-orange-800,
+.text-yellow-700, .text-yellow-800                     { color: var(--warning-fg) !important; }
+
+.text-rose-600,   .text-rose-700,   .text-rose-800,   .text-rose-900,
+.text-red-600,    .text-red-700,    .text-red-800,
+.text-pink-600,   .text-pink-700                       { color: var(--danger-fg) !important; }
+
+.text-emerald-600,.text-emerald-700,.text-emerald-800, .text-emerald-900,
+.text-green-600,  .text-green-700,  .text-green-800,
+.text-teal-700,   .text-lime-700                       { color: var(--success-fg) !important; }
+
+.text-blue-600,   .text-blue-700,   .text-blue-800,
+.text-sky-600,    .text-sky-700,    .text-cyan-700,
+.text-cyan-800,   .text-indigo-600, .text-indigo-700   { color: var(--info-fg) !important; }
+
+.text-violet-600, .text-violet-700, .text-violet-800,
+.text-purple-600, .text-purple-700,
+.text-fuchsia-600,.text-fuchsia-700                    { color: var(--highlight-fg) !important; }
+
+/* — viền pastel — */
+.border-amber-200,  .border-amber-300,  .border-orange-200   { border-color: var(--warning-border) !important; }
+.border-rose-200,   .border-rose-300,   .border-red-200      { border-color: var(--danger-border) !important; }
+.border-emerald-200,.border-emerald-300,.border-green-200    { border-color: var(--success-border) !important; }
+.border-blue-200,   .border-blue-300,
+.border-sky-200,    .border-cyan-200                         { border-color: var(--info-border) !important; }
+.border-violet-200, .border-violet-300,
+.border-purple-200, .border-fuchsia-200                      { border-color: var(--highlight-border) !important; }

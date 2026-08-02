@@ -83,7 +83,7 @@ const CHANNELS = [
   { id: "email", label: "Email",        Icon: Mail,         desc: "Gửi về hộp thư cá nhân",            default: true },
   { id: "push",  label: "Push",         Icon: Smartphone,   desc: "Realtime trên thiết bị di động",    default: false },
   { id: "sms",   label: "SMS",          Icon: MessageSquare, desc: "Tin nhắn tới số đăng ký",          default: false },
-  { id: "telegram", label: "Telegram", Icon: Send,          desc: "Bot chat Le Palmier",              default: false },
+  { id: "telegram", label: "Telegram", Icon: Send,          desc: "Bot chat Condo HUB",              default: false },
   { id: "slack", label: "Slack",        Icon: Radio,         desc: "Webhook tới channel #ops",         default: false },
 ];
 

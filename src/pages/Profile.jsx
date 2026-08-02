@@ -23,13 +23,13 @@ export default function Profile() {
   const user = {
     name: "Nguyễn Văn A",
     username: "nguyen.a",
-    email: "nguyen.a@lepalmier.vn",
+    email: "nguyen.a@condohub.vn",
     phone: "+84 987 654 321",
     role: "Giám đốc vận hành",
     roleLevel: "Admin",
     status: "active",
     avatar: "NV",
-    bio: "Quản lý chuỗi 4 chi nhánh Le Palmier từ 2019. Đam mê F&B, hospitality & data-driven decisions.",
+    bio: "Quản lý chuỗi 4 chi nhánh Condo HUB từ 2019. Đam mê F&B, hospitality & data-driven decisions.",
     location: "TP. Hồ Chí Minh, Việt Nam",
     timezone: "GMT+7 (Hà Nội)",
     language: "Tiếng Việt",
@@ -238,10 +238,10 @@ function OverviewTab({ user, editing }) {
         <Card title="Chi nhánh phụ trách" subtitle={`${user.role} · 4 chi nhánh`}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {[
-              { code: "LP1", name: "Le Palmier Sài Gòn",   role: "Giám đốc", occ: 92, rev: "12.4 tỷ" },
-              { code: "LP2", name: "Le Palmier Đà Lạt",    role: "Quản lý",  occ: 78, rev: "4.8 tỷ" },
-              { code: "LP3", name: "Le Palmier Phú Quốc",  role: "Quản lý",  occ: 96, rev: "18.2 tỷ" },
-              { code: "LP4", name: "Le Palmier Nha Trang", role: "Quản lý",  occ: 82, rev: "8.5 tỷ" },
+              { code: "LP1", name: "Condo HUB Sài Gòn",   role: "Giám đốc", occ: 92, rev: "12.4 tỷ" },
+              { code: "LP2", name: "Condo HUB Đà Lạt",    role: "Quản lý",  occ: 78, rev: "4.8 tỷ" },
+              { code: "LP3", name: "Condo HUB Phú Quốc",  role: "Quản lý",  occ: 96, rev: "18.2 tỷ" },
+              { code: "LP4", name: "Condo HUB Nha Trang", role: "Quản lý",  occ: 82, rev: "8.5 tỷ" },
             ].map((b) => (
               <div
                 key={b.code}
@@ -703,7 +703,7 @@ function BillingTab({ user }) {
             className="rounded-md border p-3 text-[12px]"
             style={{ backgroundColor: "var(--surface-2)", borderColor: "var(--border-soft)" }}
           >
-            <div className="font-semibold text-ink-900">Cty CP Le Palmier Group</div>
+            <div className="font-semibold text-ink-900">Cty CP Condo HUB Group</div>
             <div className="text-ink-500 mt-1 leading-relaxed">
               88 Lê Duẩn, P. Bến Nghé,<br />
               Quận 1, TP. Hồ Chí Minh<br />

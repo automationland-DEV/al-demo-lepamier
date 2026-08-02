@@ -585,7 +585,7 @@ function buildData() {
         mk("c3-3", "Visa & Giấy tờ",       "visa-giay-to",   8, { seo: 90 }),
       ],
     }),
-    mk("c4", "Câu chuyện Le Palmier", "cau-chuyen", 18, {
+    mk("c4", "Câu chuyện Condo HUB", "cau-chuyen", 18, {
       tone: "amber", icon: Star, featured: true, seo: 84, viewMult: 900,
       children: [
         mk("c4-1", "Behind the scenes",   "behind-the-scenes", 8, { seo: 82 }),

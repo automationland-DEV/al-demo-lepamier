@@ -843,9 +843,9 @@ function buildData() {
 
   const contacts = [
     { Icon: Phone, label: "Hotline", value: "1900 6868 · 24/7", href: "tel:19006868" },
-    { Icon: Mail, label: "Email", value: "support@lepalmier.vn", href: "mailto:support@lepalmier.vn" },
+    { Icon: Mail, label: "Email", value: "support@condohub.vn", href: "mailto:support@condohub.vn" },
     { Icon: MessageSquare, label: "Chat nội bộ", value: "8:00 – 22:00 hằng ngày", href: "/messages" },
-    { Icon: Globe, label: "Cổng hỗ trợ", value: "help.lepalmier.vn", href: "https://help.lepalmier.vn" },
+    { Icon: Globe, label: "Cổng hỗ trợ", value: "help.condohub.vn", href: "https://help.condohub.vn" },
   ];
 
   return { videos, articles, processes, tips, contacts };

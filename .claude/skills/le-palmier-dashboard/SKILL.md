@@ -1,9 +1,9 @@
 ---
 name: le-palmier-dashboard
-description: Quy ước và công thức làm việc trên dự án Le Palmier — dashboard quản lý khách sạn đa chi nhánh (React 19 + Vite 8 + Tailwind 3 + React Router 7 + Recharts, mock data, UI tiếng Việt). Dùng khi thêm/sửa trang trong src/pages, component trong src/components, mock data, theming/dark mode, filter-search-pagination, biểu đồ, hoặc khi cần chạy/build/lint/deploy repo này.
+description: Quy ước và công thức làm việc trên dự án Condo HUB — dashboard quản lý khách sạn đa chi nhánh (React 19 + Vite 8 + Tailwind 3 + React Router 7 + Recharts, mock data, UI tiếng Việt). Dùng khi thêm/sửa trang trong src/pages, component trong src/components, mock data, theming/dark mode, filter-search-pagination, biểu đồ, hoặc khi cần chạy/build/lint/deploy repo này.
 ---
 
-# Le Palmier — Dashboard quản lý khách sạn
+# Condo HUB — Dashboard quản lý khách sạn
 
 Demo UI/UX **không có backend**. Mọi dữ liệu đến từ `src/data/mockData.js` (random có seed cố định `seed = 42`). Mọi action create/edit/delete/search/filter chỉ đổi UI state trong component.
 
@@ -62,7 +62,7 @@ Khung trang chuẩn, pattern filter/search/pagination, và cách dùng Recharts:
 | `useThemeVars()` | `context/ThemeContext` | đọc giá trị CSS var đã tính (**bắt buộc** khi truyền màu cho Recharts) |
 | `useAuth()` | `context/AuthContext` | `{ user, isAuthenticated, login, logout }` — login giả lập, lưu `localStorage` |
 
-Tất cả state đều persist ở `localStorage` với prefix `lepalmier.*`.
+Tất cả state đều persist ở `localStorage` với prefix `condohub.*`.
 
 ## Format
 
