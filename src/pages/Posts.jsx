@@ -973,7 +973,7 @@ function buildData() {
     title: T(i, [
       "Top 10 điểm check-in mùa hè tại Phú Quốc",
       "Bí quyết chọn resort cho gia đình có trẻ nhỏ",
-      "Behind the scenes: Đầu bếp 5 sao tại Le Palmier",
+      "Behind the scenes: Đầu bếp 5 sao tại Condo HUB",
       "Sự kiện âm nhạc Acoustic cuối tuần bên hồ bơi",
       "Ưu đãi 30% phòng Deluxe tháng 8 — Đặt sớm",
       "Review khách hàng: Kỳ nghỉ đáng nhớ tại Đà Lạt",
@@ -985,9 +985,9 @@ function buildData() {
       "Behind the scenes: Đội ngũ housekeeping 5 sao",
     ]),
     excerpt: T(i, [
-      "Khám phá những góc sống ảo đẹp nhất tại đảo ngọc cùng Le Palmier Phú Quốc trong mùa hè này.",
+      "Khám phá những góc sống ảo đẹp nhất tại đảo ngọc cùng Condo HUB Phú Quốc trong mùa hè này.",
       "Hướng dẫn chi tiết từ A-Z cho kỳ nghỉ gia đình hoàn hảo, từ chọn phòng đến hoạt động.",
-      "Câu chuyện về những đôi tay vàng làm nên ẩm thực đẳng cấp tại hệ thống Le Palmier.",
+      "Câu chuyện về những đôi tay vàng làm nên ẩm thực đẳng cấp tại hệ thống Condo HUB.",
       "Đêm nhạc acoustic lãng mạn bên hồ bơi vô cực với ban nhạc The Fingers.",
       "Đặt phòng sớm để nhận ưu đãi hấp dẫn lên đến 30% phòng Deluxe tháng 8.",
       "Chia sẻ từ gia đình anh Tuấn sau 3 ngày tuyệt vời tại LP2 Đà Lạt.",
@@ -1024,7 +1024,7 @@ function buildData() {
     kw: T(i, [2.4, 1.8, 2.1, 1.2, 3.2, 1.6, 1.4, 2.6, 1.8, 1.0, 2.2, 1.8]),
     backlinks: T(i, [14, 8, 6, 4, 12, 9, 3, 7, 5, 1, 11, 2]),
     mainKeywords: T(i, [
-      ["phú quốc","check-in","mùa hè"], ["resort gia đình","trẻ nhỏ"], ["đầu bếp","le palmier"],
+      ["phú quốc","check-in","mùa hè"], ["resort gia đình","trẻ nhỏ"], ["đầu bếp","condo hub"],
       ["acoustic","hồ bơi"], ["ưu đãi","deluxe"], ["review","đà lạt"],
       ["workshop","bánh"], ["đặt phòng","mẹo"], ["đà lạt","mùa thu"],
       ["yoga","biển"], ["phú quốc","4n3đ"], ["housekeeping","5 sao"],

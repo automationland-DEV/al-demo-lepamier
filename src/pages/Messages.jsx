@@ -663,7 +663,7 @@ const [DH, HT, LA, TN] = branches.map((b) => b.id);
 
 function pickAutoReply(conv, sentText) {
   const t = (sentText || "").toLowerCase();
-  if (t.includes("cảm ơn")) return "Dạ em cảm ơn anh/chị đã tin tưởng Le Palmier ạ 🌴";
+  if (t.includes("cảm ơn")) return "Dạ em cảm ơn anh/chị đã tin tưởng Condo HUB ạ 🌴";
   if (t.includes("bếp") || t.includes("chuẩn bị")) return "Dạ vâng, em chờ nhé!";
   if (t.includes("quản lý") || t.includes("kiểm tra")) return "Dạ em cảm ơn, mong được hỗ trợ sớm ạ.";
   const pool = conv.autoReplies || ["Dạ em đã nhận được thông tin ạ.", "Vâng, em cảm ơn anh/chị nhiều 🙏", "Dạ để em kiểm tra rồi phản hồi ngay ạ."];
@@ -734,7 +734,7 @@ function buildSeed() {
       lastMsg: "Dạ đón tiếp đoàn anh/chị ạ, phòng họp đã setup xong 🎉",
       context: { branchId: DH, guests: 24, time: "08:00 mai", amount: 62000000 },
       quickReplies: ["Xác nhận danh sách phòng", "Gửi lịch trình 2 ngày 1 đêm", "Báo kế toán xuất hóa đơn"],
-      autoReplies: ["Cảm ơn team Le Palmier, hẹn gặp ngày mai!", "Bên mình cần thêm 1 phòng họp nhỏ nữa được không?"],
+      autoReplies: ["Cảm ơn team Condo HUB, hẹn gặp ngày mai!", "Bên mình cần thêm 1 phòng họp nhỏ nữa được không?"],
     },
     {
       id: "c9", name: "Trần Thị Bích", verified: false, avatar: AVA(9), phone: "0987 234 561",
@@ -770,7 +770,7 @@ function buildSeed() {
       { id: "t4", from: "us", text: "Dạ anh/chị cho em xin đơn hiện tại để em cập nhật phần bào ngư vào ạ, khoảng 15 phút bếp sẽ chuẩn bị xong.", time: "09:24", status: "sent" },
     ],
     c2: [
-      { id: "t1", from: "them", text: "Chào shop, khu vực garden của Le Palmier có cho mang thú cưng không ạ?", time: "Hôm qua" },
+      { id: "t1", from: "them", text: "Chào shop, khu vực garden của Condo HUB có cho mang thú cưng không ạ?", time: "Hôm qua" },
       { id: "t2", from: "us", text: "Dạ có ạ, khu vực garden cho phép mang pet nhé anh/chị 🐾\nChỉ cần đăng ký trước với lễ tân khi check-in.", time: "Hôm qua", status: "read" },
       { id: "t3", from: "them", text: "Dạ có ạ, khu vực garden cho phép mang pet nhé anh/chị 🐾", time: "09:41" },
     ],
@@ -785,22 +785,22 @@ function buildSeed() {
       { id: "t3", from: "them", text: "Bạn có thể gửi lịch trình spa cuối tuần này không?", time: "08:12" },
     ],
     c5: [
-      { id: "t1", from: "them", text: "Chào Le Palmier, mình muốn hợp tác quay video review resort ạ.", time: "08:40" },
-      { id: "t2", from: "us", text: "Dạ em chào bạn! Le Palmier rất mong được hợp tác cùng bạn ạ 🌴", time: "08:45", status: "read" },
-      { id: "t3", from: "them", text: "Video hôm bữa mình quay ở Hồ Tràm đang lên xu hướng nè, tag Le Palmier vô luôn 🔥", time: "09:10" },
+      { id: "t1", from: "them", text: "Chào Condo HUB, mình muốn hợp tác quay video review resort ạ.", time: "08:40" },
+      { id: "t2", from: "us", text: "Dạ em chào bạn! Condo HUB rất mong được hợp tác cùng bạn ạ 🌴", time: "08:45", status: "read" },
+      { id: "t3", from: "them", text: "Video hôm bữa mình quay ở Hồ Tràm đang lên xu hướng nè, tag Condo HUB vô luôn 🔥", time: "09:10" },
       { id: "t4", from: "them", text: "Reply nhanh giúp mình nha, video đang lên xu hướng 🔥", time: "09:20" },
     ],
     c6: [
       { id: "t1", from: "them", text: "Mã giảm giá TIKTOK50 áp dụng đến khi nào vậy ạ?", time: "3 giờ trước" },
     ],
     c7: [
-      { id: "t1", from: "them", text: "Chào Le Palmier, mình cần tổ chức tiệc cưới khoảng 120 khách vào 15/09.", time: "Hôm qua" },
-      { id: "t2", from: "us", text: "Dạ chào anh/chị, Le Palmier Đức Hòa có sảnh tiệc ngoài trời sức chứa 150 khách rất phù hợp ạ 🎉", time: "Hôm qua", status: "read" },
+      { id: "t1", from: "them", text: "Chào Condo HUB, mình cần tổ chức tiệc cưới khoảng 120 khách vào 15/09.", time: "Hôm qua" },
+      { id: "t2", from: "us", text: "Dạ chào anh/chị, Condo HUB Đức Hòa có sảnh tiệc ngoài trời sức chứa 150 khách rất phù hợp ạ 🎉", time: "Hôm qua", status: "read" },
       { id: "t3", from: "them", text: "Dạ nhận được rồi ạ, báo sales đầu giờ chiều liên hệ anh/chị nhé.", time: "13:02" },
     ],
     c8: [
       { id: "t1", from: "them", text: "Đoàn công ty VNG 24 người sẽ đến lúc 08:00 sáng mai, đã book 2 phòng họp.", time: "Hôm qua" },
-      { id: "t2", from: "us", text: "Dạ Le Palmier đã ghi nhận đoàn 24 khách, 2 phòng họp cho ngày mai ạ. Tổng chi phí tạm tính 62 triệu.", time: "Hôm qua", status: "read" },
+      { id: "t2", from: "us", text: "Dạ Condo HUB đã ghi nhận đoàn 24 khách, 2 phòng họp cho ngày mai ạ. Tổng chi phí tạm tính 62 triệu.", time: "Hôm qua", status: "read" },
       { id: "t3", from: "them", text: "Dạ đón tiếp đoàn anh/chị ạ, phòng họp đã setup xong 🎉", time: "16:30", status: "sent" },
     ],
     c9: [

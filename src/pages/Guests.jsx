@@ -785,8 +785,8 @@ function MessageModal({ target, onClose, onSend }) {
           <div className="text-[10.5px] uppercase font-bold tracking-wider text-ink-500 mb-1.5">Mẫu có sẵn</div>
           <div className="flex flex-wrap gap-1.5">
             {[
-              { l: "Cảm ơn", t: "Cảm ơn quý khách đã lựa chọn Le Palmier. Rất mong được đón tiếp quý khách lần sau!" },
-              { l: "Ưu đãi", t: "Le Palmier gửi tặng quý khách mã giảm 15% cho kỳ nghỉ tiếp theo. Áp dụng đến hết tháng này." },
+              { l: "Cảm ơn", t: "Cảm ơn quý khách đã lựa chọn Condo HUB. Rất mong được đón tiếp quý khách lần sau!" },
+              { l: "Ưu đãi", t: "Condo HUB gửi tặng quý khách mã giảm 15% cho kỳ nghỉ tiếp theo. Áp dụng đến hết tháng này." },
               { l: "Mời đánh giá", t: "Quý khách vui lòng dành 1 phút đánh giá trải nghiệm vừa qua để chúng tôi phục vụ tốt hơn." },
             ].map((tpl) => (
               <Chip key={tpl.l} on={text === tpl.t} onClick={() => setText(tpl.t)}>{tpl.l}</Chip>

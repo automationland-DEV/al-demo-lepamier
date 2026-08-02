@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import { branches } from "../data/mockData";
 
-const STORAGE_KEY = "lepalmier.activeBranchId";
+const STORAGE_KEY = "condohub.activeBranchId";
 
 const BranchContext = createContext(null);
 

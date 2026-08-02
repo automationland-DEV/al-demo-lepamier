@@ -2021,7 +2021,7 @@ function Bubble({ m, prev }) {
       <div className={`max-w-[78%] ${sameAuthor ? "mt-0.5" : "mt-2"} ${isStaff ? "items-end" : "items-start"} flex flex-col gap-0.5`}>
         {!sameAuthor && (
           <div className={`text-[10px] font-bold mb-0.5 ${isStaff ? "text-amber-700" : "text-ink-500"}`}>
-            {isStaff ? "Le Palmier" : m.author || "Khách"}
+            {isStaff ? "Condo HUB" : m.author || "Khách"}
           </div>
         )}
         <div
@@ -2069,22 +2069,22 @@ function buildData({ shift, branch }) {
      này (xem makeRestaurant) thay vì gõ tay, nên không bao giờ lệch nhau. */
   const restaurants = [
     makeRestaurant({
-      id: "lp1", code: "LP1", name: "Le Palmier Sài Gòn", area: "Quận 1",
+      id: "lp1", code: "LP1", name: "Condo HUB Sài Gòn", area: "Quận 1",
       avgWait: 10, revToday: 118_400_000,
       map: "ooroo ovooo oooxo ovoor oooov ooovo ooooo",
     }),
     makeRestaurant({
-      id: "lp2", code: "LP2", name: "Le Palmier Đà Lạt", area: "Phường 4",
+      id: "lp2", code: "LP2", name: "Condo HUB Đà Lạt", area: "Phường 4",
       avgWait: 7, revToday: 96_800_000,
       map: "ooroo voovo oroov ooxvo voroo ovoor oovoo",
     }),
     makeRestaurant({
-      id: "lp3", code: "LP3", name: "Le Palmier Phú Quốc", area: "Bãi Trường",
+      id: "lp3", code: "LP3", name: "Condo HUB Phú Quốc", area: "Bãi Trường",
       avgWait: 14, revToday: 142_600_000,
       map: "oooor ooooo oxooo ooovo ooroo oooov ooooo",
     }),
     makeRestaurant({
-      id: "lp4", code: "LP4", name: "Le Palmier Nha Trang", area: "Trần Phú",
+      id: "lp4", code: "LP4", name: "Condo HUB Nha Trang", area: "Trần Phú",
       avgWait: 8, revToday: 88_200_000,
       map: "oorvo oovvo xovoo oroov ovoro oovoo voroo",
     }),
@@ -2223,13 +2223,13 @@ function buildData({ shift, branch }) {
 
   /* ═══ INBOX ĐA KÊNH — dữ liệu mô phỏng thật ═══ */
   const channels = [
-    { id: "zalo",      short: "Zalo",      name: "Zalo OA · Le Palmier",      tone: "bg-blue-50 text-blue-700 border-blue-200",        dot: "bg-[#0068FF]", unread: 14 },
+    { id: "zalo",      short: "Zalo",      name: "Zalo OA · Condo HUB",      tone: "bg-blue-50 text-blue-700 border-blue-200",        dot: "bg-[#0068FF]", unread: 14 },
     { id: "messenger", short: "Messenger", name: "Facebook Messenger",        tone: "bg-cyan-50 text-cyan-700 border-cyan-200",        dot: "bg-gradient-to-r from-cyan-400 to-blue-500", unread: 9 },
-    { id: "tiktok",    short: "TikTok",    name: "TikTok DM @lepalmier.vn",  tone: "bg-ink-900 text-white border-ink-900",            dot: "bg-black", unread: 7 },
-    { id: "instagram", short: "IG",        name: "Instagram @lepalmier",      tone: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200", dot: "bg-gradient-to-r from-fuchsia-400 to-rose-400", unread: 5 },
-    { id: "facebook",  short: "FB",        name: "Facebook Page /le.palmier", tone: "bg-blue-50 text-blue-700 border-blue-200",        dot: "bg-[#1877F2]", unread: 4 },
-    { id: "sms",       short: "SMS",       name: "SMS Brandname LE PALMIER",  tone: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500", unread: 3 },
-    { id: "email",     short: "Email",     name: "Email contact@lepalmier.vn",tone: "bg-rose-50 text-rose-700 border-rose-200",        dot: "bg-rose-500", unread: 2 },
+    { id: "tiktok",    short: "TikTok",    name: "TikTok DM @condohub.vn",  tone: "bg-ink-900 text-white border-ink-900",            dot: "bg-black", unread: 7 },
+    { id: "instagram", short: "IG",        name: "Instagram @condohub",      tone: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200", dot: "bg-gradient-to-r from-fuchsia-400 to-rose-400", unread: 5 },
+    { id: "facebook",  short: "FB",        name: "Facebook Page /condo.hub", tone: "bg-blue-50 text-blue-700 border-blue-200",        dot: "bg-[#1877F2]", unread: 4 },
+    { id: "sms",       short: "SMS",       name: "SMS Brandname CONDO HUB",  tone: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500", unread: 3 },
+    { id: "email",     short: "Email",     name: "Email contact@condohub.vn",tone: "bg-rose-50 text-rose-700 border-rose-200",        dot: "bg-rose-500", unread: 2 },
   ];
 
   const conversations = [
@@ -2300,7 +2300,7 @@ function buildData({ shift, branch }) {
       context: null,
       quickReplies: ["Gửi voucher 20%", "Mời quay review", "Cảm ơn review"],
       messages: [
-        { from: "customer", text: "Mình vừa quay clip Le Palmier Đà Lạt được 1.2tr view! 🥰 Cảm ơn team nhiều nha", time: "09:08" },
+        { from: "customer", text: "Mình vừa quay clip Condo HUB Đà Lạt được 1.2tr view! 🥰 Cảm ơn team nhiều nha", time: "09:08" },
         { from: "customer", text: "Cho mình hỏi combo set menu cho 4 người giá sao vậy shop?", time: "09:14" },
         { from: "customer", text: "Reply nhanh giúp mình nha, view đang tăng mạnh 🔥", time: "09:20" },
       ],
@@ -2375,9 +2375,9 @@ function buildData({ shift, branch }) {
       },
       quickReplies: [],
       messages: [
-        { from: "system",  text: "Hệ thống Le Palmier: Cảm ơn anh/chị đã đặt bàn tại LP2 Đà Lạt 19:30 tối nay", time: "08:00" },
+        { from: "system",  text: "Hệ thống Condo HUB: Cảm ơn anh/chị đã đặt bàn tại LP2 Đà Lạt 19:30 tối nay", time: "08:00" },
         { from: "customer", text: "OK xác nhận. Có cho mang theo chó nhỏ 3kg không?", time: "08:42" },
-        { from: "staff",    text: "LE PALMIER: Dạ có ạ, khu vực garden cho phép mang pet dưới 5kg. Anh/chị lưu ý vòng yếm cho pet ạ", time: "08:55", read: true },
+        { from: "staff",    text: "CONDO HUB: Dạ có ạ, khu vực garden cho phép mang pet dưới 5kg. Anh/chị lưu ý vòng yếm cho pet ạ", time: "08:55", read: true },
       ],
     },
     {
@@ -2399,7 +2399,7 @@ function buildData({ shift, branch }) {
       quickReplies: ["Trả lời sau", "Chuyển sales"],
       messages: [
         { from: "customer", text: "Subject: Group booking 200 pax — Aug/Sep 2026", time: "08:30", author: "Kevin Wong" },
-        { from: "customer", text: "Dear Le Palmier team, we have 200 pax Singapore market Aug-Sep looking for 3 nights all-inclusive. Please quote.", time: "08:30" },
+        { from: "customer", text: "Dear Condo HUB team, we have 200 pax Singapore market Aug-Sep looking for 3 nights all-inclusive. Please quote.", time: "08:30" },
         { from: "system",   text: "Email tự động phân loại → Sales Manager", time: "08:31" },
       ],
     },
@@ -2478,7 +2478,7 @@ function buildData({ shift, branch }) {
       quickReplies: [],
       messages: [
         { from: "customer", text: "Hi, do you have halal food options? I am from Dubai visiting next week.", time: "07:15" },
-        { from: "staff",    text: "Hello! Yes, Le Palmier has certified halal kitchen options. We will prepare a welcome package for you 🙏", time: "07:20" },
+        { from: "staff",    text: "Hello! Yes, Condo HUB has certified halal kitchen options. We will prepare a welcome package for you 🙏", time: "07:20" },
       ],
     },
   ];

@@ -1016,7 +1016,7 @@ function BranchForm({ open, initial, existingCodes = [], onClose, onSubmit }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Field className="sm:col-span-2" label="Tên chi nhánh" required error={err("name")} id="f-name">
               <input id="f-name" className="input" value={v.name} onChange={(e) => set("name", e.target.value)}
-                placeholder="Le Palmier Resort Cần Giờ" />
+                placeholder="Condo HUB Resort Cần Giờ" />
             </Field>
             <Field label="Mã" required error={err("code")} id="f-code" hint="2–3 chữ in hoa">
               <input id="f-code" className="input uppercase" maxLength={3} value={v.code}
@@ -1050,7 +1050,7 @@ function BranchForm({ open, initial, existingCodes = [], onClose, onSubmit }) {
             </Field>
             <Field label="Email" required error={err("email")} id="f-email">
               <input id="f-email" className="input" inputMode="email" value={v.email}
-                onChange={(e) => set("email", e.target.value)} placeholder="branch.cg@lepalmier.vn" />
+                onChange={(e) => set("email", e.target.value)} placeholder="branch.cg@condohub.vn" />
             </Field>
             <Field label="Người quản lý" required error={err("manager")} id="f-manager">
               <input id="f-manager" className="input" value={v.manager} onChange={(e) => set("manager", e.target.value)}
@@ -1213,7 +1213,7 @@ function BranchDrawer({ branch: selected, stats, isActive, onClose, onToggleActi
           </button>
           <button
             onClick={() => {
-              const url = `https://lepalmier.vn/${(selected.code || "").toLowerCase()}`;
+              const url = `https://condohub.vn/${(selected.code || "").toLowerCase()}`;
               navigator.clipboard?.writeText(url);
               onNotify(`Đã sao chép liên kết: ${url}`);
             }}
@@ -1317,7 +1317,7 @@ function TabOverview({ selected, stats }) {
           </div>
           <div className="flex items-center gap-2 min-w-0">
             <Globe className="w-3.5 h-3.5 text-ink-500 shrink-0" />
-            <span className="text-ink-700 truncate">lepalmier.vn/{(selected.code || "").toLowerCase()}</span>
+            <span className="text-ink-700 truncate">condohub.vn/{(selected.code || "").toLowerCase()}</span>
           </div>
         </div>
       </Card>

@@ -1,24 +1,31 @@
-# Le Palmier — Hệ thống quản trị chuỗi khách sạn
+# Condo HUB — Hệ thống quản trị chuỗi khách sạn
 
 Ứng dụng React thuần front-end, **không có backend**. Toàn bộ số liệu là mock data sinh theo seed cố định (`seed = 42` trong `src/data/mockData.js`). Mọi thao tác create/edit/delete chỉ đổi UI state. Giao diện 100% tiếng Việt.
 
 ## ⚠️ Bắt buộc trước khi viết bất kỳ UI nào
 
-**Đọc `Design.md` trước.** Đó là đặc tả giao diện chuẩn (v3 "Vivid Bento") và là bắt buộc, không phải gợi ý.
+**Đọc `Design.md` trước.** Đó là đặc tả giao diện chuẩn (v4 "Palmier Riviera") và là bắt buộc, không phải gợi ý.
 
-Sau đó mở file tham chiếu tương ứng và **copy công thức từ đó thay vì tự sáng tác**:
+**Import component từ `src/components/ui/` — đừng copy-paste giữa các trang.** Đó là nguồn sự thật: `Button`, `Panel`, `StatStrip`/`Stat`, `Table`, `Modal`, `Tabs`, `Tag`, `StatusTag`, `Avatar`, `EmptyState`, `Toast`, `PageHeader`, `SectionHead`…
+
+Sau đó mở file tham chiếu để xem cách ghép chúng lại:
 
 | Loại trang | File mẫu |
 |---|---|
-| Danh sách (grid thẻ + bảng + lọc + phân trang) | `src/pages/Staff.jsx` |
-| Hub nhiều tab (KPI + bảng + thẻ + modal + biểu đồ) | `src/pages/Marketing.jsx` |
+| Danh sách (bảng + thẻ + lọc + phân trang) | `src/pages/Staff.jsx` |
+| Dashboard (tối đa 4 khối lớn) | `src/pages/Dashboard.jsx` |
+| Hub nhiều tab (KPI + bảng + modal + biểu đồ) | `src/pages/Marketing.jsx` |
 
-Hai file này đã theo v3. Mọi trang khác **chưa migrate** — đừng lấy chúng làm mẫu. Bảng trạng thái migrate ở `Design.md` §14.
+Ba file này đã theo v4. Phần lớn trang còn lại **chưa migrate** — đừng lấy chúng làm mẫu. Bảng trạng thái ở `Design.md` §16.
 
-Ba lỗi hay gặp nhất:
-1. **Hardcode hex gradient trong trang** → phải lấy qua `usePalette()` từ `src/theme/palette.js`. Người dùng chọn được Đơn sắc (6 accent) hoặc Đa sắc trong Cài đặt; hardcode là trang của bạn không đổi theo. Xem `Design.md` §2.2.
-2. Viết `bg-white`, `text-ink-900`, `border-ink-200` → phải dùng `var(--surface)`, `var(--fg)`, `var(--border)`, nếu không dark mode vỡ.
-3. Viết lại `.lift` / `.glowbtn` trong thẻ `<style>` của trang → chúng đã là class toàn cục trong `src/index.css`.
+Năm lỗi hay gặp nhất:
+1. **Dùng gradient.** v4 không có gradient (trừ 3 ngoại lệ ở `Design.md` §2.5). Nếu bạn định viết `linear-gradient(135deg,…)` là đang làm theo v3.
+2. **Hardcode hex.** Màu nhà/kim loại lấy qua `usePalette()`; màu ngữ nghĩa và bề mặt lấy qua `var(--*)`. Người dùng chọn được 4 **bộ sưu tập màu** trong Cài đặt; hardcode là trang của bạn không đổi theo.
+3. Viết `bg-white`, `text-ink-900`, `border-ink-200` → phải dùng `var(--surface)`, `var(--fg)`, `var(--border)`, nếu không chế độ tối vỡ.
+4. **`rounded-full` cho nút/input** → v4 dùng `var(--r-sm)` = 4px. Tròn chỉ dành cho avatar và chấm trạng thái.
+5. **`font-extrabold` / `font-bold`** → trần độ đậm của v4 là `600`. Tiêu đề dùng `font-display` (Playfair Display) weight **400**.
+
+`.lift` / `.glowbtn` là di sản v3, đã bị giảm hiệu lực trong `src/index.css` để trang cũ không giật cục. **Không dùng trong code mới** — dùng `.card-hover`.
 
 ## Lệnh
 
@@ -39,8 +46,10 @@ React 19 · Vite 8 · React Router 7 · Tailwind 3 · Recharts · lucide-react. 
 ```
 src/
   App.jsx            BrowserRouter + 3 provider lồng nhau + 25 route
-  context/           Theme (light/dark, 6 accent) · Auth (localStorage) · Branch (lọc chi nhánh toàn cục)
+  context/           Theme (sáng/tối, 4 bộ sưu tập màu) · Auth (localStorage) · Branch (lọc chi nhánh toàn cục)
+  theme/palette.js   usePalette() — màu nhà, kim loại, bảng đất, màu ngữ nghĩa
   data/mockData.js   nguồn dữ liệu duy nhất — branches, rooms, staff, guests, bookings
+  components/ui/     ★ thư viện component v4 — import từ đây
   components/        Sidebar, Topbar, Chatbot, Pagination, Icons, Semantic…
   pages/             25 trang
   utils/format.js    formatVND, formatVNDFull, formatDate
@@ -48,8 +57,8 @@ src/
 
 **Ba context là xương sống:**
 
-- `ThemeContext` — ghi `data-theme` / `data-accent` lên `<html>`; toàn bộ màu chạy qua CSS variable trong `src/index.css`. **Người dùng đổi được 6 accent, nên không được coi xanh dương là màu thương hiệu cố định.**
-- `AuthContext` — auth giả, lưu key `lepalmier.auth` vào localStorage. `RequireAuth` trong `App.jsx` chặn route.
+- `ThemeContext` — ghi `data-theme` / `data-collection` / `data-density` lên `<html>`; toàn bộ màu chạy qua CSS variable trong `src/index.css`. **Người dùng đổi được 4 bộ sưu tập (Ô-liu & Đồng thau · Bordeaux & Xương · Hải quân & Cát · Noir & Champagne), nên không được coi bất kỳ màu nào là màu thương hiệu cố định.** `data-accent` vẫn được ghi (bằng chính id bộ sưu tập) cho tới khi trang cuối cùng migrate.
+- `AuthContext` — auth giả, lưu key `condohub.auth` vào localStorage. `RequireAuth` trong `App.jsx` chặn route.
 - `BranchContext` — `activeBranchId` (`"ALL"` hoặc id chi nhánh). Các trang danh sách phải `useEffect` đồng bộ theo nó, **không tự tạo bộ chọn chi nhánh thứ hai**.
 
 Dữ liệu thật sinh ra: **4 chi nhánh · 713 phòng · 124 nhân viên · 240 khách · 320 booking**. (README ghi 12 chi nhánh / 1.800 phòng là số cũ, sai.)
@@ -63,12 +72,14 @@ Dữ liệu thật sinh ra: **4 chi nhánh · 713 phòng · 124 nhân viên · 2
 
 ## Nợ kỹ thuật đã biết
 
-Danh sách đầy đủ ở `Design.md` §15. Đáng chú ý:
+Danh sách đầy đủ ở `Design.md` §17. Đáng chú ý:
 
-- Cài đặt "Mật độ" **không hoạt động** — `ThemeContext` ghi attribute `data-density` nhưng `index.css` viết selector class `.density-compact`.
-- `Sidebar.jsx` badge số sai (316 nhân viên / 1.2K phòng — thực tế 124 / 713) và thuật ngữ trái quy ước.
-- `Topbar.jsx` còn `bg-white` cứng nên hỏng dark mode; tên người dùng hardcode thay vì đọc `useAuth()`.
-- Khi migrate trang thứ ba sang v3: **tách** `KpiCard`, `Avatar`, `Segmented`, `PillSelect`, `Modal`, `Section`, `StatusTag` từ `Staff.jsx`/`Marketing.jsx` sang `src/components/` thay vì copy lần nữa.
+- Bundle vẫn 1 chunk ~2,2 MB — chưa code-splitting theo route.
+- `vite.config.js` thiếu `@vitejs/plugin-react` — build chạy được nhưng mất Fast Refresh.
+- `AppearanceModal.jsx`, `StatCard.jsx` không được import ở đâu, nên xóa.
+- Lớp tương thích ngược ở cuối `src/index.css` (alias `bg-white`/`ink-*`/`brand-*`, ánh xạ pastel Tailwind, `.lift`/`.glowbtn`) tồn tại **chỉ** để ~20 trang chưa migrate không vỡ. Xóa hết khi trang cuối cùng chuyển sang `src/components/ui/`.
+
+Đã sửa trong đợt v4: mật độ hiển thị (selector `[data-density]`), badge số ở `Sidebar.jsx` (nay đọc thẳng từ `mockData`), `Topbar.jsx` (breadcrumb theo route, tên người dùng đọc `useAuth()`), `Footer.jsx` (hết nền xanh dương cứng).
 
 ## CI/CD
 

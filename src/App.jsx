@@ -26,6 +26,8 @@ import Help from "./pages/Help";
 import Profile from "./pages/Profile";
 import RestaurantOperations from "./pages/RestaurantOperations";
 import Marketing from "./pages/Marketing";
+import WebsiteOverview from "./pages/WebsiteOverview";
+import WebsiteUsers from "./pages/WebsiteUsers";
 import Posts from "./pages/Posts";
 import PostCategories from "./pages/PostCategories";
 import Login from "./pages/Login";
@@ -135,6 +137,8 @@ function AppLayout() {
             <Route path="/help" element={<Help />} />
             <Route path="/restaurant-ops" element={<RestaurantOperations />} />
             <Route path="/marketing" element={<Marketing />} />
+            <Route path="/website" element={<WebsiteOverview />} />
+            <Route path="/website/users" element={<WebsiteUsers />} />
             <Route path="/posts" element={<Posts />} />
             <Route path="/post-categories" element={<PostCategories />} />
           </Routes>

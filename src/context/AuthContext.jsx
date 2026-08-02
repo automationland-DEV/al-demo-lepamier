@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-const STORAGE_KEY = "lepalmier.auth";
+const STORAGE_KEY = "condohub.auth";
 
 const DEMO_USER = {
   id: "U-001",
   name: "Nguyễn Văn A",
   username: "nguyen.a",
-  email: "nguyen.a@lepalmier.vn",
+  email: "nguyen.a@condohub.vn",
   role: "Giám đốc vận hành",
   roleLevel: "Admin",
   avatar: "NV",

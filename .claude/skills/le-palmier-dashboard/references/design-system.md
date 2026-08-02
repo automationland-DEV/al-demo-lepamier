@@ -1,4 +1,4 @@
-# Design system — Le Palmier
+# Design system — Condo HUB
 
 Toàn bộ định nghĩa nằm ở `src/index.css`. Hệ màu điều khiển bởi 2 thuộc tính trên `<html>`: `data-theme` (`light` | `dark`) × `data-accent` (`navy` | `green` | `purple` | `orange` | `red` | `amber`) → 12 tổ hợp. Viết CSS/JSX sai token là vỡ 11/12 tổ hợp còn lại.
 

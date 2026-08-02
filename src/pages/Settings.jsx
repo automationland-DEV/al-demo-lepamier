@@ -2,7 +2,7 @@ import { useState } from "react";
 import PageHeader from "../components/PageHeader";
 import Card from "../components/Card";
 import { Icons } from "../components/Icons";
-import { useTheme, ACCENTS, DENSITIES, FONT_SIZES } from "../context/ThemeContext";
+import { useTheme, COLLECTIONS, DENSITIES, FONT_SIZES } from "../context/ThemeContext";
 import { StatusPill, AccentPill, Trend, ToneBox, ToneDot, ToneAlert } from "../components/Semantic";
 
 const {
@@ -16,7 +16,7 @@ const SECTIONS = [
     id: "account", icon: User, title: "Thông tin tài khoản", desc: "Cập nhật thông tin cá nhân và ảnh đại diện",
     fields: [
       { label: "Họ và tên", value: "Nguyễn Quản Lý" },
-      { label: "Email", value: "admin@lepalmier.vn" },
+      { label: "Email", value: "admin@condohub.vn" },
       { label: "Số điện thoại", value: "0987654321" },
       { label: "Chức vụ", value: "Giám đốc vận hành" },
     ],
@@ -248,8 +248,40 @@ function ReloadTheme() {
   );
 }
 
+/**
+ * Ô xem trước một bộ sưu tập: mảnh giấy thật của bộ đó, một khối màu nhà,
+ * và vạch đồng thau. Người dùng nhìn thấy chất liệu chứ không phải một
+ * chấm tròn màu như v3.
+ */
+function CollectionSwatch({ c, dark }) {
+  return (
+    <span
+      className="relative w-14 h-11 shrink-0 overflow-hidden border"
+      style={{
+        borderRadius: "var(--r-sm)",
+        backgroundColor: dark ? c.paper.dark : c.paper.light,
+        borderColor: "var(--border)",
+      }}
+    >
+      <span
+        className="absolute left-2 top-2 bottom-2 w-4"
+        style={{ backgroundColor: dark ? c.house.dark : c.house.light }}
+      />
+      <span
+        className="absolute right-2 top-3 bottom-3 w-px"
+        style={{ backgroundColor: c.metal }}
+      />
+      <span
+        className="absolute right-3.5 top-3 w-1.5 h-1.5 rounded-full"
+        style={{ backgroundColor: c.metal }}
+      />
+    </span>
+  );
+}
+
 function ColorConfig() {
-  const { theme, accent, setTheme, setAccent } = useTheme();
+  const { theme, collection, setTheme, setCollection } = useTheme();
+  const active = COLLECTIONS.find((c) => c.id === collection);
   return (
     <div className="space-y-5">
       {/* Mode */}
@@ -259,8 +291,8 @@ function ColorConfig() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { id: "light", label: "Sáng", desc: "Phù hợp ban ngày · nền trắng", Icon: Sun },
-            { id: "dark",  label: "Tối",  desc: "Dễ chịu cho mắt ban đêm",       Icon: Moon },
+            { id: "light", label: "Sáng", desc: "Giấy ngà · dùng ban ngày", Icon: Sun },
+            { id: "dark",  label: "Tối",  desc: "Buổi tối trong khách sạn",  Icon: Moon },
           ].map((m) => (
             <button
               key={m.id}
@@ -296,39 +328,39 @@ function ColorConfig() {
         </div>
       </div>
 
-      {/* Accent */}
+      {/* Bộ sưu tập màu */}
       <div>
         <div className="text-[11px] font-semibold uppercase tracking-wider mb-2.5 text-ink-500">
-          Màu chủ đạo
+          Bộ sưu tập màu
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {ACCENTS.map((a) => {
-            const isActive = accent === a.id;
-            const swatch = theme === "dark" ? a.dark : a.light;
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {COLLECTIONS.map((c) => {
+            const isActive = collection === c.id;
             return (
               <button
-                key={a.id}
-                onClick={() => setAccent(a.id)}
-                className={`p-3 rounded-lg border-2 transition flex items-center gap-3 ${
-                  isActive ? "" : "hover:border-ink-300"
-                }`}
+                key={c.id}
+                onClick={() => setCollection(c.id)}
+                aria-pressed={isActive}
+                className="p-3 border-2 transition flex items-center gap-3 text-left"
                 style={{
+                  borderRadius: "var(--r)",
                   backgroundColor: "var(--surface)",
                   borderColor: isActive ? "var(--accent)" : "var(--border)",
                 }}
               >
-                <span
-                  className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-white shadow-sm"
-                  style={a.swatch ? { background: a.swatch } : { backgroundColor: swatch }}
-                >
-                  {isActive && <Check className="w-4 h-4" />}
-                </span>
-                <div className="min-w-0 text-left">
-                  <div className="text-[13px] font-semibold text-ink-900 truncate">{a.label}</div>
-                  <div className={`text-[10px] text-ink-500 truncate ${a.desc ? "" : "font-mono"}`}>
-                    {a.desc || swatch}
-                  </div>
+                <CollectionSwatch c={c} dark={theme === "dark"} />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-semibold text-ink-900 truncate">{c.label}</div>
+                  <div className="text-[11px] text-ink-500 truncate">{c.desc}</div>
                 </div>
+                {isActive && (
+                  <span
+                    className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: "var(--accent)", color: "var(--on-accent)" }}
+                  >
+                    <Check className="w-3 h-3" />
+                  </span>
+                )}
               </button>
             );
           })}
@@ -336,20 +368,29 @@ function ColorConfig() {
       </div>
 
       {/* Giải thích ảnh hưởng */}
-      <div className="rounded-md border p-3" style={{ backgroundColor: "var(--surface-2)", borderColor: "var(--border-soft)" }}>
+      <div className="border p-3" style={{ borderRadius: "var(--r)", backgroundColor: "var(--surface-2)", borderColor: "var(--border-soft)" }}>
         <div className="flex items-center gap-2 mb-1.5">
-          <Sparkles className="w-3.5 h-3.5" style={{ color: "var(--accent)" }} />
+          <Sparkles className="w-3.5 h-3.5" style={{ color: "var(--metal)" }} />
           <div className="text-[11px] uppercase tracking-wider font-bold" style={{ color: "var(--fg-muted)" }}>
-            Các vùng bị ảnh hưởng
+            Bộ sưu tập đổi những gì
           </div>
         </div>
         <div className="text-[11.5px] leading-relaxed" style={{ color: "var(--fg-muted)" }}>
-          Đổi màu chủ đạo & chế độ sẽ tự động áp dụng cho: <b>button primary</b>, <b>link</b>, <b>highlight sidebar</b>, <b>chart series chính</b>, <b>gradient brand</b>, <b>status active</b>, <b>focus ring</b>, <b>dark mode surfaces</b>.
+          Mỗi bộ là một cặp <b>màu nhà</b> + <b>kim loại</b> + <b>loại giấy</b> đã phối sẵn, nên không
+          có tổ hợp nào lệch tông. Đổi bộ sẽ áp dụng ngay cho: <b>nút chính</b>, <b>liên kết</b>,
+          <b> mục sidebar đang mở</b>, <b>vạch tab</b>, <b>chuỗi biểu đồ chính</b>, <b>vòng focus</b>,
+          và <b>nền giấy</b> của cả hai chế độ sáng/tối.
           <br /><br />
-          Chọn <b>một màu cụ thể</b> → toàn hệ thống về <b>đơn sắc</b>: mọi nhóm phân loại (vai trò nhân viên, danh mục bài viết, chuỗi KPI) dùng chung tông màu đó, chỉ khác độ sáng.
-          Chọn <b>Đa sắc</b> → mỗi nhóm một màu riêng để phân biệt nhanh hơn.
-          <br /><br />
-          <b>Không đổi trong mọi chế độ:</b> màu trạng thái (thành công · cảnh báo · lỗi) vì đổi là mất ý nghĩa, và màu thương hiệu kênh ngoài (Facebook · YouTube · TikTok) vì đó là nhận diện của họ.
+          <b>Không đổi theo bộ sưu tập:</b> màu <b>ngữ nghĩa</b> (thành công · cảnh báo · lỗi) vì đổi
+          là mất ý nghĩa; màu <b>phân loại</b> (vai trò nhân viên, danh mục bài viết) vì người dùng
+          cần một mốc cố định để nhận ra "màu của bộ phận Lễ tân"; và màu <b>thương hiệu kênh ngoài</b>
+          (Facebook · YouTube · TikTok) vì đó là nhận diện của họ.
+          {active && (
+            <>
+              <br /><br />
+              Đang dùng: <b>{active.label}</b> — {active.desc}.
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -430,7 +471,7 @@ function LayoutConfig() {
 }
 
 function AdvancedConfig() {
-  const { theme, accent } = useTheme();
+  const { theme, collection } = useTheme();
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -471,15 +512,16 @@ function AdvancedConfig() {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-ink-500">Accent</span>
+              <span className="text-ink-500">Bộ sưu tập</span>
               <span className="font-semibold text-ink-900 inline-flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: "var(--accent)" }} />
-                {ACCENTS.find((a) => a.id === accent)?.label}
+                <span className="w-3 h-3" style={{ backgroundColor: "var(--accent)" }} />
+                <span className="w-1 h-3" style={{ backgroundColor: "var(--metal)" }} />
+                {COLLECTIONS.find((c) => c.id === collection)?.label}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-ink-500">Storage</span>
-              <span className="font-semibold text-ink-900 font-mono text-[11px]">localStorage('lepalmier.theme')</span>
+              <span className="font-semibold text-ink-900 font-mono text-[11px]">localStorage('condohub.theme')</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-ink-500">Phản ứng</span>

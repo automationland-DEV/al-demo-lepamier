@@ -14,8 +14,8 @@ const {
 /* Tài khoản demo — hệ thống không có backend, mọi mật khẩu đều được chấp nhận */
 const DEMO_ACCOUNT = {
   id: "admin",
-  email: "admin@lepalmier.vn",
-  password: "lepalmier2026",
+  email: "admin@condohub.vn",
+  password: "condohub2026",
   name: "Nguyễn Văn A",
   role: "Giám đốc vận hành",
   desc: "Toàn quyền · 4 chi nhánh",
@@ -111,7 +111,7 @@ export default function Login() {
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError("Email chưa đúng định dạng, ví dụ: ten@lepalmier.vn");
+      setError("Email chưa đúng định dạng, ví dụ: ten@condohub.vn");
       return;
     }
     if (password.length < 4) {
@@ -174,7 +174,7 @@ export default function Login() {
       </div>
       <div className="min-w-0 leading-tight">
         <div className="truncate font-display text-[16px] font-bold tracking-tight" style={{ color: "var(--fg)" }}>
-          Le Palmier
+          Condo HUB
         </div>
         <div className="truncate text-[10px] font-extrabold uppercase tracking-[0.14em]" style={{ color: "var(--fg-subtle)" }}>
           Hospitality Cloud
@@ -237,7 +237,7 @@ export default function Login() {
                 <Crown className="h-5 w-5 text-white" />
               </div>
               <div className="leading-tight">
-                <div className="font-display text-[15px] font-bold text-white">Le Palmier</div>
+                <div className="font-display text-[15px] font-bold text-white">Condo HUB</div>
                 <div className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/75">
                   Hospitality Cloud
                 </div>
@@ -385,7 +385,7 @@ export default function Login() {
                     setEmail(e.target.value);
                     if (error) setError("");
                   }}
-                  placeholder="ten@lepalmier.vn"
+                  placeholder="ten@condohub.vn"
                   aria-invalid={Boolean(error)}
                 />
               </div>
@@ -570,7 +570,7 @@ export default function Login() {
         </div>
 
         <div className="mt-8 text-center text-[10.5px]" style={{ color: "var(--fg-subtle)" }}>
-          © 2026 Le Palmier Hospitality Group · v2.4.1
+          © 2026 Condo HUB Hospitality Group · v2.4.1
         </div>
       </div>
 
@@ -607,7 +607,7 @@ export default function Login() {
               <Crown className="h-5 w-5 text-white" />
             </div>
             <div className="leading-tight">
-              <div className="font-display text-[16px] font-bold">Le Palmier Group</div>
+              <div className="font-display text-[16px] font-bold">Condo HUB Group</div>
               <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/75">
                 Hospitality · F&amp;B · Travel
               </div>

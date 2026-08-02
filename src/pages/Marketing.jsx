@@ -1,16 +1,21 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AreaChart, Area, BarChart, Bar,
   PieChart as RechartsPieChart, Pie, Cell,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { Icons } from "../components/Icons";
-import { usePalette, TONE, scoreTone } from "../theme/palette";
+import { usePalette, scoreTone } from "../theme/palette";
+import {
+  Page, PageHeader, Tabs, Button, Toast as UiToast, Eyebrow, Hairline,
+  StatusTag as UiStatusTag, Tag, Panel as UiPanel, SectionHead,
+  ChartLegend, chartTip as uiChartTip, axisProps, gridProps,
+} from "../components/ui";
 
 const {
   Megaphone, Facebook, Instagram, Youtube, Twitter, Linkedin, Music2,
-  Share2, Hash, AtSign, FileText, Workflow, PlayCircle, PauseCircle,
+  Share2, Hash, AtSign, FileText, Workflow,
   Webhook, Bot, Target, MousePointerClick, Heart, CalendarClock, CalendarDays,
   TrendingUp, TrendingDown, Plus, Download, Star, Users, Clock, DollarSign,
   Eye, Send, CheckCircle2, XCircle, Hourglass, Sparkles, Copy, Building2,
@@ -23,43 +28,40 @@ const deaccent = (s = "") =>
   s.toString().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
 
-/* ════════ Bảng màu kênh — dùng màu thương hiệu thật ════════ */
+/* ════════ Bảng màu kênh ════════
+ * Đây là màu THƯƠNG HIỆU NGOÀI — không đổi theo bộ sưu tập, vì đó là nhận
+ * diện của họ chứ không phải trang trí của mình (Design.md §2.2).
+ * v4 bỏ gradient nên chỉ giữ một màu đặc cho mỗi kênh. */
 const CHANNELS = {
-  facebook:  { name: "Facebook",    icon: Facebook,  from: "#1877F2", to: "#3b82f6" },
-  instagram: { name: "Instagram",   icon: Instagram, from: "#E1306C", to: "#f97316" },
-  zalo:      { name: "Zalo OA",     icon: Send,      from: "#0068FF", to: "#0ea5e9" },
-  tiktok:    { name: "TikTok",      icon: Music2,    from: "#25F4EE", to: "#FE2C55" },
-  youtube:   { name: "YouTube",     icon: Youtube,   from: "#FF0000", to: "#f43f5e" },
-  twitter:   { name: "X / Twitter", icon: Twitter,   from: "#334155", to: "#0f172a" },
-  linkedin:  { name: "LinkedIn",    icon: Linkedin,  from: "#0A66C2", to: "#0ea5e9" },
-  website:   { name: "Website",     icon: Globe2,    from: "#0ea5e9", to: "#06b6d4" },
-  email:     { name: "Newsletter",  icon: AtSign,    from: "#8b5cf6", to: "#a855f7" },
+  facebook:  { name: "Facebook",    icon: Facebook,  from: "#1877F2", to: "#1877F2" },
+  instagram: { name: "Instagram",   icon: Instagram, from: "#E1306C", to: "#E1306C" },
+  zalo:      { name: "Zalo OA",     icon: Send,      from: "#0068FF", to: "#0068FF" },
+  tiktok:    { name: "TikTok",      icon: Music2,    from: "#111827", to: "#111827" },
+  youtube:   { name: "YouTube",     icon: Youtube,   from: "#FF0000", to: "#FF0000" },
+  twitter:   { name: "X / Twitter", icon: Twitter,   from: "#0f172a", to: "#0f172a" },
+  linkedin:  { name: "LinkedIn",    icon: Linkedin,  from: "#0A66C2", to: "#0A66C2" },
+  website:   { name: "Website",     icon: Globe2,    from: "#0891b2", to: "#0891b2" },
+  email:     { name: "Newsletter",  icon: AtSign,    from: "#7c3aed", to: "#7c3aed" },
 };
 
+/* Trạng thái bài viết → tone ngữ nghĩa. v3 ghi cứng hex pastel nên chói ở
+ * chế độ tối; nay trỏ vào token nên tự đảo theo chế độ. */
 const STATUS = {
-  draft:      { label: "Nháp",        bg: "#eef1f6", ink: "#475569", dot: "#94a3b8" },
-  review:     { label: "Chờ duyệt",   bg: "#f1ecfe", ink: "#6d28d9", dot: "#8b5cf6" },
-  scheduled:  { label: "Đã lên lịch", bg: "#e4f3fe", ink: "#0369a1", dot: "#0ea5e9" },
-  publishing: { label: "Đang đăng",   bg: "#fef1d8", ink: "#b45309", dot: "#f59e0b" },
-  published:  { label: "Đã đăng",     bg: "#d9f9e7", ink: "#15803d", dot: "#10b981" },
-  failed:     { label: "Lỗi",         bg: "#ffe6ea", ink: "#be123c", dot: "#f43f5e" },
+  draft:      { label: "Nháp",        tone: "neutral" },
+  review:     { label: "Chờ duyệt",   tone: "info" },
+  scheduled:  { label: "Đã lên lịch", tone: "info" },
+  publishing: { label: "Đang đăng",   tone: "warning" },
+  published:  { label: "Đã đăng",     tone: "success" },
+  failed:     { label: "Lỗi",         tone: "danger" },
 };
 
 const TABS = [
-  { id: "overview",   label: "Tổng quan", icon: Sparkles },
-  { id: "channels",   label: "Kênh đăng", icon: Share2 },
-  { id: "automation", label: "Automation", icon: Bot },
-  { id: "queue",      label: "Hàng chờ",  icon: CalendarClock },
-  { id: "analytics",  label: "Phân tích", icon: TrendingUp },
+  { key: "overview",   label: "Tổng quan",  icon: Sparkles },
+  { key: "channels",   label: "Kênh đăng",  icon: Share2 },
+  { key: "automation", label: "Automation", icon: Bot },
+  { key: "queue",      label: "Hàng chờ",   icon: CalendarClock },
+  { key: "analytics",  label: "Phân tích",  icon: TrendingUp },
 ];
-
-/* Mau thuong hieu lay tu usePalette() trong component (doi theo accent) */
-
-const chartTip = {
-  background: "#0f1218", border: "none", borderRadius: 12,
-  fontSize: 12, color: "#fff", padding: "10px 14px",
-  boxShadow: "0 12px 30px -8px rgba(0,0,0,.45)",
-};
 
 /* ════════════════════════════════════════════════════════════ */
 
@@ -139,67 +141,30 @@ export default function Marketing() {
   };
 
   return (
-    <div className="max-w-[1360px] mx-auto pb-10">
-      {/* ═══════ HEADER ═══════ */}
-      <div className="relative flex flex-wrap items-end justify-between gap-4 pt-1 pb-6">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-[0.14em] text-white"
-                  style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
-              <Megaphone className="w-3 h-3" /> Marketing Hub
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
-                  style={{ backgroundColor: "#d9f9e7", color: "#15803d" }}>
-              <span className="relative flex w-2 h-2">
-                <span className="absolute inset-0 rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                <span className="relative w-2 h-2 rounded-full bg-emerald-500" />
-              </span>
-              9 kênh đang kết nối
-            </span>
-          </div>
-          <h1 className="font-display font-extrabold tracking-[-0.03em] text-[32px] sm:text-[38px] leading-none"
-              style={{ color: "var(--fg)" }}>
-            Trung tâm Marketing
-          </h1>
-          <div className="flex items-center gap-2.5 mt-2.5 text-[13px] flex-wrap" style={{ color: "var(--fg-muted)" }}>
-            {data.heroMeta.map((m, i) => (
-              <span key={m.label} className="inline-flex items-center gap-1.5">
-                {i > 0 && <span className="opacity-40 mr-1">•</span>}
-                <b className="font-extrabold" style={{ color: "var(--fg)" }}>{m.value}</b> {m.label.toLowerCase()}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <GhostBtn icon={Download} onClick={() => setExportOpen(true)}>Xuất báo cáo</GhostBtn>
-          <GhostBtn icon={Workflow} onClick={() => setFlowFormOpen(true)}>Tạo Automation</GhostBtn>
-          <button onClick={() => setComposeOpen(true)}
-                  className="glowbtn inline-flex items-center gap-2 h-11 px-5 rounded-full text-[13px] font-bold text-white active:scale-95"
-                  style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})`,
-                           boxShadow: "0 8px 20px -8px rgba(139,92,246,.65)" }}>
-            <Plus className="w-4 h-4" /> Bài viết mới
-          </button>
-        </div>
-      </div>
+    <Page>
+      <PageHeader
+        eyebrow="Marketing Hub"
+        title="Trung tâm Marketing"
+        live
+        meta={[
+          "9 kênh đang kết nối",
+          ...data.heroMeta.map((m) => `${m.value} ${m.label.toLowerCase()}`),
+        ]}
+        actions={
+          <>
+            <Button variant="outline" icon={Download} onClick={() => setExportOpen(true)}>
+              <span className="hidden sm:inline">Xuất báo cáo</span>
+            </Button>
+            <Button variant="outline" icon={Workflow} onClick={() => setFlowFormOpen(true)}>
+              <span className="hidden sm:inline">Tạo Automation</span>
+            </Button>
+            <Button icon={Plus} onClick={() => setComposeOpen(true)}>Bài viết mới</Button>
+          </>
+        }
+      />
 
       {/* ═══════ TABS ═══════ */}
-      <div className="noscroll flex items-center gap-1.5 p-1.5 rounded-full mb-6 overflow-x-auto w-full sm:w-fit"
-           style={{ backgroundColor: "var(--surface-2)" }}>
-        {TABS.map((t) => {
-          const on = tab === t.id;
-          return (
-            <button key={t.id} onClick={() => setTab(t.id)}
-                    className="shrink-0 inline-flex items-center gap-2 h-10 px-4 rounded-full text-[13px] font-bold transition-all duration-200"
-                    style={on
-                      ? { background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})`, color: "#fff",
-                          boxShadow: "0 8px 18px -8px rgba(139,92,246,.7)" }
-                      : { color: "var(--fg-muted)" }}>
-              <t.icon className="w-4 h-4" /> {t.label}
-            </button>
-          );
-        })}
-      </div>
+      <Tabs value={tab} onChange={setTab} items={TABS} className="mb-2" />
 
       {tab === "overview"   && <Overview data={data} kpi={KPI} brand={BRAND} onShare={setShareOpen} />}
       {tab === "channels"   && <ChannelsTab data={data} brand={BRAND} onShare={setShareOpen} onDetail={setChannelOpen} />}
@@ -218,18 +183,13 @@ export default function Marketing() {
       {exportOpen && <ExportModal data={data} onClose={() => setExportOpen(false)} onPick={(f) => { setExportOpen(false); notify(`Đang chuẩn bị ${f}`); }} />}
       {channelOpen && <ChannelModal ch={channelOpen} onClose={() => setChannelOpen(null)} />}
 
-      {toast && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] h-11 px-5 rounded-full border shadow-pop text-[12.5px] font-bold flex items-center gap-2 animate-slideUp max-w-[92vw]"
-             style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", color: "var(--fg)" }}>
-          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: TONE.success.dot }} />
-          {toast}
-        </div>
-      )}
+      <UiToast message={toast} onClose={() => setToast(null)} />
 
-      <div className="mt-12 flex items-center justify-center gap-1.5 text-[11px]" style={{ color: "var(--fg-subtle)" }}>
-        <Megaphone className="w-3 h-3" /> Marketing Hub · Đồng bộ đa kênh · Cập nhật real-time · 28/07/2026
+      <Hairline className="mt-16 mb-4" />
+      <div className="flex items-center justify-center gap-1.5 text-[11px]" style={{ color: "var(--fg-subtle)" }}>
+        <Megaphone className="w-3 h-3" /> Marketing Hub · Đồng bộ đa kênh · Cập nhật liên tục · 02/08/2026
       </div>
-    </div>
+    </Page>
   );
 }
 
@@ -238,12 +198,12 @@ function Overview({ data, kpi, brand, onShare }) {
   const BRAND = brand;
   return (
     <>
-      <Section brand={BRAND} title="KPI tuần này" sub="So với tuần trước" icon={Target} />
+      <Section eyebrow="Hiệu quả" title="KPI tuần này" sub="So với tuần trước" icon={Target} />
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {data.overviewKpi.map((k, i) => <KpiCard key={k.label} k={{ ...k, ...kpi[i] }} />)}
       </div>
 
-      <Section brand={BRAND} title="Bài viết gần đây" sub="Trạng thái & đăng tải đa kênh" icon={FileText}
+      <Section eyebrow="Nội dung" title="Bài viết gần đây" sub="Trạng thái & đăng tải đa kênh" icon={FileText}
                right={<Pill>{data.recentPosts.length} bài</Pill>} />
       <Panel>
         <div className="overflow-x-auto">
@@ -251,7 +211,7 @@ function Overview({ data, kpi, brand, onShare }) {
             <thead>
               <tr style={{ backgroundColor: "var(--surface-2)" }}>
                 {["Bài viết", "Danh mục", "Kênh", "Trạng thái", "Tương tác", ""].map((h, i) => (
-                  <th key={i} className={`px-5 py-3.5 text-[10.5px] font-extrabold uppercase tracking-wider ${i === 4 ? "text-right" : "text-left"}`}
+                  <th key={i} className={`px-5 py-3.5 text-[10.5px] font-medium uppercase tracking-wider ${i === 4 ? "text-right" : "text-left"}`}
                       style={{ color: "var(--fg-muted)" }}>{h}</th>
                 ))}
               </tr>
@@ -265,7 +225,7 @@ function Overview({ data, kpi, brand, onShare }) {
                       <div className="flex items-center gap-2.5 min-w-0">
                         <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: st.dot }} />
                         <div className="min-w-0">
-                          <div className="font-bold truncate" style={{ color: "var(--fg)" }}>{p.title}</div>
+                          <div className="font-medium truncate" style={{ color: "var(--fg)" }}>{p.title}</div>
                           <div className="text-[11px] truncate mt-0.5" style={{ color: "var(--fg-subtle)" }}>
                             {p.author} · {p.date} · #{p.tags?.slice(0, 2).join(" #")}
                           </div>
@@ -275,7 +235,7 @@ function Overview({ data, kpi, brand, onShare }) {
                     <td className="px-5 py-3.5"><CatPill>{p.category}</CatPill></td>
                     <td className="px-5 py-3.5"><ChannelStack ids={p.channels} /></td>
                     <td className="px-5 py-3.5"><StatusTag s={p.status} /></td>
-                    <td className="px-5 py-3.5 text-right font-extrabold tabular-nums" style={{ color: "var(--fg)" }}>
+                    <td className="px-5 py-3.5 text-right font-medium tabular-nums" style={{ color: "var(--fg)" }}>
                       {p.engagement}
                     </td>
                     <td className="px-5 py-3.5">
@@ -292,7 +252,7 @@ function Overview({ data, kpi, brand, onShare }) {
         </div>
       </Panel>
 
-      <Section brand={BRAND} title="Automation đang chạy" sub="Tự động đăng tải đa kênh" icon={Bot} />
+      <Section eyebrow="Tự động hóa" title="Automation đang chạy" sub="Tự động đăng tải đa kênh" icon={Bot} />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {data.automations.map((a) => <AutomationCard key={a.id} a={a} brand={BRAND} />)}
       </div>
@@ -301,77 +261,79 @@ function Overview({ data, kpi, brand, onShare }) {
 }
 
 /* ════════════════ TAB: KÊNH ĐĂNG ════════════════ */
-function ChannelsTab({ data, brand, onShare, onDetail }) {
-  const BRAND = brand;
+function ChannelsTab({ data, onShare, onDetail }) {
   return (
     <>
-      <Section brand={BRAND} title="Kênh đăng" sub="Trạng thái kết nối & sức khỏe" icon={Share2} />
+      <Section eyebrow="Kết nối" title="Kênh đăng" sub="Trạng thái kết nối & sức khỏe" icon={Share2} />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {data.channels.map((c) => {
           const m = CHANNELS[c.id];
           const Icon = m.icon;
           const health = c.health;
           const ht = scoreTone(health);
-          const hue = [ht.from, ht.to];
+          const connected = c.status === "connected";
           return (
-            <div key={c.id} className="lift relative rounded-[var(--r)] border p-5 overflow-hidden"
-                 style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", "--glow": `${m.from}50` }}>
-              <div className="absolute -right-8 -top-8 w-28 h-28 rounded-full blur-2xl opacity-20"
-                   style={{ background: `linear-gradient(135deg,${m.from},${m.to})` }} />
-              <div className="relative flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0"
-                       style={{ background: `linear-gradient(135deg,${m.from},${m.to})`, boxShadow: `0 8px 18px -8px ${m.from}` }}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-display font-extrabold text-[15px] truncate" style={{ color: "var(--fg)" }}>{c.name}</div>
-                    <div className="text-[11px] flex items-center gap-1.5 mt-0.5" style={{ color: "var(--fg-muted)" }}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${c.status === "connected" ? "bg-emerald-500" : "bg-rose-500"}`} />
-                      {c.status === "connected" ? "Đã kết nối" : "Mất kết nối"} · {m.name}
-                    </div>
+            <div key={c.id} className="card-hover border p-5"
+                 style={{
+                   borderRadius: "var(--r)",
+                   backgroundColor: "var(--surface)",
+                   borderColor: "var(--border)",
+                   boxShadow: "var(--shadow-card)",
+                 }}>
+              {/* Ô icon giữ màu thương hiệu thật của kênh — Design.md §2.2 */}
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="w-10 h-10 flex items-center justify-center text-white shrink-0"
+                      style={{ borderRadius: "var(--r-sm)", backgroundColor: m.from }}>
+                  <Icon className="w-5 h-5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-[15px] font-medium truncate" style={{ color: "var(--fg)" }}>{c.name}</div>
+                  <div className="text-[11px] flex items-center gap-1.5 mt-0.5" style={{ color: "var(--fg-muted)" }}>
+                    <span className="w-1.5 h-1.5 rounded-full"
+                          style={{ backgroundColor: connected ? "var(--success)" : "var(--danger)" }} />
+                    {connected ? "Đã kết nối" : "Mất kết nối"} · {m.name}
                   </div>
                 </div>
               </div>
 
-              <div className="relative grid grid-cols-3 gap-2 mt-4 p-3 rounded-xl" style={{ backgroundColor: "var(--surface-2)" }}>
+              <div className="grid grid-cols-3 gap-px mt-4 border overflow-hidden"
+                   style={{ borderRadius: "var(--r-sm)", backgroundColor: "var(--border)", borderColor: "var(--border)" }}>
                 <MiniStat label="Followers" value={c.followers} />
                 <MiniStat label="Bài đăng"  value={c.posts} />
                 <MiniStat label="Tương tác" value={c.engagement} />
               </div>
 
-              <div className="relative flex items-center gap-2 mt-4">
-                <span className="text-[10px] uppercase tracking-wider font-extrabold" style={{ color: "var(--fg-subtle)" }}>Sức khỏe</span>
-                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--surface-3)" }}>
-                  <div className="h-full rounded-full" style={{ width: `${health}%`, background: `linear-gradient(90deg,${hue[0]},${hue[1]})` }} />
+              <div className="flex items-center gap-2.5 mt-4">
+                <span className="text-[10px] uppercase tracking-[0.14em] font-semibold shrink-0"
+                      style={{ color: "var(--fg-subtle)" }}>Sức khỏe</span>
+                <div className="flex-1 h-0.5 overflow-hidden" style={{ backgroundColor: "var(--surface-3)" }}>
+                  <div className="h-full" style={{ width: `${health}%`, backgroundColor: ht.base }} />
                 </div>
-                <span className="text-[12px] font-extrabold tabular-nums" style={{ color: "var(--fg)" }}>{health}%</span>
+                <span className="text-[12px] tnum" style={{ color: "var(--fg)" }}>{health}%</span>
               </div>
 
-              <div className="relative flex items-center gap-2 mt-4">
-                <button onClick={() => onDetail?.({ ...c, meta: m, health })}
-                        className="flex-1 h-9 rounded-full border text-[12px] font-bold transition hover:border-violet-300 active:scale-95"
-                        style={{ borderColor: "var(--border)", color: "var(--fg-muted)" }}>
+              <div className="flex items-center gap-2 mt-4">
+                <Button className="flex-1" size="sm" variant="outline"
+                        onClick={() => onDetail?.({ ...c, meta: m, health })}>
                   Xem chi tiết
-                </button>
-                <button
+                </Button>
+                <Button
+                  className="flex-1" size="sm"
                   onClick={() => onShare({ id: "demo", title: `Đăng nhanh lên ${c.name}`, category: m.name,
-                                           excerpt: "Bài viết sẽ được tạo nhanh từ template và đăng lên kênh này.", channels: [c.id] })}
-                  className="flex-1 h-9 rounded-full text-white text-[12px] font-bold transition hover:opacity-90"
-                  style={{ background: `linear-gradient(135deg,${m.from},${m.to})` }}>
+                                           excerpt: "Bài viết sẽ được tạo nhanh từ template và đăng lên kênh này.", channels: [c.id] })}>
                   Đăng nhanh
-                </button>
+                </Button>
               </div>
             </div>
           );
         })}
       </div>
 
-      <Section brand={BRAND} title="Lịch đăng tuần này" sub="Hàng chờ & slot trống" icon={CalendarDays} />
+      <Section eyebrow="Lịch" title="Lịch đăng tuần này" sub="Hàng chờ & slot trống" icon={CalendarDays} />
       <Panel>
         <div className="grid grid-cols-7 border-b" style={{ borderColor: "var(--border)" }}>
           {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((d) => (
-            <div key={d} className="px-2 py-3 text-center text-[10.5px] uppercase font-extrabold tracking-wider"
+            <div key={d} className="px-2 py-3 text-center text-[10.5px] uppercase font-medium tracking-wider"
                  style={{ color: "var(--fg-muted)" }}>{d}</div>
           ))}
         </div>
@@ -379,23 +341,23 @@ function ChannelsTab({ data, brand, onShare, onDetail }) {
           {data.calendar.map((day, i) => (
             <div key={i} className="border-r last:border-r-0 p-2 min-h-[190px] space-y-2"
                  style={{ borderColor: "var(--border-soft)" }}>
-              <div className="text-[10.5px] font-extrabold tabular-nums" style={{ color: "var(--fg-subtle)" }}>{day.date}</div>
+              <div className="text-[10.5px] font-medium tabular-nums" style={{ color: "var(--fg-subtle)" }}>{day.date}</div>
               {day.slots.map((s) => {
                 const ch = CHANNELS[s.channel];
                 const Icon = ch?.icon;
                 return (
-                  <div key={s.id} className="rounded-xl p-2 text-white overflow-hidden"
+                  <div key={s.id} className="rounded-[var(--r-sm)] p-2 text-white overflow-hidden"
                        style={{ background: `linear-gradient(135deg,${ch.from},${ch.to})`,
                                 boxShadow: `0 6px 14px -8px ${ch.from}` }}>
-                    <div className="flex items-center gap-1 text-[9.5px] font-extrabold opacity-90">
+                    <div className="flex items-center gap-1 text-[9.5px] font-medium opacity-90">
                       {Icon && <Icon className="w-2.5 h-2.5" />} {s.time}
                     </div>
-                    <div className="text-[11px] font-bold leading-tight mt-0.5 line-clamp-2">{s.title}</div>
+                    <div className="text-[11px] font-medium leading-tight mt-0.5 line-clamp-2">{s.title}</div>
                   </div>
                 );
               })}
               {day.slots.length === 0 && (
-                <div className="rounded-xl border border-dashed h-16 flex items-center justify-center text-[10.5px] font-semibold"
+                <div className="rounded-[var(--r-sm)] border border-dashed h-16 flex items-center justify-center text-[10.5px] font-semibold"
                      style={{ borderColor: "var(--border)", color: "var(--fg-subtle)" }}>
                   Trống
                 </div>
@@ -414,11 +376,11 @@ function AutomationTab({ data, brand, onView, onToggle, onNew }) {
   const active = data.automations.filter((a) => a.status === "active").length;
   return (
     <>
-      <Section brand={BRAND} title="Workflow Automation"
+      <Section eyebrow="Tự động hóa" title="Workflow Automation"
                sub={`${active}/${data.automations.length} đang chạy`} icon={Workflow}
                right={
                  <button onClick={onNew}
-                         className="glowbtn inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-white text-[12px] font-bold active:scale-95"
+                         className="glowbtn inline-flex items-center gap-1.5 h-9 px-4 rounded-[var(--r-sm)] text-white text-[12px] font-medium active:scale-95"
                          style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
                    <Plus className="w-3.5 h-3.5" /> Workflow mới
                  </button>
@@ -429,29 +391,47 @@ function AutomationTab({ data, brand, onView, onToggle, onNew }) {
         ))}
       </div>
 
-      <Section brand={BRAND} title="Triggers có sẵn" sub="Sự kiện kích hoạt automation" icon={Webhook} />
+      <Section eyebrow="Thư viện" title="Triggers có sẵn" sub="Sự kiện kích hoạt automation" icon={Webhook} />
       <BlockGrid items={data.triggers} />
 
-      <Section brand={BRAND} title="Hành động tự động hóa" sub="Action block — kéo vào workflow" icon={Zap} />
+      <Section eyebrow="Thư viện" title="Hành động tự động hóa" sub="Action block — kéo vào workflow" icon={Zap} />
       <BlockGrid items={data.actions} />
     </>
   );
 }
 
+/** Lưới khối trigger/action. Màu lấy từ bảng đất theo thứ tự thay vì các hex
+ *  neon còn sót trong buildData() — chúng là màu phân loại, Design.md §2.4. */
 function BlockGrid({ items }) {
+  const { series } = usePalette();
+  const colors = useMemo(() => series(7), [series]);
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      {items.map((t, i) => (
-        <div key={i} className="lift rounded-[var(--r)] border p-4 cursor-pointer"
-             style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", "--glow": `${t.from}45` }}>
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white mb-3"
-               style={{ background: `linear-gradient(135deg,${t.from},${t.to})`, boxShadow: `0 6px 14px -7px ${t.from}` }}>
-            <t.icon className="w-4.5 h-4.5" />
+      {items.map((t, i) => {
+        const c = colors[i % colors.length];
+        return (
+          <div key={i} className="card-hover border p-4 cursor-pointer"
+               style={{
+                 borderRadius: "var(--r)",
+                 backgroundColor: "var(--surface)",
+                 borderColor: "var(--border)",
+                 boxShadow: "var(--shadow-card)",
+               }}>
+            <div className="w-9 h-9 flex items-center justify-center mb-3 border"
+                 style={{
+                   borderRadius: "var(--r-sm)",
+                   backgroundColor: c.soft,
+                   borderColor: c.base,
+                   color: c.fg,
+                 }}>
+              <t.icon className="w-4 h-4" />
+            </div>
+            <div className="text-[13px] font-medium truncate" style={{ color: "var(--fg)" }}>{t.name}</div>
+            <div className="text-[11px] mt-0.5 truncate" style={{ color: "var(--fg-muted)" }}>{t.desc}</div>
           </div>
-          <div className="font-bold text-[13px] truncate" style={{ color: "var(--fg)" }}>{t.name}</div>
-          <div className="text-[11px] mt-0.5 truncate" style={{ color: "var(--fg-muted)" }}>{t.desc}</div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -483,7 +463,7 @@ function QueueTab({ data, brand, onShare }) {
 
   return (
     <>
-      <Section brand={BRAND} title="Hàng chờ đăng tải"
+      <Section eyebrow="Hàng chờ" title="Hàng chờ đăng tải"
                sub={hasFilter ? `${queue.length}/${data.queue.length} bài` : `${data.queue.length} bài đang chờ`}
                icon={Clock} />
 
@@ -495,7 +475,7 @@ function QueueTab({ data, brand, onShare }) {
           <input value={q} onChange={(e) => setQ(e.target.value)}
                  aria-label="Tìm bài trong hàng chờ"
                  placeholder="Tìm theo tiêu đề, danh mục, người đăng…"
-                 className="w-full h-11 pl-11 pr-10 rounded-full text-[13px] border-0 outline-none"
+                 className="w-full h-11 pl-11 pr-10 rounded-[var(--r-sm)] text-[13px] border-0 outline-none"
                  style={{ backgroundColor: "var(--surface-2)", color: "var(--fg)" }} />
           {q && (
             <button onClick={() => setQ("")} aria-label="Xoá"
@@ -519,7 +499,7 @@ function QueueTab({ data, brand, onShare }) {
         <div className="relative shrink-0">
           <select value={chan} onChange={(e) => setChan(e.target.value)}
                   aria-label="Lọc theo kênh"
-                  className="h-11 pl-4 pr-9 rounded-full text-[13px] font-semibold border-0 outline-none appearance-none cursor-pointer"
+                  className="h-11 pl-4 pr-9 rounded-[var(--r-sm)] text-[13px] font-semibold border-0 outline-none appearance-none cursor-pointer"
                   style={{ backgroundColor: "var(--surface-2)", color: "var(--fg)" }}>
             <option value="all">Tất cả kênh</option>
             {chanOptions.map((c) => <option key={c} value={c}>{CHANNELS[c]?.name || c}</option>)}
@@ -530,7 +510,7 @@ function QueueTab({ data, brand, onShare }) {
 
         {hasFilter && (
           <button onClick={reset}
-                  className="h-11 px-4 rounded-full text-[12.5px] font-bold border transition active:scale-95 shrink-0"
+                  className="h-11 px-4 rounded-[var(--r-sm)] text-[12.5px] font-medium border transition active:scale-95 shrink-0"
                   style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", color: "var(--fg)" }}>
             Xoá lọc
           </button>
@@ -540,13 +520,13 @@ function QueueTab({ data, brand, onShare }) {
       <Panel>
         {queue.length === 0 ? (
           <div className="py-14 text-center">
-            <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-white mb-3"
+            <div className="w-14 h-14 mx-auto rounded-[var(--r)] flex items-center justify-center text-white mb-3"
                  style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
               <Search className="w-6 h-6" />
             </div>
-            <div className="text-[14px] font-bold" style={{ color: "var(--fg)" }}>Không có bài nào khớp</div>
+            <div className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Không có bài nào khớp</div>
             <div className="text-[12px] mt-1" style={{ color: "var(--fg-muted)" }}>Thử đổi từ khoá hoặc bỏ bớt bộ lọc.</div>
-            <button onClick={reset} className="mt-4 h-10 px-5 rounded-full text-[12.5px] font-bold text-white"
+            <button onClick={reset} className="mt-4 h-10 px-5 rounded-[var(--r-sm)] text-[12.5px] font-medium text-white"
                     style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
               Xoá bộ lọc
             </button>
@@ -558,20 +538,20 @@ function QueueTab({ data, brand, onShare }) {
             const Icon = ch?.icon;
             return (
               <div key={q.id} className="flex items-center gap-4 p-4 transition hover:bg-ink-50">
-                <div className="shrink-0 w-16 rounded-xl py-2 text-center text-white"
+                <div className="shrink-0 w-16 rounded-[var(--r-sm)] py-2 text-center text-white"
                      style={{ background: `linear-gradient(135deg,${ch.from},${ch.to})` }}>
-                  <div className="text-[10px] font-bold opacity-90">{q.day}</div>
-                  <div className="text-[15px] font-display font-extrabold tabular-nums leading-none mt-0.5">{q.time}</div>
+                  <div className="text-[10px] font-medium opacity-90">{q.day}</div>
+                  <div className="text-[15px] font-display font-medium tabular-nums leading-none mt-0.5">{q.time}</div>
                   <div className="text-[9.5px] opacity-80 mt-0.5">{q.date}</div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-bold text-[14px] truncate" style={{ color: "var(--fg)" }}>{q.title}</div>
+                  <div className="font-medium text-[14px] truncate" style={{ color: "var(--fg)" }}>{q.title}</div>
                   <div className="text-[11.5px] truncate mt-0.5" style={{ color: "var(--fg-muted)" }}>
                     {q.category} · {q.author} · {q.postType === "reel" ? "Video ngắn" : q.postType === "video" ? "Video" : q.postType === "carousel" ? "Carousel" : "Bài viết"}
                   </div>
                 </div>
                 <div className="hidden sm:flex items-center gap-2 shrink-0">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white"
+                  <div className="w-8 h-8 rounded-[var(--r-sm)] flex items-center justify-center text-white"
                        style={{ background: `linear-gradient(135deg,${ch.from},${ch.to})` }}>
                     {Icon && <Icon className="w-4 h-4" />}
                   </div>
@@ -585,7 +565,7 @@ function QueueTab({ data, brand, onShare }) {
         )}
       </Panel>
 
-      <Section brand={BRAND} title="Đã đăng gần đây" sub="Auto-publish · 24h qua" icon={CheckCircle2} />
+      <Section eyebrow="Hàng chờ" title="Đã đăng gần đây" sub="Auto-publish · 24h qua" icon={CheckCircle2} />
       <Panel>
         <div className="divide-y" style={{ borderColor: "var(--border-soft)" }}>
           {data.history.map((h) => {
@@ -594,21 +574,21 @@ function QueueTab({ data, brand, onShare }) {
             const ok = h.result === "success";
             return (
               <div key={h.id} className="flex items-center gap-4 p-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0"
-                     style={{ background: ok ? "linear-gradient(135deg,#10b981,#14b8a6)" : "linear-gradient(135deg,#f43f5e,#ec4899)" }}>
+                <div className="w-10 h-10 rounded-[var(--r-sm)] flex items-center justify-center text-white shrink-0"
+                     style={{ backgroundColor: ok ? "var(--success)" : "var(--danger)" }}>
                   {ok ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-bold text-[13.5px] truncate" style={{ color: "var(--fg)" }}>{h.title}</div>
+                  <div className="font-medium text-[13.5px] truncate" style={{ color: "var(--fg)" }}>{h.title}</div>
                   <div className="text-[11.5px] truncate mt-0.5" style={{ color: ok ? "var(--fg-muted)" : "#be123c" }}>
                     {h.time} · {h.error || "Đã đăng thành công"}
                   </div>
                 </div>
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0"
+                <div className="w-8 h-8 rounded-[var(--r-sm)] flex items-center justify-center text-white shrink-0"
                      style={{ background: `linear-gradient(135deg,${ch.from},${ch.to})` }}>
                   {Icon && <Icon className="w-4 h-4" />}
                 </div>
-                <span className="text-[14px] font-extrabold tabular-nums shrink-0" style={{ color: "var(--fg)" }}>
+                <span className="text-[14px] font-medium tabular-nums shrink-0" style={{ color: "var(--fg)" }}>
                   {h.reach === "—" ? "—" : `+${h.reach}`}
                 </span>
               </div>
@@ -621,51 +601,69 @@ function QueueTab({ data, brand, onShare }) {
 }
 
 /* ════════════════ TAB: PHÂN TÍCH ════════════════ */
-function AnalyticsTab({ data, brand }) {
-  const BRAND = brand;
+function AnalyticsTab({ data }) {
+  /* Chuỗi biểu đồ lấy từ bảng màu — v3 ghi cứng #8b5cf6/#f43f5e nên biểu đồ
+     là mảng neon duy nhất còn lại sau khi cả trang đã chuyển sang tông đất. */
+  const { house, metal } = usePalette();
+
   return (
     <>
-      <Section brand={BRAND} title="Hiệu quả 30 ngày" sub="Reach · engagement · conversion" icon={TrendingUp} />
+      <Section eyebrow="Phân tích" title="Hiệu quả 30 ngày" sub="Reach · engagement · conversion" icon={TrendingUp} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Panel title="Reach & Engagement theo ngày" sub="Tổng đa kênh" pad>
+          <ChartLegend
+            className="mb-4"
+            items={[
+              { label: "Reach", color: house.base, area: true },
+              { label: "Engagement", color: metal.base },
+            ]}
+          />
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data.reach30} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                 <defs>
+                  {/* Ngoại lệ gradient được phép: vùng tô dưới đường — Design.md §2.5 */}
                   <linearGradient id="gReach" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.55} />
-                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="gEng" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.5} />
-                    <stop offset="100%" stopColor="#f43f5e" stopOpacity={0} />
+                    <stop offset="0%" stopColor={house.base} stopOpacity={0.14} />
+                    <stop offset="100%" stopColor={house.base} stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 6" stroke="var(--border-soft)" vertical={false} />
-                <XAxis dataKey="d" stroke="var(--fg-subtle)" fontSize={10} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--fg-subtle)" fontSize={10} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={chartTip} />
-                <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
-                <Area type="monotone" dataKey="reach" stroke="#8b5cf6" strokeWidth={2.5} fill="url(#gReach)" name="Reach" />
-                <Area type="monotone" dataKey="eng" stroke="#f43f5e" strokeWidth={2.5} fill="url(#gEng)" name="Engagement" />
+                <CartesianGrid {...gridProps} />
+                <XAxis dataKey="d" {...axisProps} />
+                <YAxis {...axisProps} />
+                <Tooltip {...uiChartTip} />
+                <Area type="monotone" dataKey="reach" stroke={house.base} strokeWidth={1.5}
+                      fill="url(#gReach)" name="Reach" dot={false} activeDot={{ r: 3, strokeWidth: 0 }} />
+                <Area type="monotone" dataKey="eng" stroke={metal.base} strokeWidth={1.5}
+                      fill="none" name="Engagement" dot={false} activeDot={{ r: 3, strokeWidth: 0 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </Panel>
 
         <Panel title="Phân bổ kênh" sub="% Reach 30 ngày" pad>
-          <div className="h-64">
+          <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <RechartsPieChart>
-                <Pie data={data.channelMix} dataKey="value" innerRadius={52} outerRadius={86}
-                     paddingAngle={3} cornerRadius={6} stroke="var(--surface)" strokeWidth={3}>
+                <Pie data={data.channelMix} dataKey="value" nameKey="name"
+                     innerRadius={54} outerRadius={78} paddingAngle={1}
+                     stroke="var(--surface)" strokeWidth={2}>
                   {data.channelMix.map((e, i) => <Cell key={i} fill={e.color} />)}
                 </Pie>
-                <Tooltip contentStyle={chartTip} />
-                <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" verticalAlign="bottom" />
+                <Tooltip {...uiChartTip} formatter={(v, n) => [`${v}%`, n]} />
               </RechartsPieChart>
             </ResponsiveContainer>
           </div>
+          <Hairline soft className="my-4" />
+          <ul className="space-y-2.5">
+            {data.channelMix.map((e) => (
+              <li key={e.name} className="flex items-center gap-2.5 text-[12px]">
+                <span aria-hidden className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: e.color }} />
+                <span className="flex-1 truncate" style={{ color: "var(--fg-muted)" }}>{e.name}</span>
+                <span className="tnum" style={{ color: "var(--fg)" }}>{e.value}%</span>
+              </li>
+            ))}
+          </ul>
         </Panel>
       </div>
 
@@ -674,34 +672,34 @@ function AnalyticsTab({ data, brand }) {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.topPosts} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gBar" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#6366f1" />
-                    <stop offset="100%" stopColor="#a855f7" />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 6" stroke="var(--border-soft)" horizontal={false} />
-                <XAxis type="number" stroke="var(--fg-subtle)" fontSize={10} tickLine={false} axisLine={false} />
-                <YAxis dataKey="t" type="category" stroke="var(--fg-subtle)" fontSize={10}
-                       tickLine={false} axisLine={false} width={124} />
-                <Tooltip contentStyle={chartTip} />
-                <Bar dataKey="eng" fill="url(#gBar)" radius={[0, 8, 8, 0]} barSize={18} />
+                <CartesianGrid {...gridProps} horizontal={false} vertical />
+                <XAxis type="number" {...axisProps} />
+                <YAxis dataKey="t" type="category" width={124} {...axisProps} />
+                <Tooltip {...uiChartTip} />
+                <Bar dataKey="eng" fill={house.base} radius={[0, 2, 2, 0]} barSize={14} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Panel>
 
         <Panel title="Performance đa chiều" sub="Hiện tại so với mục tiêu" pad>
+          <ChartLegend
+            className="mb-4"
+            items={[
+              { label: "Hiện tại", color: house.base },
+              { label: "Mục tiêu", color: metal.base },
+            ]}
+          />
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={data.radar}>
-                <PolarGrid stroke="var(--border)" />
-                <PolarAngleAxis dataKey="k" stroke="var(--fg-muted)" fontSize={10} />
-                <PolarRadiusAxis stroke="var(--border)" fontSize={9} />
-                <Radar name="Hiện tại" dataKey="now" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.35} strokeWidth={2} />
-                <Radar name="Mục tiêu" dataKey="target" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.12} strokeWidth={2} />
-                <Tooltip contentStyle={chartTip} />
-                <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
+                <PolarGrid stroke="var(--border-soft)" />
+                <PolarAngleAxis dataKey="k" stroke="var(--fg-subtle)" fontSize={10} />
+                <PolarRadiusAxis stroke="var(--border-soft)" fontSize={9} />
+                <Radar name="Hiện tại" dataKey="now" stroke={house.base} fill={house.base}
+                       fillOpacity={0.12} strokeWidth={1.5} />
+                <Radar name="Mục tiêu" dataKey="target" stroke={metal.base} fill="none" strokeWidth={1.5} />
+                <Tooltip {...uiChartTip} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
@@ -713,137 +711,158 @@ function AnalyticsTab({ data, brand }) {
 
 /* ════════════════ THÀNH PHẦN CHUNG ════════════════ */
 
-function Section({ title, sub, icon: Icon, right, brand }) {
-  const { brand: fallback } = usePalette();
-  const BRAND = brand || fallback;
+/* Tiêu đề section — nhãn lông mày + kẻ tóc + tiêu đề serif (Design.md §3 ①).
+   Giữ prop `icon` của v3 để 5 tab bên dưới không phải sửa; icon nay chỉ là
+   dấu nhỏ màu kim loại chứ không còn ô gradient. */
+function Section({ eyebrow, title, sub, icon: Icon, right }) {
   return (
-    <div className="flex items-end justify-between gap-4 mt-9 mb-4">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0"
-             style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})`,
-                      boxShadow: "0 6px 14px -7px rgba(139,92,246,.8)" }}>
-          <Icon className="w-4 h-4" />
-        </div>
-        <div className="min-w-0">
-          <div className="font-display font-extrabold text-[17px] tracking-tight truncate" style={{ color: "var(--fg)" }}>
-            {title}
-          </div>
-          {sub && <div className="text-[12px] truncate" style={{ color: "var(--fg-muted)" }}>{sub}</div>}
-        </div>
-      </div>
-      {right && <div className="shrink-0">{right}</div>}
-    </div>
+    <SectionHead
+      eyebrow={
+        <span className="inline-flex items-center gap-1.5">
+          {Icon && <Icon className="w-3 h-3" style={{ color: "var(--metal)" }} />}
+          {eyebrow || "Marketing"}
+        </span>
+      }
+      title={title}
+      sub={sub}
+      right={right}
+    />
   );
 }
 
 function Panel({ children, title, sub, pad }) {
   return (
-    <div className="rounded-[var(--r)] border overflow-hidden"
-         style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)" }}>
-      {title && (
-        <div className="px-5 py-4 border-b" style={{ borderColor: "var(--border-soft)" }}>
-          <div className="font-bold text-[14px]" style={{ color: "var(--fg)" }}>{title}</div>
-          {sub && <div className="text-[11.5px] mt-0.5" style={{ color: "var(--fg-muted)" }}>{sub}</div>}
-        </div>
-      )}
-      <div className={pad ? "p-5" : ""}>{children}</div>
-    </div>
+    <UiPanel title={title} sub={sub} flush={!pad}>
+      {children}
+    </UiPanel>
   );
 }
 
+/** Ô KPI — v4 bỏ ô icon gradient, quầng mờ và bóng màu. Chỉ còn nhãn lông
+ *  mày, con số, và biến động tô bằng màu ngữ nghĩa. */
 function KpiCard({ k }) {
   const up = (k.trend ?? 0) >= 0;
   const T = up ? TrendingUp : TrendingDown;
   return (
-    <div className="lift relative rounded-[var(--r)] border p-4 overflow-hidden"
-         style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", "--glow": `${k.from}55` }}>
-      <div className="absolute -right-6 -top-6 w-20 h-20 rounded-full blur-2xl opacity-25"
-           style={{ background: `linear-gradient(135deg,${k.from},${k.to})` }} />
-      <div className="relative flex items-center justify-between gap-2">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white"
-             style={{ background: `linear-gradient(135deg,${k.from},${k.to})`, boxShadow: `0 6px 14px -7px ${k.from}` }}>
-          <k.icon className="w-4 h-4" />
-        </div>
-        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10.5px] font-extrabold"
-              style={up ? { backgroundColor: "#d9f9e7", color: "#15803d" } : { backgroundColor: "#ffe6ea", color: "#be123c" }}>
+    <div
+      className="card-hover border p-5"
+      style={{
+        borderRadius: "var(--r)",
+        backgroundColor: "var(--surface)",
+        borderColor: "var(--border)",
+        boxShadow: "var(--shadow-card)",
+      }}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <Eyebrow className="truncate">{k.label}</Eyebrow>
+        <k.icon className="w-4 h-4 shrink-0" style={{ color: "var(--fg-subtle)" }} />
+      </div>
+      <div className="mt-3 flex items-baseline gap-2 flex-wrap">
+        <span
+          className="text-[26px] font-medium tnum"
+          style={{ color: "var(--fg)", letterSpacing: "-0.02em" }}
+        >
+          {k.value}
+        </span>
+        <span
+          className="inline-flex items-center gap-0.5 text-[12px] font-medium tnum"
+          style={{ color: up ? "var(--success)" : "var(--danger)" }}
+        >
           <T className="w-3 h-3" />{up ? "+" : ""}{k.trend}%
         </span>
-      </div>
-      <div className="relative font-display font-extrabold text-[26px] leading-none tracking-tight tabular-nums mt-3"
-           style={{ color: "var(--fg)" }}>
-        {k.value}
-      </div>
-      <div className="relative text-[10.5px] uppercase tracking-wider font-extrabold mt-1.5 truncate"
-           style={{ color: "var(--fg-subtle)" }}>
-        {k.label}
       </div>
     </div>
   );
 }
 
-function AutomationCard({ a, expanded, onView, onToggle, brand }) {
-  const BRAND = brand;
+function AutomationCard({ a, expanded, onView, onToggle }) {
   const on = a.status === "active";
-  const g = on ? [BRAND.from, BRAND.to] : [TONE.neutral.from, TONE.neutral.to];
   return (
-    <div className="lift rounded-[var(--r)] border p-5"
-         style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", "--glow": on ? "rgba(139,92,246,.4)" : "rgba(100,116,139,.3)" }}>
+    <div
+      className="card-hover border p-5"
+      style={{
+        borderRadius: "var(--r)",
+        backgroundColor: "var(--surface)",
+        borderColor: on ? "var(--border)" : "var(--border-soft)",
+        boxShadow: "var(--shadow-card)",
+        opacity: on ? 1 : 0.75,
+      }}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0"
-               style={{ background: `linear-gradient(135deg,${g[0]},${g[1]})`, boxShadow: `0 6px 14px -7px ${g[0]}` }}>
-            <Bot className="w-5 h-5" />
-          </div>
+          <span
+            className="w-9 h-9 shrink-0 grid place-items-center border"
+            style={{
+              borderRadius: "var(--r-sm)",
+              backgroundColor: on ? "var(--accent-soft)" : "var(--surface-2)",
+              borderColor: on ? "var(--accent)" : "var(--border)",
+              color: on ? "var(--accent-fg)" : "var(--fg-subtle)",
+            }}
+          >
+            <Bot className="w-4 h-4" />
+          </span>
           <div className="min-w-0">
-            <div className="font-display font-extrabold text-[14px] truncate" style={{ color: "var(--fg)" }}>{a.name}</div>
+            <div className="text-[14px] font-medium truncate" style={{ color: "var(--fg)" }}>{a.name}</div>
             <div className="text-[11.5px] truncate mt-0.5" style={{ color: "var(--fg-muted)" }}>{a.trigger}</div>
           </div>
         </div>
-        <span className="inline-flex items-center gap-1 px-2 h-6 rounded-full text-[10.5px] font-extrabold shrink-0"
-              style={on ? { backgroundColor: "#d9f9e7", color: "#15803d" } : { backgroundColor: "var(--surface-3)", color: "var(--fg-muted)" }}>
-          {on ? <><PlayCircle className="w-3 h-3" /> Chạy</> : <><PauseCircle className="w-3 h-3" /> Tạm</>}
-        </span>
+        <UiStatusTag tone={on ? "success" : "neutral"}>
+          {on ? "Đang chạy" : "Tạm dừng"}
+        </UiStatusTag>
       </div>
 
       <div className="flex items-center gap-1 mt-4">
         {a.steps.slice(0, 3).map((s, i, arr) => (
           <div key={i} className="flex items-center gap-1 flex-1 min-w-0">
-            <div className="px-2 py-1.5 rounded-lg text-[10.5px] font-bold flex items-center gap-1 truncate flex-1"
-                 title={`${s.kind}: ${s.label}`}
-                 style={on ? { backgroundColor: "#f1ecfe", color: "#6d28d9" } : { backgroundColor: "var(--surface-2)", color: "var(--fg-muted)" }}>
-              <s.icon className="w-3 h-3 shrink-0" />
+            <div
+              className="px-2 py-1.5 text-[10.5px] font-medium flex items-center gap-1 truncate flex-1 border"
+              title={`${s.kind}: ${s.label}`}
+              style={{
+                borderRadius: "var(--r-sm)",
+                backgroundColor: "var(--surface-2)",
+                borderColor: "var(--border)",
+                color: "var(--fg-muted)",
+              }}
+            >
+              <s.icon className="w-3 h-3 shrink-0" style={{ color: "var(--metal)" }} />
               <span className="truncate">{s.label}</span>
             </div>
-            {i < arr.length - 1 && <ChevronRight className="w-3 h-3 shrink-0" style={{ color: "var(--fg-subtle)" }} />}
+            {i < arr.length - 1 && (
+              <ChevronRight className="w-3 h-3 shrink-0" style={{ color: "var(--fg-subtle)" }} />
+            )}
           </div>
         ))}
         {a.steps.length > 3 && (
-          <span className="shrink-0 px-2 py-1.5 rounded-lg text-[10.5px] font-extrabold tabular-nums"
-                title={a.steps.slice(3).map((s) => s.label).join(" → ")}
-                style={{ backgroundColor: "var(--surface-3)", color: "var(--fg-muted)" }}>
+          <span
+            className="shrink-0 px-2 py-1.5 text-[10.5px] font-medium tnum border"
+            title={a.steps.slice(3).map((s) => s.label).join(" → ")}
+            style={{
+              borderRadius: "var(--r-sm)",
+              backgroundColor: "var(--surface-2)",
+              borderColor: "var(--border)",
+              color: "var(--fg-muted)",
+            }}
+          >
             +{a.steps.length - 3}
           </span>
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-2 mt-4 p-3 rounded-xl" style={{ backgroundColor: "var(--surface-2)" }}>
+      <div
+        className="grid grid-cols-3 gap-px mt-4 border overflow-hidden"
+        style={{ borderRadius: "var(--r-sm)", backgroundColor: "var(--border)", borderColor: "var(--border)" }}
+      >
         <MiniStat label="Lượt chạy" value={a.runCount} />
-        <MiniStat label="Thành công" value={`${a.successRate}%`} tone="#15803d" />
+        <MiniStat label="Thành công" value={`${a.successRate}%`} tone="var(--success)" />
         <MiniStat label="Đã đăng" value={a.postedCount} />
       </div>
 
       {expanded && (
         <div className="flex items-center gap-2 mt-4">
-          <button onClick={() => onView?.(a)}
-                  className="flex-1 h-9 rounded-full text-white text-[12px] font-bold transition hover:opacity-90"
-                  style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
-            Xem chi tiết
-          </button>
-          <button onClick={() => onToggle?.(a)}
-                  className="flex-1 h-9 rounded-full border text-[12px] font-bold transition hover:border-violet-300 active:scale-95"
-                  style={{ borderColor: "var(--border)", color: "var(--fg-muted)" }}>
+          <Button className="flex-1" size="sm" onClick={() => onView?.(a)}>Xem chi tiết</Button>
+          <Button className="flex-1" size="sm" variant="outline" onClick={() => onToggle?.(a)}>
             {on ? "Tạm dừng" : "Kích hoạt"}
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -852,15 +871,21 @@ function AutomationCard({ a, expanded, onView, onToggle, brand }) {
 
 function MiniStat({ label, value, tone }) {
   return (
-    <div className="min-w-0">
-      <div className="font-display font-extrabold text-[16px] tabular-nums leading-none truncate"
-           style={{ color: tone || "var(--fg)" }}>{value}</div>
-      <div className="text-[9.5px] uppercase tracking-wider font-extrabold mt-1 truncate"
-           style={{ color: "var(--fg-subtle)" }}>{label}</div>
+    <div className="min-w-0 p-3" style={{ backgroundColor: "var(--surface)" }}>
+      <div className="text-[16px] font-medium tnum leading-none truncate" style={{ color: tone || "var(--fg)" }}>
+        {value}
+      </div>
+      <div
+        className="text-[9px] uppercase tracking-[0.14em] font-semibold mt-1.5 truncate"
+        style={{ color: "var(--fg-subtle)" }}
+      >
+        {label}
+      </div>
     </div>
   );
 }
 
+/** Chồng icon kênh. Màu thương hiệu thật, nền đặc, viền theo bề mặt. */
 function ChannelStack({ ids = [] }) {
   return (
     <div className="flex items-center">
@@ -869,17 +894,17 @@ function ChannelStack({ ids = [] }) {
         if (!ch) return null;
         const Icon = ch.icon;
         return (
-          <div key={c} title={ch.name}
-               className="w-7 h-7 rounded-full flex items-center justify-center text-white"
-               style={{ background: `linear-gradient(135deg,${ch.from},${ch.to})`,
-                        marginLeft: i === 0 ? 0 : -8, zIndex: 10 - i,
-                        boxShadow: "0 0 0 2px var(--surface)" }}>
-            <Icon className="w-3.5 h-3.5" />
-          </div>
+          <span key={c} title={ch.name}
+                className="w-6 h-6 rounded-full flex items-center justify-center text-white"
+                style={{ backgroundColor: ch.from,
+                         marginLeft: i === 0 ? 0 : -7, zIndex: 10 - i,
+                         boxShadow: "0 0 0 2px var(--surface)" }}>
+            <Icon className="w-3 h-3" />
+          </span>
         );
       })}
       {ids.length > 4 && (
-        <span className="ml-1.5 text-[11px] font-extrabold" style={{ color: "var(--fg-subtle)" }}>
+        <span className="ml-2 text-[11px] tnum" style={{ color: "var(--fg-subtle)" }}>
           +{ids.length - 4}
         </span>
       )}
@@ -889,48 +914,37 @@ function ChannelStack({ ids = [] }) {
 
 function StatusTag({ s }) {
   const c = STATUS[s] || STATUS.draft;
-  return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[11px] font-extrabold whitespace-nowrap"
-          style={{ backgroundColor: c.bg, color: c.ink }}>
-      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.dot }} />
-      {c.label}
-    </span>
-  );
+  return <UiStatusTag tone={c.tone}>{c.label}</UiStatusTag>;
 }
 
 function CatPill({ children }) {
-  return (
-    <span className="inline-flex items-center px-2.5 h-6 rounded-full text-[11px] font-bold whitespace-nowrap"
-          style={{ backgroundColor: "#f1ecfe", color: "#6d28d9" }}>
-      {children}
-    </span>
-  );
+  return <Tag>{children}</Tag>;
 }
 
 function Pill({ children }) {
   return (
-    <span className="inline-flex items-center px-3 h-8 rounded-full text-[12px] font-bold"
-          style={{ backgroundColor: "var(--surface-2)", color: "var(--fg-muted)" }}>
+    <span
+      className="inline-flex items-center px-3 h-8 text-[12px] font-medium border"
+      style={{
+        borderRadius: "var(--r-sm)",
+        backgroundColor: "var(--surface-2)",
+        borderColor: "var(--border)",
+        color: "var(--fg-muted)",
+      }}
+    >
       {children}
     </span>
-  );
-}
-
-function GhostBtn({ icon: Icon, children, onClick }) {
-  return (
-    <button onClick={onClick}
-            className="inline-flex items-center gap-2 h-11 px-4 rounded-full text-[13px] font-bold border transition hover:border-violet-300 active:scale-95"
-            style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)", color: "var(--fg)" }}>
-      <Icon className="w-4 h-4" /> <span className="hidden sm:inline">{children}</span>
-    </button>
   );
 }
 
 function IconBtn({ children, onClick, title, tone }) {
   return (
     <button onClick={onClick} title={title} aria-label={title}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition hover:bg-ink-100"
-            style={{ color: tone === "brand" ? "#7c3aed" : "var(--fg-subtle)" }}>
+            className="w-8 h-8 flex items-center justify-center transition-colors hover:bg-[var(--surface-3)]"
+            style={{
+              borderRadius: "var(--r-sm)",
+              color: tone === "brand" ? "var(--accent)" : "var(--fg-subtle)",
+            }}>
       {children}
     </button>
   );
@@ -943,12 +957,12 @@ function ShareModal({ post, onClose }) {
   const [tone, setTone] = useState("default");
   const [copied, setCopied] = useState(false);
 
-  const link = `https://lepalmier.vn/blog/${(post.title || "demo").toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").slice(0, 50)}`;
+  const link = `https://condohub.vn/blog/${(post.title || "demo").toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").slice(0, 50)}`;
 
   const text = useMemo(() => {
     const t = {
-      default: `${post.title}\n\n${post.excerpt || "Đọc chi tiết tại Le Palmier Hotels."}`,
-      teaser: `🌴 ${post.title}\n\n${post.excerpt || "Trải nghiệm đẳng cấp tại Le Palmier."}\n👉 `,
+      default: `${post.title}\n\n${post.excerpt || "Đọc chi tiết tại Condo HUB Hotels."}`,
+      teaser: `🌴 ${post.title}\n\n${post.excerpt || "Trải nghiệm đẳng cấp tại Condo HUB."}\n👉 `,
       promo: `🎁 ƯU ĐÃI ĐẶC BIỆT — ${post.title}\n\n${post.excerpt || "Đặt phòng hôm nay để nhận ưu đãi."}\n👉 `,
     };
     return t[tone] + link;
@@ -971,25 +985,25 @@ function ShareModal({ post, onClose }) {
         {/* Preview */}
         <div>
           <Label>Preview</Label>
-          <div className="rounded-2xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+          <div className="rounded-[var(--r)] border overflow-hidden" style={{ borderColor: "var(--border)" }}>
             <div className="aspect-[16/9] relative"
-                 style={{ background: "linear-gradient(135deg,#6366f1 0%,#a855f7 50%,#ec4899 100%)" }}>
-              <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md rounded-full px-2.5 py-1 border border-white/25">
+                 style={{ backgroundColor: "var(--accent)" }}>
+              <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md rounded-[var(--r-sm)] px-2.5 py-1 border border-white/25">
                 <Building2 className="w-3.5 h-3.5 text-white" />
-                <span className="text-[10px] font-extrabold text-white uppercase tracking-wider">Le Palmier Hotels</span>
+                <span className="text-[10px] font-medium text-white uppercase tracking-wider">Condo HUB Hotels</span>
               </div>
               <div className="absolute bottom-4 left-4 right-4">
-                <span className="inline-block px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-white text-violet-700 uppercase tracking-wider mb-2">
+                <span className="inline-block px-2 py-0.5 rounded-[var(--r-sm)] text-[9.5px] font-medium bg-white text-violet-700 uppercase tracking-wider mb-2">
                   {post.category || "Blog"}
                 </span>
-                <div className="text-white font-display font-extrabold text-[19px] leading-tight line-clamp-2">
+                <div className="text-white font-display font-medium text-[19px] leading-tight line-clamp-2">
                   {post.title}
                 </div>
               </div>
             </div>
             <div className="p-4" style={{ backgroundColor: "var(--surface)" }}>
               <div className="text-[13px] leading-relaxed line-clamp-2" style={{ color: "var(--fg-muted)" }}>
-                {post.excerpt || "Khám phá trải nghiệm nghỉ dưỡng đẳng cấp 5 sao tại hệ thống Le Palmier Hotels & Resorts."}
+                {post.excerpt || "Khám phá trải nghiệm nghỉ dưỡng đẳng cấp 5 sao tại hệ thống Condo HUB Hotels & Resorts."}
               </div>
               <div className="mt-2 text-[11px] truncate" style={{ color: "var(--fg-subtle)" }}>{link}</div>
             </div>
@@ -1008,13 +1022,13 @@ function ShareModal({ post, onClose }) {
               const on = tone === t.id;
               return (
                 <button key={t.id} onClick={() => setTone(t.id)}
-                        className="p-3 rounded-2xl border text-left transition"
+                        className="p-3 rounded-[var(--r)] border text-left transition"
                         style={on
-                          ? { borderColor: "#8b5cf6", backgroundColor: "#f1ecfe", boxShadow: "0 0 0 3px rgba(139,92,246,.18)" }
+                          ? { borderColor: "var(--accent)", backgroundColor: "var(--accent-soft)" }
                           : { borderColor: "var(--border)", backgroundColor: "var(--surface)" }}>
                   <div className="flex items-center gap-1.5 mb-1">
                     <t.icon className="w-4 h-4" style={{ color: on ? "#6d28d9" : "var(--fg-subtle)" }} />
-                    <span className="text-[12px] font-extrabold" style={{ color: on ? "#6d28d9" : "var(--fg)" }}>{t.label}</span>
+                    <span className="text-[12px] font-medium" style={{ color: on ? "#6d28d9" : "var(--fg)" }}>{t.label}</span>
                   </div>
                   <div className="text-[11px]" style={{ color: "var(--fg-muted)" }}>{t.desc}</div>
                 </button>
@@ -1034,15 +1048,15 @@ function ShareModal({ post, onClose }) {
               const on = channels.includes(t.id);
               return (
                 <button key={t.id} onClick={() => toggle(t.id)}
-                        className="p-3 rounded-2xl border text-center transition"
+                        className="p-3 rounded-[var(--r)] border text-center transition"
                         style={on
                           ? { borderColor: "#8b5cf6", backgroundColor: "#f1ecfe", boxShadow: "0 0 0 3px rgba(139,92,246,.18)" }
                           : { borderColor: "var(--border)", backgroundColor: "var(--surface)" }}>
-                  <div className="w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center text-white"
+                  <div className="w-9 h-9 rounded-[var(--r-sm)] mx-auto mb-2 flex items-center justify-center text-white"
                        style={{ background: `linear-gradient(135deg,${t.from},${t.to})` }}>
                     <t.icon className="w-4 h-4" />
                   </div>
-                  <div className="text-[11px] font-extrabold truncate" style={{ color: on ? "#6d28d9" : "var(--fg-muted)" }}>
+                  <div className="text-[11px] font-medium truncate" style={{ color: on ? "var(--accent-fg)" : "var(--fg-muted)" }}>
                     {t.name}
                   </div>
                 </button>
@@ -1056,11 +1070,11 @@ function ShareModal({ post, onClose }) {
           <div className="flex items-center justify-between mb-2">
             <Label inline>Nội dung sẽ gửi</Label>
             <button onClick={() => { navigator.clipboard?.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-                    className="text-[11.5px] font-extrabold flex items-center gap-1" style={{ color: "#7c3aed" }}>
+                    className="text-[11.5px] font-medium flex items-center gap-1" style={{ color: "#7c3aed" }}>
               {copied ? <><CheckCircle2 className="w-3.5 h-3.5" /> Đã copy</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
             </button>
           </div>
-          <div className="rounded-2xl p-4 text-[13px] whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto"
+          <div className="rounded-[var(--r)] p-4 text-[13px] whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto"
                style={{ backgroundColor: "var(--surface-2)", color: "var(--fg)" }}>
             {text}
           </div>
@@ -1083,7 +1097,7 @@ function ShareModal({ post, onClose }) {
                 setTimeout(() => { setCopied(false); onClose(); }, 900);
               } else onClose();
             }}
-            className="glowbtn inline-flex items-center gap-2 h-10 px-5 rounded-full text-white text-[13px] font-bold"
+            className="glowbtn inline-flex items-center gap-2 h-10 px-5 rounded-[var(--r-sm)] text-white text-[13px] font-medium"
             style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
             <Share2 className="w-4 h-4" /> Chia sẻ {channels.length > 0 ? `(${channels.length})` : ""}
           </button>
@@ -1103,21 +1117,21 @@ function AutomationModal({ flow, onClose }) {
         <div className="space-y-2">
           {flow.steps.map((s, i) => (
             <div key={i}>
-              <div className="rounded-2xl border p-4 flex items-start gap-3"
+              <div className="rounded-[var(--r)] border p-4 flex items-start gap-3"
                    style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0"
+                <div className="w-10 h-10 rounded-[var(--r-sm)] flex items-center justify-center text-white shrink-0"
                      style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})`,
                               boxShadow: "0 6px 14px -7px rgba(139,92,246,.8)" }}>
                   <s.icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[9.5px] uppercase tracking-wider font-extrabold" style={{ color: "#7c3aed" }}>
+                    <span className="text-[9.5px] uppercase tracking-wider font-medium" style={{ color: "#7c3aed" }}>
                       Bước {i + 1}
                     </span>
                     <CatPill>{s.kind}</CatPill>
                   </div>
-                  <div className="font-bold text-[14px] mt-1 truncate" style={{ color: "var(--fg)" }}>{s.label}</div>
+                  <div className="font-medium text-[14px] mt-1 truncate" style={{ color: "var(--fg)" }}>{s.label}</div>
                   {s.desc && <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-muted)" }}>{s.desc}</div>}
                 </div>
               </div>
@@ -1135,7 +1149,7 @@ function AutomationModal({ flow, onClose }) {
         onClose={onClose}
         action={
           <button onClick={onClose}
-                  className="h-10 px-5 rounded-full text-white text-[13px] font-bold"
+                  className="h-10 px-5 rounded-[var(--r-sm)] text-white text-[13px] font-medium"
                   style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
             Đóng
           </button>
@@ -1146,30 +1160,50 @@ function AutomationModal({ flow, onClose }) {
 }
 
 /* ════════════════ MODAL SHELL ════════════════ */
+/* Modal riêng của trang — giữ chữ ký v3 (icon/title/sub/wide) nhưng dựng theo
+ * hình thức v4: bo 6px, nhãn lông mày + tiêu đề serif, không ô icon gradient.
+ * Khác <Modal> trong ui/ ở chỗ thân tự cuộn và footer là children, nên các
+ * modal dài của trang này không phải sửa cấu trúc. */
 function Modal({ children, onClose, icon: Icon, title, sub, wide }) {
-  const { brand: BRAND } = usePalette();
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose?.();
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5"
-         style={{ backgroundColor: "rgba(15,18,24,.55)", backdropFilter: "blur(6px)" }}
-         onClick={onClose}>
-      <div className={`w-full ${wide ? "max-w-2xl" : "max-w-lg"} max-h-[92vh] rounded-[20px] overflow-hidden flex flex-col`}
-           style={{ backgroundColor: "var(--surface)", boxShadow: "0 30px 70px -20px rgba(0,0,0,.5)" }}
-           onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b shrink-0"
-             style={{ borderColor: "var(--border-soft)" }}>
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0"
-                 style={{ background: `linear-gradient(135deg,${BRAND.from},${BRAND.to})` }}>
-              <Icon className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="font-display font-extrabold text-[16px] truncate" style={{ color: "var(--fg)" }}>{title}</div>
-              <div className="text-[11.5px] truncate" style={{ color: "var(--fg-muted)" }}>{sub}</div>
+         style={{ backgroundColor: "rgba(25,28,22,.42)", backdropFilter: "blur(3px)" }}
+         onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}
+         role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`w-full ${wide ? "max-w-2xl" : "max-w-lg"} max-h-[92vh] overflow-hidden flex flex-col border animate-fadeIn`}
+           style={{
+             borderRadius: "var(--r)",
+             backgroundColor: "var(--surface)",
+             borderColor: "var(--border)",
+             boxShadow: "var(--shadow-modal)",
+           }}>
+        <div className="flex items-start justify-between gap-3 px-6 pt-5 pb-4 border-b shrink-0"
+             style={{ borderColor: "var(--border)" }}>
+          <div className="min-w-0">
+            <Eyebrow className="mb-2">
+              <span className="inline-flex items-center gap-1.5">
+                {Icon && <Icon className="w-3 h-3" style={{ color: "var(--metal)" }} />}
+                {sub || "Marketing"}
+              </span>
+            </Eyebrow>
+            <div className="font-display text-[22px] leading-tight truncate" style={{ color: "var(--fg)" }}>
+              {title}
             </div>
           </div>
-          <button onClick={onClose} aria-label="Đóng"
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition hover:bg-ink-100 shrink-0"
-                  style={{ color: "var(--fg-muted)" }}>
+          <button onClick={onClose} aria-label="Đóng" title="Đóng"
+                  className="w-8 h-8 flex items-center justify-center shrink-0 -mr-1 transition-colors hover:bg-[var(--surface-3)]"
+                  style={{ borderRadius: "var(--r-sm)", color: "var(--fg-subtle)" }}>
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -1181,15 +1215,11 @@ function Modal({ children, onClose, icon: Icon, title, sub, wide }) {
 
 function ModalFooter({ left, onClose, action }) {
   return (
-    <div className="px-5 py-3.5 border-t flex items-center justify-between gap-3 shrink-0"
-         style={{ borderColor: "var(--border-soft)", backgroundColor: "var(--surface-2)" }}>
-      <span className="text-[11.5px] truncate" style={{ color: "var(--fg-muted)" }}>{left}</span>
-      <div className="flex items-center gap-2 shrink-0">
-        <button onClick={onClose}
-                className="h-10 px-4 rounded-full border text-[13px] font-bold transition"
-                style={{ borderColor: "var(--border)", color: "var(--fg-muted)" }}>
-          Hủy
-        </button>
+    <div className="px-6 py-4 border-t flex items-center justify-between gap-3 shrink-0"
+         style={{ borderColor: "var(--border)", backgroundColor: "var(--surface-2)" }}>
+      <span className="text-[12px] truncate" style={{ color: "var(--fg-muted)" }}>{left}</span>
+      <div className="flex items-center gap-2.5 shrink-0">
+        <Button variant="outline" onClick={onClose}>Hủy</Button>
         {action}
       </div>
     </div>
@@ -1198,13 +1228,16 @@ function ModalFooter({ left, onClose, action }) {
 
 /* ════════════════ BỔ SUNG: soạn bài, workflow, xuất, kênh ════════════════ */
 
-function QueueChip({ on, onClick, brand, children }) {
+function QueueChip({ on, onClick, children }) {
   return (
     <button onClick={onClick} aria-pressed={on}
-            className="inline-flex items-center h-9 px-3.5 rounded-full text-[12px] font-bold border transition active:scale-95"
-            style={on
-              ? { background: `linear-gradient(135deg,${brand.from},${brand.to})`, color: "#fff", borderColor: "transparent" }
-              : { backgroundColor: "var(--surface)", color: "var(--fg-muted)", borderColor: "var(--border)" }}>
+            className="inline-flex items-center h-9 px-3.5 text-[12px] font-medium border transition-colors"
+            style={{
+              borderRadius: "var(--r-sm)",
+              backgroundColor: on ? "var(--accent-soft)" : "var(--surface)",
+              borderColor: on ? "var(--accent)" : "var(--border)",
+              color: on ? "var(--accent-fg)" : "var(--fg-muted)",
+            }}>
       {children}
     </button>
   );
@@ -1216,7 +1249,7 @@ function FieldRow({ label, error, children }) {
       <Label>{label}</Label>
       {children}
       {error && (
-        <div className="mt-1.5 text-[11.5px] font-bold inline-flex items-center gap-1" style={{ color: TONE.danger.ink }}>
+        <div className="mt-1.5 text-[11.5px] inline-flex items-center gap-1" style={{ color: "var(--danger-fg)" }}>
           <XCircle className="w-3 h-3 shrink-0" /> {error}
         </div>
       )}
@@ -1224,10 +1257,16 @@ function FieldRow({ label, error, children }) {
   );
 }
 
+/* Ô nhập trong modal — cao 40px, bo 4px, có viền. v3 dùng rounded-full không viền. */
 const roundField = {
-  className: "w-full h-11 px-4 rounded-full text-[13px] border-0 outline-none",
+  className: "w-full h-10 px-3 text-[13px] border outline-none",
 };
-const fieldStyle = { backgroundColor: "var(--surface-2)", color: "var(--fg)" };
+const fieldStyle = {
+  borderRadius: "var(--r-sm)",
+  backgroundColor: "var(--surface)",
+  borderColor: "var(--border)",
+  color: "var(--fg)",
+};
 
 /* ── Soạn bài viết mới ── */
 const CATEGORIES = ["Trải nghiệm", "Khuyến mãi", "Cẩm nang", "Câu chuyện", "Sự kiện", "Đánh giá"];
@@ -1270,13 +1309,13 @@ function ComposeModal({ brand, onClose, onSubmit }) {
       <div className="p-5 space-y-4">
         <FieldRow label="Tiêu đề" error={err("title")}>
           <input {...roundField} style={fieldStyle} value={title} onChange={(e) => setTitle(e.target.value)}
-                 placeholder="Ví dụ: Ưu đãi mùa hè tại Le Palmier Hồ Tràm" />
+                 placeholder="Ví dụ: Ưu đãi mùa hè tại Condo HUB Hồ Tràm" />
           <div className="mt-1.5 text-[10.5px]" style={{ color: "var(--fg-subtle)" }}>{title.length} ký tự</div>
         </FieldRow>
 
         <FieldRow label="Mô tả ngắn" error={err("excerpt")}>
           <textarea rows={3} value={excerpt} onChange={(e) => setExcerpt(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl text-[13px] border-0 outline-none resize-y"
+                    className="w-full px-4 py-3 rounded-[var(--r)] text-[13px] border-0 outline-none resize-y"
                     style={fieldStyle} placeholder="Đoạn mô tả hiển thị khi chia sẻ lên mạng xã hội…" />
         </FieldRow>
 
@@ -1284,7 +1323,7 @@ function ComposeModal({ brand, onClose, onSubmit }) {
           <FieldRow label="Danh mục">
             <div className="relative">
               <select value={category} onChange={(e) => setCategory(e.target.value)}
-                      className="w-full h-11 pl-4 pr-9 rounded-full text-[13px] font-semibold border-0 outline-none appearance-none cursor-pointer"
+                      className="w-full h-11 pl-4 pr-9 rounded-[var(--r-sm)] text-[13px] font-semibold border-0 outline-none appearance-none cursor-pointer"
                       style={fieldStyle}>
                 {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
               </select>
@@ -1305,7 +1344,7 @@ function ComposeModal({ brand, onClose, onSubmit }) {
               const Icon = c.icon;
               return (
                 <button key={id} onClick={() => toggleChan(id)} aria-pressed={on}
-                        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[12px] font-bold border transition active:scale-95"
+                        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-[var(--r-sm)] text-[12px] font-medium border transition active:scale-95"
                         style={on
                           ? { background: `linear-gradient(135deg,${c.from},${c.to})`, color: "#fff", borderColor: "transparent" }
                           : { backgroundColor: "var(--surface)", color: "var(--fg-muted)", borderColor: "var(--border)" }}>
@@ -1323,9 +1362,9 @@ function ComposeModal({ brand, onClose, onSubmit }) {
             {schedule === "later" && (
               <>
                 <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                       className="h-11 px-4 rounded-full text-[13px] border-0 outline-none" style={fieldStyle} />
+                       className="h-11 px-4 rounded-[var(--r-sm)] text-[13px] border-0 outline-none" style={fieldStyle} />
                 <input type="time" value={time} onChange={(e) => setTime(e.target.value)}
-                       className="h-11 px-4 rounded-full text-[13px] border-0 outline-none" style={fieldStyle} />
+                       className="h-11 px-4 rounded-[var(--r-sm)] text-[13px] border-0 outline-none" style={fieldStyle} />
               </>
             )}
           </div>
@@ -1339,7 +1378,7 @@ function ComposeModal({ brand, onClose, onSubmit }) {
         onClose={onClose}
         action={
           <button onClick={submit}
-                  className="h-10 px-5 rounded-full text-[13px] font-bold text-white inline-flex items-center gap-2"
+                  className="h-10 px-5 rounded-[var(--r-sm)] text-[13px] font-medium text-white inline-flex items-center gap-2"
                   style={{ background: `linear-gradient(135deg,${brand.from},${brand.to})` }}>
             <Send className="w-4 h-4" /> {schedule === "now" ? "Đăng ngay" : "Lên lịch"}
           </button>
@@ -1393,7 +1432,7 @@ function WorkflowModal({ brand, onClose, onSubmit }) {
         <FieldRow label="Trigger — sự kiện kích hoạt">
           <div className="relative">
             <select value={trigger} onChange={(e) => setTrigger(e.target.value)}
-                    className="w-full h-11 pl-4 pr-9 rounded-full text-[13px] font-semibold border-0 outline-none appearance-none cursor-pointer"
+                    className="w-full h-11 pl-4 pr-9 rounded-[var(--r-sm)] text-[13px] font-semibold border-0 outline-none appearance-none cursor-pointer"
                     style={fieldStyle}>
               {TRIGGER_OPTIONS.map((t) => <option key={t}>{t}</option>)}
             </select>
@@ -1418,17 +1457,17 @@ function WorkflowModal({ brand, onClose, onSubmit }) {
         </FieldRow>
 
         {actions.length > 0 && (
-          <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--surface-2)" }}>
+          <div className="rounded-[var(--r)] p-4" style={{ backgroundColor: "var(--surface-2)" }}>
             <Label>Xem trước luồng</Label>
-            <div className="flex items-center gap-2 flex-wrap text-[12px] font-bold" style={{ color: "var(--fg)" }}>
-              <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-white"
+            <div className="flex items-center gap-2 flex-wrap text-[12px] font-medium" style={{ color: "var(--fg)" }}>
+              <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[var(--r-sm)] text-white"
                     style={{ background: `linear-gradient(135deg,${brand.from},${brand.to})` }}>
                 <Webhook className="w-3.5 h-3.5" /> {trigger}
               </span>
               {actions.map((a) => (
                 <span key={a} className="inline-flex items-center gap-1.5">
                   <ChevronRight className="w-3.5 h-3.5" style={{ color: "var(--fg-subtle)" }} />
-                  <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full"
+                  <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[var(--r-sm)]"
                         style={{ backgroundColor: "var(--surface)", color: "var(--fg-muted)" }}>
                     <Zap className="w-3.5 h-3.5" /> {a}
                   </span>
@@ -1446,7 +1485,7 @@ function WorkflowModal({ brand, onClose, onSubmit }) {
         onClose={onClose}
         action={
           <button onClick={submit}
-                  className="h-10 px-5 rounded-full text-[13px] font-bold text-white inline-flex items-center gap-2"
+                  className="h-10 px-5 rounded-[var(--r-sm)] text-[13px] font-medium text-white inline-flex items-center gap-2"
                   style={{ background: `linear-gradient(135deg,${brand.from},${brand.to})` }}>
             <CheckCircle2 className="w-4 h-4" /> Tạo workflow
           </button>
@@ -1469,10 +1508,10 @@ function ExportModal({ data, onClose, onPick }) {
       <div className="p-5 space-y-2">
         {opts.map((o) => (
           <button key={o.fmt} onClick={() => onPick(o.fmt)}
-                  className="w-full text-left flex items-center gap-3 p-3.5 rounded-2xl border transition hover:bg-ink-50 active:scale-[.99]"
+                  className="w-full text-left flex items-center gap-3 p-3.5 rounded-[var(--r)] border transition hover:bg-ink-50 active:scale-[.99]"
                   style={{ borderColor: "var(--border)" }}>
             <div className="min-w-0 flex-1">
-              <div className="text-[13px] font-bold" style={{ color: "var(--fg)" }}>{o.fmt}</div>
+              <div className="text-[13px] font-medium" style={{ color: "var(--fg)" }}>{o.fmt}</div>
               <div className="text-[11.5px] mt-0.5" style={{ color: "var(--fg-muted)" }}>{o.desc}</div>
             </div>
             <Download className="w-4 h-4 shrink-0" style={{ color: "var(--fg-subtle)" }} />
@@ -1491,18 +1530,18 @@ function ChannelModal({ ch, onClose }) {
   return (
     <Modal onClose={onClose} icon={Icon || Share2} title={meta?.name || ch.id} sub={ch.name}>
       <div className="p-5 space-y-4">
-        <div className="flex items-center gap-4 p-4 rounded-2xl text-white"
+        <div className="flex items-center gap-4 p-4 rounded-[var(--r)] text-white"
              style={{ background: `linear-gradient(135deg,${meta.from},${meta.to})` }}>
-          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-[var(--r)] bg-white/20 flex items-center justify-center shrink-0">
             {Icon && <Icon className="w-6 h-6" />}
           </div>
           <div className="min-w-0">
-            <div className="text-[15px] font-extrabold truncate">{ch.name}</div>
+            <div className="text-[15px] font-medium truncate">{ch.name}</div>
             <div className="text-[12px] opacity-85">{meta?.name} · Đang kết nối</div>
           </div>
           <div className="ml-auto text-right shrink-0">
-            <div className="text-[10px] uppercase font-extrabold opacity-80">Followers</div>
-            <div className="text-[18px] font-extrabold tabular-nums">{ch.followers}</div>
+            <div className="text-[10px] uppercase font-medium opacity-80">Followers</div>
+            <div className="text-[18px] font-medium tabular-nums">{ch.followers}</div>
           </div>
         </div>
 
@@ -1512,8 +1551,8 @@ function ChannelModal({ ch, onClose }) {
           <MiniStat label="Sức khỏe" value={`${ch.health}%`} />
         </div>
 
-        <div className="rounded-2xl p-4" style={{ backgroundColor: tone.bg }}>
-          <div className="text-[11px] font-extrabold uppercase tracking-wider mb-1" style={{ color: tone.ink }}>
+        <div className="rounded-[var(--r)] p-4" style={{ backgroundColor: tone.bg }}>
+          <div className="text-[11px] font-medium uppercase tracking-wider mb-1" style={{ color: tone.ink }}>
             Đánh giá kênh
           </div>
           <div className="text-[12.5px] font-semibold" style={{ color: tone.ink }}>
@@ -1532,7 +1571,7 @@ function ChannelModal({ ch, onClose }) {
 
 function Label({ children, inline }) {
   return (
-    <div className={`text-[10.5px] uppercase tracking-wider font-extrabold ${inline ? "" : "mb-2.5"}`}
+    <div className={`text-[10.5px] uppercase tracking-wider font-medium ${inline ? "" : "mb-2.5"}`}
          style={{ color: "var(--fg-subtle)" }}>
       {children}
     </div>
@@ -1558,19 +1597,19 @@ function buildData() {
   ];
 
   const channels = [
-    { id: "facebook",  name: "Le Palmier Hotels",  followers: "184.2K", posts: 28, engagement: "32.4K", health: 96, status: "connected" },
-    { id: "instagram", name: "@lepalmier.vn",      followers: "98.4K",  posts: 36, engagement: "24.1K", health: 92, status: "connected" },
-    { id: "zalo",      name: "Le Palmier OA",      followers: "62.8K",  posts: 18, engagement: "12.6K", health: 88, status: "connected" },
-    { id: "tiktok",    name: "@lepalmierhotels",   followers: "126.4K", posts: 42, engagement: "48.2K", health: 94, status: "connected" },
-    { id: "youtube",   name: "Le Palmier Channel", followers: "32.8K",  posts: 8,  engagement: "8.4K",  health: 78, status: "connected" },
-    { id: "twitter",   name: "@lepalmierhotels",   followers: "12.4K",  posts: 14, engagement: "2.1K",  health: 64, status: "connected" },
-    { id: "linkedin",  name: "Le Palmier Group",   followers: "8.6K",   posts: 12, engagement: "1.4K",  health: 82, status: "connected" },
-    { id: "website",   name: "Blog lepalmier.vn",  followers: "—",      posts: 32, engagement: "18.2K", health: 90, status: "connected" },
+    { id: "facebook",  name: "Condo HUB Hotels",  followers: "184.2K", posts: 28, engagement: "32.4K", health: 96, status: "connected" },
+    { id: "instagram", name: "@condohub.vn",      followers: "98.4K",  posts: 36, engagement: "24.1K", health: 92, status: "connected" },
+    { id: "zalo",      name: "Condo HUB OA",      followers: "62.8K",  posts: 18, engagement: "12.6K", health: 88, status: "connected" },
+    { id: "tiktok",    name: "@condohubhotels",   followers: "126.4K", posts: 42, engagement: "48.2K", health: 94, status: "connected" },
+    { id: "youtube",   name: "Condo HUB Channel", followers: "32.8K",  posts: 8,  engagement: "8.4K",  health: 78, status: "connected" },
+    { id: "twitter",   name: "@condohubhotels",   followers: "12.4K",  posts: 14, engagement: "2.1K",  health: 64, status: "connected" },
+    { id: "linkedin",  name: "Condo HUB Group",   followers: "8.6K",   posts: 12, engagement: "1.4K",  health: 82, status: "connected" },
+    { id: "website",   name: "Blog condohub.vn",  followers: "—",      posts: 32, engagement: "18.2K", health: 90, status: "connected" },
     { id: "email",     name: "Newsletter",         followers: "24.6K",  posts: 4,  engagement: "3.8K",  health: 86, status: "connected" },
   ];
 
   const recentPosts = [
-    { id: "p1", title: "Top 10 điểm check-in mùa hè tại Phú Quốc", excerpt: "Khám phá những góc sống ảo đẹp nhất tại đảo ngọc cùng Le Palmier.",
+    { id: "p1", title: "Top 10 điểm check-in mùa hè tại Phú Quốc", excerpt: "Khám phá những góc sống ảo đẹp nhất tại đảo ngọc cùng Condo HUB.",
       category: "Trải nghiệm", author: "Nguyễn Minh K.", date: "28/07 · 09:30", tags: ["phu-quoc", "summer", "check-in"],
       channels: ["facebook", "instagram", "tiktok", "website"], status: "published", engagement: "12.4K" },
     { id: "p2", title: "Ưu đãi 30% phòng Deluxe tháng 8", excerpt: "Đặt phòng sớm để nhận ưu đãi hấp dẫn.",
@@ -1579,7 +1618,7 @@ function buildData() {
     { id: "p3", title: "Bí quyết chọn resort cho gia đình có trẻ nhỏ", excerpt: "Hướng dẫn chi tiết từ A-Z cho kỳ nghỉ gia đình hoàn hảo.",
       category: "Cẩm nang", author: "Trần Hồng N.", date: "27/07 · 16:00", tags: ["family", "kids", "tips"],
       channels: ["website", "facebook", "linkedin"], status: "published", engagement: "5.8K" },
-    { id: "p4", title: "Behind the scenes: Đầu bếp 5 sao tại Le Palmier", excerpt: "Câu chuyện về những đôi tay vàng làm nên ẩm thực đẳng cấp.",
+    { id: "p4", title: "Behind the scenes: Đầu bếp 5 sao tại Condo HUB", excerpt: "Câu chuyện về những đôi tay vàng làm nên ẩm thực đẳng cấp.",
       category: "Câu chuyện", author: "Lê Quốc C.", date: "27/07 · 14:00", tags: ["chef", "fnb", "behind-the-scenes"],
       channels: ["youtube", "instagram", "facebook"], status: "scheduled", engagement: "—" },
     { id: "p5", title: "Sự kiện âm nhạc Acoustic cuối tuần", excerpt: "Đêm nhạc acoustic lãng mạn bên bể bơi vô cực.",
