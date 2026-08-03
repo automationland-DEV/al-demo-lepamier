@@ -262,10 +262,10 @@ export default function RoomTypes() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <IconButton icon={Eye} label="Xem chi tiết" size="sm" onClick={() => setDetail(t)} />
-                      <IconButton icon={Edit2} label="Sửa hạng phòng" size="sm" onClick={() => setForm(t)} />
+                      <IconButton icon={Eye} label="Xem chi tiết" size="md" onClick={() => setDetail(t)} />
+                      <IconButton icon={Edit2} label="Sửa hạng phòng" size="md" onClick={() => setForm(t)} />
                       <Dropdown
-                        trigger={<IconButton icon={MoreHorizontal} label="Thao tác khác" size="sm" />}
+                        trigger={<IconButton icon={MoreHorizontal} label="Thao tác khác" size="md" />}
                       >
                         <MenuItem icon={Check} onClick={() => toggle(t)}>
                           {t.active ? "Ngừng bán" : "Mở bán lại"}
@@ -519,7 +519,7 @@ function RoomTypeForm({ open, data, onClose, onSave }) {
                   transitionDuration: ".16s",
                 }}
               >
-                {on && <Check className="w-3 h-3" />}
+                {on && <Check className="w-3.5 h-3.5" />}
                 {a}
               </button>
             );

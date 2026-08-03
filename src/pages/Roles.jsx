@@ -222,7 +222,7 @@ export default function Roles() {
                                     aria-pressed={on}
                                     aria-label={`${a.label} ${m.label}`}
                                     title={`${a.label} — ${m.label}`}
-                                    className="w-6 h-6 grid place-items-center border transition-colors"
+                                    className="w-8 h-8 grid place-items-center border transition-colors"
                                     style={{
                                       borderRadius: "var(--r-sm)",
                                       backgroundColor: on ? "var(--success-soft)" : "var(--surface-2)",
@@ -232,7 +232,7 @@ export default function Roles() {
                                       opacity: role.system ? 0.6 : 1,
                                     }}
                                   >
-                                    {on ? <Check className="w-3.5 h-3.5" /> : <X className="w-3 h-3" />}
+                                    {on ? <Check className="w-[18px] h-[18px]" /> : <X className="w-4 h-4" />}
                                   </button>
                                 </Td>
                               );

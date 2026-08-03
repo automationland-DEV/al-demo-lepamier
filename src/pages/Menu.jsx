@@ -180,12 +180,14 @@ function DishCard({ m, c, onOpen, onEdit, onToggle, onDelete }) {
           <StatusTag tone={m.active ? "success" : "neutral"}>
             {m.active ? "Đang phục vụ" : "Tạm ngừng"}
           </StatusTag>
-          {/* Thao tác chỉ hiện khi rê chuột — thẻ ở trạng thái nghỉ phải sạch,
-              nhưng vẫn giữ chỗ để chiều cao thẻ không nhảy. */}
-          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-            <IconButton icon={Edit2} label="Sửa món" size="sm" onClick={onEdit} />
-            <IconButton icon={Check} label={m.active ? "Tạm ngừng phục vụ" : "Phục vụ lại"} size="sm" onClick={onToggle} />
-            <IconButton icon={Trash2} label="Xóa khỏi thực đơn" size="sm" onClick={onDelete} />
+          {/* Trước đây nhóm nút này ẩn tới khi rê chuột (giống thẻ ở trang Dịch
+              vụ). Bỏ đi: trên thiết bị cảm ứng không có trạng thái hover nên
+              thao tác coi như biến mất, và ngay trên desktop cũng khó đoán là
+              thẻ có nút. */}
+          <div className="flex items-center gap-0.5">
+            <IconButton icon={Edit2} label="Sửa món" size="md" onClick={onEdit} />
+            <IconButton icon={Check} label={m.active ? "Tạm ngừng phục vụ" : "Phục vụ lại"} size="md" onClick={onToggle} />
+            <IconButton icon={Trash2} label="Xóa khỏi thực đơn" size="md" onClick={onDelete} />
           </div>
         </div>
       </div>
@@ -698,7 +700,7 @@ function MenuForm({ open, data, onClose, onSave }) {
                 color: on ? "var(--accent-fg)" : "var(--fg-muted)",
               }}
             >
-              <t.icon className="w-3.5 h-3.5" />
+              <t.icon className="w-4 h-4" />
               {on ? t.on : t.off}
             </button>
           );

@@ -184,7 +184,7 @@ export default function Promotions() {
                       }}
                     >
                       {p.code}
-                      <Copy className="w-3 h-3" />
+                      <Copy className="w-3.5 h-3.5" />
                     </button>
                     <h3 className="mt-2.5 font-display text-[19px] leading-tight" style={{ color: "var(--fg)" }}>
                       {p.name}
@@ -253,8 +253,8 @@ export default function Promotions() {
                     {p.branches.length === branches.length ? "Tất cả chi nhánh" : `${p.branches.length} chi nhánh`}
                   </span>
                   <div className="flex items-center gap-1">
-                    <IconButton icon={Edit2} label="Sửa chương trình" size="sm" onClick={() => setForm(p)} />
-                    <Dropdown trigger={<IconButton icon={BadgePercent} label="Thao tác khác" size="sm" />}>
+                    <IconButton icon={Edit2} label="Sửa chương trình" size="md" onClick={() => setForm(p)} />
+                    <Dropdown trigger={<IconButton icon={BadgePercent} label="Thao tác khác" size="md" />}>
                       <MenuItem icon={p.active ? Ban : Check} onClick={() => toggle(p)}>
                         {p.active ? "Tạm dừng chương trình" : "Kích hoạt lại"}
                       </MenuItem>
@@ -461,7 +461,7 @@ function PromoForm({ open, data, onClose, onSave }) {
                     color: on ? "var(--accent-fg)" : "var(--fg-muted)",
                   }}
                 >
-                  {on && <Check className="w-3 h-3" />}
+                  {on && <Check className="w-3.5 h-3.5" />}
                   {ch.label}
                 </button>
               );
@@ -487,7 +487,7 @@ function PromoForm({ open, data, onClose, onSave }) {
                     color: on ? "var(--accent-fg)" : "var(--fg-muted)",
                   }}
                 >
-                  {on && <Check className="w-3 h-3" />}
+                  {on && <Check className="w-3.5 h-3.5" />}
                   {b.city}
                 </button>
               );

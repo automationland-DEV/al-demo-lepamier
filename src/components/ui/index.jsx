@@ -91,9 +91,21 @@ const BTN_VARIANT = {
   },
 };
 
+/* Chiều cao nút và cỡ icon đi kèm.
+ *
+ * `sm` trước đây là 32px với icon 14px. Trên các trang nhiều thao tác dạng
+ * bảng/thẻ (Hạng phòng, Thực đơn, Hóa đơn…), một hàng ba nút icon 14px nét
+ * mảnh 2px đọc ra như ba dấu chấm — người dùng không nhận ra đó là nút bấm.
+ * Nay 36px / icon 16px, `md` 40px / icon 18px. */
 const BTN_SIZE = {
-  sm: "h-8 px-3 text-[12px] gap-1.5",
+  sm: "h-9 px-3 text-[12px] gap-1.5",
   md: "h-10 px-4 text-[13px] gap-2",
+};
+
+/** Cỡ icon trong nút — dùng chung cho Button và IconButton */
+const BTN_ICON = {
+  sm: "w-4 h-4",
+  md: "w-[18px] h-[18px]",
 };
 
 /**
@@ -143,25 +155,37 @@ export function Button({
       }}
       {...rest}
     >
-      {Icon && <Icon className={size === "sm" ? "w-3.5 h-3.5" : "w-4 h-4"} />}
+      {Icon && <Icon className={cx(BTN_ICON[size] || BTN_ICON.md, "shrink-0")} />}
       {children}
-      {IconRight && <IconRight className={size === "sm" ? "w-3.5 h-3.5" : "w-4 h-4"} />}
+      {IconRight && <IconRight className={cx(BTN_ICON[size] || BTN_ICON.md, "shrink-0")} />}
     </button>
   );
 }
 
-/** Nút chỉ có icon — luôn cần aria-label + title (Design.md §14) */
-export function IconButton({ icon: Icon, label, size = "md", className = "", ...rest }) {
+/**
+ * Nút chỉ có icon — luôn cần aria-label + title (Design.md §14).
+ *
+ * Ô vuông bằng đúng chiều cao nút cùng cỡ (sm 36px, md 40px) để một hàng
+ * nút icon xếp cạnh nút chữ không bị lệch đường chân.
+ *
+ * Padding bỏ bằng inline style chứ KHÔNG bằng class `px-0`: `px-4` của
+ * BTN_SIZE nằm sau `px-0` trong stylesheet Tailwind nên `px-0` thua, nút
+ * 40px còn lại 32px padding và bóp icon 18px xuống còn 6px. Đó là lý do
+ * mọi nút icon trước đây trông như dấu chấm. Inline style thắng mọi class,
+ * và `shrink-0` ở trên là lớp chặn thứ hai.
+ */
+export function IconButton({ icon: Icon, label, size = "md", className = "", style, ...rest }) {
   return (
     <Button
       variant="ghost"
       size={size}
       aria-label={label}
       title={label}
-      className={cx(size === "sm" ? "w-8 px-0" : "w-10 px-0", className)}
+      className={cx(size === "sm" ? "w-9" : "w-10", className)}
+      style={{ paddingLeft: 0, paddingRight: 0, ...style }}
       {...rest}
     >
-      <Icon className={size === "sm" ? "w-3.5 h-3.5" : "w-4 h-4"} />
+      <Icon className={cx(BTN_ICON[size] || BTN_ICON.md, "shrink-0")} />
     </Button>
   );
 }
