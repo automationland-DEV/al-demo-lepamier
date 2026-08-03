@@ -463,11 +463,11 @@ Bỏ: gradient ngang trên bar, `strokeDasharray="3 6"` trên lưới, tooltip n
 
 ## 8. Mẫu trang
 
-13 mẫu phủ 25 route.
+14 mẫu phủ 38 route.
 
 | Mẫu | Áp dụng cho | Đặc thù |
 |---|---|---|
-| **A** Danh sách | Staff ✅ · Bookings · Services · Branches · Posts · Guests | §5 đầy đủ. Toggle Bảng/Thẻ, mặc định **Bảng** |
+| **A** Danh sách | Staff ✅ · RoomTypes ✅ · Menu ✅ · Invoices ✅ · Promotions ✅ · Bookings · Services · Branches · Posts · Guests | §5 đầy đủ. Toggle Bảng/Thẻ, mặc định **Bảng** |
 | **B** Chi tiết | Branches (chi tiết) | Ảnh bìa 1320×280 + lớp phủ đọc chữ, tab bên dưới |
 | **C** Dashboard | Dashboard ✅ | Tối đa **4** khối lớn |
 | **D** Danh sách + panel bên | Guests | Danh sách 2fr / panel 1fr sticky; <1024px thành drawer |
@@ -476,11 +476,12 @@ Bỏ: gradient ngang trên bar, `strokeDasharray="3 6"` trên lưới, tooltip n
 | **G** Feed + chọn nhiều | Notifications | Nhóm theo ngày, thanh bulk thay chỗ toolbar |
 | **H** Form / Cài đặt | Settings · Profile | Nav trái 220px + nội dung max 720px |
 | **I** Hội thoại 2 cột | Messages | Danh sách 320px + chat 1fr, bong bóng max 65% |
-| **J** Hub nhiều tab | Marketing ✅ · RestaurantOperations · Reports | Tabs + `<SectionHead>` phân đoạn |
+| **J** Hub nhiều tab | Marketing ✅ · Rates ✅ · Inventory ✅ · Loyalty ✅ · Payroll ✅ · Roles ✅ · RestaurantOperations · Reports | Tabs + `<SectionHead>` phân đoạn |
 | **K** Trang con báo cáo | 6 trang `/reports/*` | 1 biểu đồ chính + 1 bảng |
 | **L** Trang mục lục | ReportDetail | Lưới thẻ viền tóc, tiêu đề serif |
 | **M** Tài liệu | Help | Mục lục sticky 220px + nội dung 720px, chữ body 15px |
 | **N** Xác thực | Login | Ngoài layout, form 420px trái + ảnh phải toàn chiều cao |
+| **O** Sổ / Nhật ký | AuditLog ✅ · Cashflow ✅ · Receivables ✅ · Reviews ✅ | Bộ lọc nhiều trục (ai · cái gì · khi nào) trên một hàng riêng, bảng dày, phân trang 20 dòng |
 
 ✅ = đã dựng theo v4, dùng làm tham chiếu.
 
@@ -614,7 +615,14 @@ Khi migrate trang cuối cùng, xóa toàn bộ mục này cùng `.lift` / `.glo
 | `Staff.jsx` | ✅ v4 — **file tham chiếu mẫu A** (danh sách) |
 | `Marketing.jsx` | ✅ v4 — **file tham chiếu mẫu J** (hub nhiều tab) |
 | `Dashboard.jsx` | ✅ v4 — **file tham chiếu mẫu C**, đã cắt 17 khối → 4 |
-| `Sidebar.jsx` · `Topbar.jsx` · `BranchSelector.jsx` | ✅ v4 — khung vỏ |
+| `Sidebar.jsx` · `Topbar.jsx` · `BranchSelector.jsx` | ✅ v4 — khung vỏ. Sidebar chia **8 nhóm nghiệp vụ** gập được, nhớ trạng thái ở `condohub.nav.groups` |
+| `RoomTypes.jsx` · `Rates.jsx` | ✅ v4 — nhóm Khách sạn |
+| `Menu.jsx` · `Inventory.jsx` | ✅ v4 — nhóm Nhà hàng |
+| `Loyalty.jsx` · `Reviews.jsx` | ✅ v4 — nhóm Khách hàng |
+| `Payroll.jsx` | ✅ v4 — nhóm Nhân sự |
+| `Invoices.jsx` · `Receivables.jsx` · `Cashflow.jsx` | ✅ v4 — nhóm Tài chính |
+| `Promotions.jsx` | ✅ v4 — nhóm Marketing |
+| `Roles.jsx` · `AuditLog.jsx` | ✅ v4 — nhóm Hệ thống |
 | `Footer.jsx` · `Pagination.jsx` | ✅ v4 — dùng chung mọi trang |
 | `Settings.jsx` | ⚠️ Phần **Giao diện** đã sang v4 (chọn bộ sưu tập màu); các tab còn lại vẫn v3 |
 | `Rooms.jsx` | ⬜ Ưu tiên 1 — mẫu E |

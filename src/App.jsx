@@ -30,6 +30,20 @@ import WebsiteOverview from "./pages/WebsiteOverview";
 import WebsiteUsers from "./pages/WebsiteUsers";
 import Posts from "./pages/Posts";
 import PostCategories from "./pages/PostCategories";
+/* Bổ sung đợt "đủ nghiệp vụ" — 13 trang lấp các mảng còn thiếu của bản demo */
+import RoomTypes from "./pages/RoomTypes";
+import Rates from "./pages/Rates";
+import MenuPage from "./pages/Menu";
+import Inventory from "./pages/Inventory";
+import Loyalty from "./pages/Loyalty";
+import Reviews from "./pages/Reviews";
+import Payroll from "./pages/Payroll";
+import Invoices from "./pages/Invoices";
+import Receivables from "./pages/Receivables";
+import Cashflow from "./pages/Cashflow";
+import Promotions from "./pages/Promotions";
+import Roles from "./pages/Roles";
+import AuditLog from "./pages/AuditLog";
 import Login from "./pages/Login";
 import Notifications from "./pages/Notifications";
 import Chatbot from "./components/Chatbot";
@@ -141,6 +155,27 @@ function AppLayout() {
             <Route path="/website/users" element={<WebsiteUsers />} />
             <Route path="/posts" element={<Posts />} />
             <Route path="/post-categories" element={<PostCategories />} />
+
+            {/* Khách sạn */}
+            <Route path="/room-types" element={<RoomTypes />} />
+            <Route path="/rates" element={<Rates />} />
+            {/* Nhà hàng */}
+            <Route path="/menu" element={<MenuPage />} />
+            <Route path="/inventory" element={<Inventory />} />
+            {/* Khách hàng */}
+            <Route path="/loyalty" element={<Loyalty />} />
+            <Route path="/reviews" element={<Reviews />} />
+            {/* Nhân sự */}
+            <Route path="/payroll" element={<Payroll />} />
+            {/* Tài chính */}
+            <Route path="/invoices" element={<Invoices />} />
+            <Route path="/receivables" element={<Receivables />} />
+            <Route path="/cashflow" element={<Cashflow />} />
+            {/* Marketing */}
+            <Route path="/promotions" element={<Promotions />} />
+            {/* Hệ thống */}
+            <Route path="/roles" element={<Roles />} />
+            <Route path="/audit-log" element={<AuditLog />} />
           </Routes>
           {!isFullHeightPage && (
             <div>

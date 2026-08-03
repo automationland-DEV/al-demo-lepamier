@@ -295,6 +295,140 @@ export const bookings = (() => {
   return list;
 })();
 
+/* ══════════════════════════════════════════════════════════════════
+   NỐI BOOKING ↔ PHÒNG CỤ THỂ
+
+   Trước đây `bookings` chỉ có `roomType` nên trang Phòng và trang Đặt
+   phòng là hai tập dữ liệu rời nhau: 149 phòng báo "đang ở" nhưng chỉ
+   64 booking ở trạng thái checked_in. Mọi chỉ số lấp đầy / ADR / RevPAR
+   vì thế đều không kiểm chứng được.
+
+   Lượt xử lý dưới đây chạy SAU khi đã sinh xong toàn bộ dữ liệu và
+   KHÔNG gọi rand() lần nào — nên seed = 42 và mọi số liệu phía trên
+   giữ nguyên. Việc gán phòng dùng con trỏ xoay vòng theo (chi nhánh,
+   hạng phòng) nên hoàn toàn tất định.
+   ══════════════════════════════════════════════════════════════════ */
+(() => {
+  const applyStatus = (r, key) => {
+    r.status = key;
+    const st = roomStatuses.find((s) => s.key === key);
+    if (st) {
+      r.statusLabel = st.label;
+      r.statusColor = st.color;
+      r.statusSoft = st.soft;
+    }
+  };
+
+  // Phòng đang bảo trì / đang dọn thì không bán được — loại khỏi nhóm gán.
+  const blocked = (r) => r.status === "maintenance" || r.status === "cleaning";
+
+  // Nhớ trạng thái ngẫu nhiên ban đầu để giữ đúng tỉ lệ lấp đầy của bản demo
+  const wasOccupied = new Set(rooms.filter((r) => r.status === "occupied").map((r) => r.id));
+
+  const pool = new Map(); // "chi nhánh|hạng" -> phòng bán được
+  for (const r of rooms) {
+    if (blocked(r)) continue;
+    const key = `${r.branchId}|${r.type}`;
+    if (!pool.has(key)) pool.set(key, []);
+    pool.get(key).push(r);
+  }
+
+  const holder = new Map(); // roomId -> booking đang giữ phòng
+  const cursor = new Map();
+
+  /** Lấy phòng còn trống kế tiếp trong nhóm; null nếu nhóm đã kín */
+  const takeFree = (key) => {
+    const list = pool.get(key);
+    if (!list?.length) return null;
+    let i = cursor.get(key) ?? 0;
+    for (let n = 0; n < list.length; n++, i++) {
+      const r = list[i % list.length];
+      if (!holder.has(r.id)) {
+        cursor.set(key, i + 1);
+        return r;
+      }
+    }
+    cursor.set(key, i);
+    return null;
+  };
+
+  // Booking đang chiếm phòng được gán trước và giữ phòng độc quyền
+  const active = bookings.filter((b) => b.status === "checked_in" || b.status === "confirmed");
+  for (const bk of active) {
+    const room = takeFree(`${bk.branchId}|${bk.roomType}`);
+    if (!room) continue;
+    bk.roomId = room.id;
+    bk.roomNumber = room.number;
+    bk.floor = room.floor;
+    holder.set(room.id, bk);
+  }
+
+  // Booking đã trả phòng / chờ / đã hủy chỉ tham chiếu phòng, không giữ chỗ
+  const past = new Map();
+  for (const bk of bookings) {
+    if (bk.roomId) continue;
+    const key = `${bk.branchId}|${bk.roomType}`;
+    const list = pool.get(key);
+    if (!list?.length) continue;
+    const i = past.get(key) ?? 0;
+    const room = list[i % list.length];
+    past.set(key, i + 1);
+    bk.roomId = room.id;
+    bk.roomNumber = room.number;
+    bk.floor = room.floor;
+  }
+
+  /* Phòng ban đầu "đang ở" nhưng chưa có booking nào → tạo booking khách
+     vãng lai. Nhờ vậy tỉ lệ lấp đầy của bản demo giữ nguyên, đồng thời
+     KHÔNG còn phòng nào có khách mà không truy ra được booking. */
+  let walkIn = 0;
+  for (const r of rooms) {
+    if (blocked(r) || holder.has(r.id) || !wasOccupied.has(r.id)) continue;
+    walkIn++;
+    const g = guests[(walkIn * 7) % guests.length];
+    const type = roomTypes.find((t) => t.key === r.type) || roomTypes[0];
+    const nights = (walkIn % 4) + 1;
+    const checkIn = new Date(2026, 6, 28 - (walkIn % 3));
+    const checkOut = new Date(checkIn);
+    checkOut.setDate(checkOut.getDate() + nights);
+    const total = type.basePrice * nights;
+    const bk = {
+      id: `BK-W${String(walkIn).padStart(5, "0")}`,
+      guestName: g.name, guestId: g.id, guestAvatar: g.avatar,
+      branchId: r.branchId, branchName: r.branchName,
+      roomType: r.type, roomTypeName: r.typeName,
+      roomId: r.id, roomNumber: r.number, floor: r.floor,
+      nights,
+      checkIn: checkIn.toISOString().slice(0, 10),
+      checkOut: checkOut.toISOString().slice(0, 10),
+      guests: (walkIn % 3) + 1,
+      status: "checked_in",
+      source: "Walk-in",
+      total, paid: total,
+      createdAt: checkIn.toISOString().slice(0, 10),
+    };
+    bookings.push(bk);
+    holder.set(r.id, bk);
+  }
+
+  // Đồng bộ ngược trạng thái phòng theo booking đang giữ
+  for (const r of rooms) {
+    if (blocked(r)) { r.bookingId = null; continue; }
+    const bk = holder.get(r.id);
+    if (!bk) {
+      applyStatus(r, "available");
+      r.guest = null;
+    } else if (bk.status === "checked_in") {
+      applyStatus(r, "occupied");
+      r.guest = bk.guestName;
+    } else {
+      applyStatus(r, "reserved");
+      r.guest = null;
+    }
+    r.bookingId = bk ? bk.id : null;
+  }
+})();
+
 export const bookingStatusList = bookingStatuses;
 export const roomStatusList = roomStatuses;
 export const roomTypeList = roomTypes;
