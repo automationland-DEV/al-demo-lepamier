@@ -1,5 +1,5 @@
 when:
-  - branch: [production, feature/add-drone-ci]
+  - branch: [production, feature/add-drone-ci, test/trigger-ci]
     event: [push, pull_request, manual]
 
 steps:
@@ -33,5 +33,5 @@ steps:
         # Dọn dẹp các Docker image cũ (dangling) để giải phóng dung lượng ổ cứng sau khi build thành công
         - docker image prune -f
     when:
-      branch: [production, feature/add-drone-ci]
+      branch: [production, feature/add-drone-ci, test/trigger-ci]
       event: [push, manual]
