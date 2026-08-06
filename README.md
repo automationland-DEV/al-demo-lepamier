@@ -44,8 +44,8 @@ npm run build    # build production
 
 
 ## Lưu ý quan trọng " Docker"  trong file đã cập nhật docker rồi!
-## nên trước khi push hoặc mer vào nhánh main thì phải chạy lệnh này: 
+**nên trước khi push hoặc mer vào nhánh main thì phải chạy lệnh này:**
 
-- Docker compose up -d --build
+-     Docker compose up -d --build
 
-Khi done rồi thì mới được push hoặc mer vào để tranh lôi
+**Khi done rồi thì mới được push hoặc mer vào để tranh lôi**
