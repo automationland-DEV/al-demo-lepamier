@@ -40,3 +40,12 @@ npm run build    # build production
 - Mọi số liệu là mock data, random theo seed cố định (`seed = 42`).
 - Tất cả action (create/edit/delete/search/filter) chỉ thay đổi UI state, không có backend.
 - Phù hợp để demo pitch deck, portfolio, hoặc làm starter cho dự án thật.
+
+
+
+## Lưu ý quan trọng " Docker"  trong file đã cập nhật docker rồi!
+**nên trước khi push hoặc mer vào nhánh main thì phải chạy lệnh này:**
+
+-     Docker compose up -d --build
+
+**Khi done rồi thì mới được push hoặc mer vào để tranh lôi**

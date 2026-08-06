@@ -1,0 +1,37 @@
+when:
+  - branch: production
+    event: [push, pull_request, manual]
+
+steps:
+  install-and-build:
+    image: node:20
+    commands:
+      # Cài đặt dependencies (tạo file .env ảo nếu cần)
+      - touch .env
+      - npm ci
+      # Chạy linter (nếu có) để kiểm tra code style
+      - npm run lint --if-present
+      # Build source code (nếu có)
+      - npm run build --if-present
+
+  # Bước deploy tự động lên server qua SSH và chạy bằng Docker Compose
+  deploy:
+    image: appleboy/drone-ssh
+    settings:
+      host:
+        from_secret: ssh_host
+      username:
+        from_secret: ssh_username
+      password:
+        from_secret: ssh_password
+      command_timeout: 30m
+      script:
+        # Di chuyển tới thư mục chứa code trên server
+        - cd /home/al-demo-lepamier/al-demo-lepamier
+        # Xóa bỏ các thay đổi thủ công trên server (nếu có) và kéo code mới nhất về
+        - git fetch origin production && git reset --hard origin/production && docker compose down && docker compose up -d --build && docker ps
+        # Dọn dẹp các Docker image cũ (dangling) để giải phóng dung lượng ổ cứng sau khi build thành công
+        - docker image prune -f
+    when:
+      branch: production
+      event: [push, manual]
